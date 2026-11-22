@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isShotBlocked, resolveHit, segmentIntersectsRect } from './combatMath';
+import { findVisiblePeekX, isShotBlocked, resolveHit, segmentIntersectsRect } from './combatMath';
 
 describe('combat geometry', () => {
   it('detects a cover crossing the shot segment', () => {
@@ -8,6 +8,11 @@ describe('combat geometry', () => {
 
   it('does not block a shot when cover is outside the line', () => {
     expect(isShotBlocked({ x: 0, y: 100 }, { x: 100, y: 0 }, [{ x: 70, y: 70, width: 10, height: 10 }])).toBe(false);
+  });
+
+  it('places enemies on the player-facing side of cover', () => {
+    expect(findVisiblePeekX({ x: 640, y: 662 }, { x: 250, y: 420, width: 260, height: 94 })).toBe(580);
+    expect(findVisiblePeekX({ x: 640, y: 662 }, { x: 720, y: 425, width: 180, height: 100 })).toBe(650);
   });
 
   it('distinguishes head and body hits', () => {
