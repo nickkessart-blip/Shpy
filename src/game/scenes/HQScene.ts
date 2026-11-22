@@ -2,7 +2,6 @@ import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH } from '../../app/GameConfig';
 import { BALANCE } from '../data/balance';
 import { saveService, type UpgradeKind } from '../../persistence/SaveService';
-import { AssetCatalog } from '../assets/AssetCatalog';
 import {
   getAccountLevel, getAccountRank, getNextAccountRank, getAccountProgress,
 } from '../data/progression';
@@ -158,28 +157,6 @@ export class HQScene extends Phaser.Scene {
     });
   }
 
-  private drawAccountSummary(save: ReturnType<typeof saveService.load>, x: number, y: number, width: number): void {
-
-    const level = getAccountLevel(save.accountXp);
-    const rank = getAccountRank(save.accountXp);
-    const next = getNextAccountRank(save.accountXp);
-    const progress = getAccountProgress(save.accountXp);
-    this.add.text(x, y, 'УРОВЕНЬ АККАУНТА', { fontSize: '13px', color: COLORS.muted, fontStyle: 'bold' });
-    this.add.text(x, y + 23, level + '  /  ' + rank.title, { fontSize: '25px', color: '#ffffff', fontStyle: 'bold' });
-    this.add.text(x + 310, y + 7, '$' + save.dollars.toLocaleString('ru-RU'), {
-      fontSize: '25px', color: '#83d7a4', fontStyle: 'bold',
-    });
-    this.add.text(x + 310, y + 36, 'ДОЛЛАРЫ', { fontSize: '11px', color: '#91a2b1', fontStyle: 'bold' });
-    const barY = y + 64;
-    const bar = this.add.graphics();
-    bar.fillStyle(0x0d151e, 1); bar.fillRoundedRect(x, barY, width, 10, 5);
-    bar.fillStyle(0x6ac18e, 1); bar.fillRoundedRect(x, barY, width * progress.progress, 10, 5);
-    this.add.text(x, barY + 15, next
-      ? 'ОПЫТ ' + save.accountXp.toLocaleString('ru-RU') + ' / ' + next.xp.toLocaleString('ru-RU') + ' XP  •  ДО СЛЕДУЮЩЕГО УРОВНЯ ' + (next.xp - save.accountXp)
-      : 'МАКСИМАЛЬНЫЙ РАНГ • ' + save.accountXp.toLocaleString('ru-RU') + ' XP',
-      { fontSize: '11px', color: '#aab6c4' });
-  }
-
   private upgradeValue(kind: UpgradeKind, level: number): string {
     switch (kind) {
       case 'damage': return BALANCE.weapon.damage[level].toFixed(2).replace(/0+$/, '').replace(/\.$/, '') + ' урона';
@@ -206,23 +183,6 @@ export class HQScene extends Phaser.Scene {
         : dollars < cost ? 'НУЖНО $' + cost.toLocaleString('ru-RU')
           : 'ЦЕНА $' + cost.toLocaleString('ru-RU');
     return { maxed, available, cost, label };
-  }
-
-  private drawMobileUpgrade(x: number, y: number, label: string, level: number, kind: UpgradeKind, xp: number, dollars: number): void {
-    const status = this.upgradeStatus(level, kind, xp, dollars);
-    this.add.text(x, y, label, { fontSize: '18px', color: '#f2f4f7', fontStyle: 'bold' });
-    this.add.text(x, y + 27, 'УР. ' + level + '/4 • ' + this.upgradeValue(kind, level), {
-      fontSize: '14px', color: status.maxed ? '#75c995' : '#aebdca',
-    });
-    this.add.text(x + 220, y + 4, status.label, {
-      fontSize: '12px', color: status.maxed ? '#75c995' : status.available ? '#f0c16d' : '#81909f',
-    });
-    if (!status.maxed) {
-      const button = this.add.rectangle(x + 470, y + 22, 42, 42, status.available ? COLORS.green : 0x394552)
-        .setStrokeStyle(2, 0xdde6ee, 0.5).setInteractive({ useHandCursor: status.available });
-      this.add.text(x + 470, y + 22, '+', { fontSize: '26px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
-      button.on('pointerdown', () => this.tryUpgrade(kind, label));
-    }
   }
 
   private drawUpgrade(x: number, y: number, label: string, level: number, kind: UpgradeKind, xp: number, dollars: number): void {
@@ -252,24 +212,6 @@ export class HQScene extends Phaser.Scene {
       return;
     }
     this.scene.restart();
-  }
-
-  private drawBackground(): void {
-    const g = this.add.graphics();
-    g.fillGradientStyle(0x101720, 0x101720, 0x1c2632, 0x111821, 1);
-    g.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-    g.lineStyle(1, 0x394655, 0.25);
-    for (let x = 0; x < GAME_WIDTH; x += 64) g.lineBetween(x, 0, x, GAME_HEIGHT);
-    for (let y = 0; y < GAME_HEIGHT; y += 64) g.lineBetween(0, y, GAME_WIDTH, y);
-    g.fillStyle(0x7d2329, 0.10); g.fillRect(0, 0, 14, GAME_HEIGHT);
-  }
-
-  private panel(x: number, y: number, width: number, height: number, title: string): void {
-    const g = this.add.graphics();
-    g.fillStyle(COLORS.panel, 0.96); g.fillRoundedRect(x, y, width, height, 10);
-    g.lineStyle(1, COLORS.edge, 1); g.strokeRoundedRect(x, y, width, height, 10);
-    this.add.text(x + 24, y + 18, title, { fontSize: '14px', color: '#aebdca', fontStyle: 'bold', letterSpacing: 2 });
-    g.lineStyle(1, COLORS.edge, 0.5); g.lineBetween(x + 22, y + 48, x + width - 22, y + 48);
   }
 
   private button(x: number, y: number, width: number, height: number, label: string, color: number, action: () => void): void {
