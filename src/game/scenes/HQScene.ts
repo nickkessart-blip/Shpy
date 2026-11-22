@@ -26,67 +26,6 @@ export class HQScene extends Phaser.Scene {
     this.createRoomLayout(saveService.load());
   }
 
-  private createDesktopLayout(save: ReturnType<typeof saveService.load>): void {
-    this.drawBackground();
-    if (AssetCatalog.hasTexture(this, 'ui-logo')) this.add.image(1160, 92, 'ui-logo').setDisplaySize(90, 90);
-    else this.add.text(72, 54, 'S H P Y', { fontSize: '20px', color: '#d45c5c', fontStyle: 'bold', letterSpacing: 6 });
-    this.add.text(72, 93, 'АГЕНТСТВО. ШТАБ ОПЕРАЦИЙ', { fontSize: '34px', color: '#f0f2f5', fontStyle: 'bold' });
-    this.add.text(72, 142, getAccountRank(save.accountXp).title + ' • УРОВЕНЬ АККАУНТА ' + getAccountLevel(save.accountXp), {
-      fontSize: '16px', color: COLORS.muted,
-    });
-    this.button(1018, 38, 170, 44, 'ГЛАВНОЕ МЕНЮ', 0x39495a, () => this.scene.start('Start'));
-
-    this.panel(72, 205, 720, 360, 'ОПЕРАТИВНЫЙ СТОЛ');
-    this.drawAccountSummary(save, 108, 260, 610);
-    this.add.text(108, 380, 'Доступная операция', { fontSize: '14px', color: COLORS.muted });
-    this.add.text(108, 407, '01 / КАЗИНО «РОЯЛЬ»', { fontSize: '25px', color: '#f0c16d', fontStyle: 'bold' });
-    this.add.text(108, 451, 'Главный зал → Бар и VIP-проход', { fontSize: '16px', color: '#c7d0d9' });
-    this.add.text(108, 492, '5 волн в главном зале, 5 в VIP-зоне и финальная схватка с боссом.', {
-      fontSize: '14px', color: COLORS.muted, wordWrap: { width: 610 },
-    });
-    this.button(108, 510, 260, 46, 'НАЧАТЬ ОПЕРАЦИЮ', COLORS.red, () => this.scene.start('Loadout'));
-
-    this.panel(830, 205, 378, 420, 'УЛУЧШЕНИЯ ЗА ДОЛЛАРЫ');
-    this.message = this.add.text(840, 635, '', { fontSize: '12px', color: '#f0c16d', wordWrap: { width: 360 } });
-    UPGRADES.forEach(({ kind, label }, index) => {
-      this.drawUpgrade(850, 254 + index * 59, label, save.upgrades[kind], kind, save.accountXp, save.dollars);
-    });
-    this.add.text(72, 612, 'УПРАВЛЕНИЕ: мышь — прицел • ЛКМ — огонь • R — перезарядка • Esc — пауза', {
-      fontSize: '15px', color: COLORS.muted,
-    });
-    this.add.text(72, 648, 'SHPY • ДОЛЛАРЫ ТРАТЯТСЯ НА УЛУЧШЕНИЯ • ОПЫТ АККАУНТА НЕ ТРАТИТСЯ', {
-      fontSize: '12px', color: '#68798a',
-    });
-  }
-
-  private createMobileLayout(save: ReturnType<typeof saveService.load>): void {
-    this.drawBackground();
-    const g = this.add.graphics();
-    g.fillStyle(0x192633, 0.98); g.fillRoundedRect(46, 112, 1188, 550, 18);
-    g.lineStyle(2, 0x7b6548, 0.9); g.strokeRoundedRect(46, 112, 1188, 550, 18);
-    g.lineStyle(2, 0x46596a, 0.8); g.lineBetween(640, 150, 640, 620);
-    this.add.text(72, 36, 'S H P Y', { fontSize: '34px', color: '#dc6c64', fontStyle: 'bold', letterSpacing: 8 });
-    this.add.text(72, 78, 'АГЕНТСТВО ОПЕРАЦИЙ  /  ПОЛЕВОЙ ШТАБ', { fontSize: '18px', color: '#aebdca', letterSpacing: 2 });
-    this.button(1040, 38, 168, 48, 'МЕНЮ', 0x39495a, () => this.scene.start('Start'));
-    this.add.text(88, 150, 'ОПЕРАТИВНЫЙ СТОЛ', { fontSize: '22px', color: '#b9c8d5', fontStyle: 'bold', letterSpacing: 2 });
-    this.drawAccountSummary(save, 92, 206, 500);
-    this.add.text(92, 392, 'ОПЕРАЦИЯ 01', { fontSize: '18px', color: COLORS.muted });
-    this.add.text(92, 428, 'КАЗИНО «РОЯЛЬ»', { fontSize: '33px', color: '#f0c16d', fontStyle: 'bold' });
-    this.add.text(92, 476, 'Главный зал → Бар и VIP-проход', { fontSize: '19px', color: '#c7d0d9' });
-    this.add.text(92, 510, '10 волн охраны и начальник казино в финале.', { fontSize: '16px', color: COLORS.muted });
-    this.button(92, 556, 465, 60, 'НАЧАТЬ ОПЕРАЦИЮ', COLORS.red, () => this.scene.start('Loadout'));
-
-    this.add.text(684, 150, 'УЛУЧШЕНИЯ ЗА ДОЛЛАРЫ', { fontSize: '22px', color: '#b9c8d5', fontStyle: 'bold', letterSpacing: 1 });
-    this.message = this.add.text(690, 617, '', { fontSize: '14px', color: '#f0c16d', wordWrap: { width: 490 } });
-    UPGRADES.forEach(({ kind, label }, index) => {
-      this.drawMobileUpgrade(690, 198 + index * 68, label, save.upgrades[kind], kind, save.accountXp, save.dollars);
-    });
-    this.add.text(72, 684, 'ДОЛЛАРЫ МОЖНО ТРАТИТЬ • ОПЫТ АККАУНТА СОХРАНЯЕТ УРОВЕНЬ', {
-      fontSize: '15px', color: '#718091',
-    });
-  }
-
-
   private createRoomLayout(save: ReturnType<typeof saveService.load>): void {
     const g = this.add.graphics();
     g.fillGradientStyle(0x111a24, 0x182432, 0x27323c, 0x101720, 1);
@@ -200,6 +139,7 @@ export class HQScene extends Phaser.Scene {
   private openComputerPanel(save: ReturnType<typeof saveService.load>): void {
     const shade = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x05090e, 0.82)
       .setDepth(80).setInteractive();
+    shade.on('pointerdown', () => this.scene.restart());
     const panel = this.add.graphics().setDepth(81);
     panel.fillStyle(0x192633, 0.99); panel.fillRoundedRect(720, 92, 500, 540, 14);
     panel.lineStyle(2, 0x92724f, 0.9); panel.strokeRoundedRect(720, 92, 500, 540, 14);
@@ -211,10 +151,7 @@ export class HQScene extends Phaser.Scene {
     }).setDepth(82);
     const close = this.add.rectangle(1158, 125, 34, 34, 0x704047).setDepth(83).setInteractive({ useHandCursor: true });
     this.add.text(1158, 125, '×', { fontSize: '25px', color: '#fff' }).setOrigin(0.5).setDepth(84);
-    const closeAll = (): void => {
-      this.children.list.filter((child) => child.depth >= 80).forEach((child) => child.destroy());
-    };
-    close.on('pointerdown', closeAll);
+    close.on('pointerdown', () => this.scene.restart());
     this.message = this.add.text(754, 592, '', { fontSize: '12px', color: '#f0c16d' }).setDepth(82);
     UPGRADES.forEach(({ kind, label }, index) => {
       this.drawUpgrade(754, 205 + index * 60, label, save.upgrades[kind], kind, save.accountXp, save.dollars);
@@ -290,17 +227,17 @@ export class HQScene extends Phaser.Scene {
 
   private drawUpgrade(x: number, y: number, label: string, level: number, kind: UpgradeKind, xp: number, dollars: number): void {
     const status = this.upgradeStatus(level, kind, xp, dollars);
-    this.add.text(x, y, label, { fontSize: '13px', color: '#f2f4f7', fontStyle: 'bold' });
+    this.add.text(x, y, label, { fontSize: '13px', color: '#f2f4f7', fontStyle: 'bold' }).setDepth(82);
     this.add.text(x, y + 23, 'УР. ' + level + '/4 • ' + this.upgradeValue(kind, level), {
       fontSize: '12px', color: status.maxed ? '#75c995' : COLORS.muted,
-    });
+    }).setDepth(82);
     this.add.text(x + 145, y + 5, status.label, {
       fontSize: '10px', color: status.maxed ? '#75c995' : status.available ? '#f0c16d' : '#81909f',
-    });
+    }).setDepth(82);
     if (!status.maxed) {
       const button = this.add.rectangle(x + 330, y + 20, 36, 32, status.available ? COLORS.green : 0x394552)
-        .setInteractive({ useHandCursor: status.available });
-      this.add.text(x + 330, y + 20, '+', { fontSize: '23px', color: '#ffffff' }).setOrigin(0.5);
+        .setDepth(82).setInteractive({ useHandCursor: status.available });
+      this.add.text(x + 330, y + 20, '+', { fontSize: '23px', color: '#ffffff' }).setOrigin(0.5).setDepth(83);
       button.on('pointerdown', () => this.tryUpgrade(kind, label));
     }
   }
