@@ -33,8 +33,8 @@ export class MissionScene extends Phaser.Scene {
   private spawnTimer = 300;
   private phase: 'active' | 'transition' | 'finished' | 'paused' = 'active';
   private transitionTimer = 0;
-  private hp = BALANCE.player.maxHp;
-  private magazine = BALANCE.weapon.magazine[0];
+  private hp: number = BALANCE.player.maxHp;
+  private magazine: number = BALANCE.weapon.magazine[0];
   private reserve = 48;
   private reloading = 0;
   private shotCooldown = 0;
