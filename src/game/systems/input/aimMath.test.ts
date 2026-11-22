@@ -19,6 +19,12 @@ describe('mobile aim response', () => {
     expect(Math.hypot(diagonal.x, diagonal.y)).toBeCloseTo(horizontal.x, 8);
   });
 
+  it('caps over-range stick input without increasing diagonal speed', () => {
+    const capped = getAimVelocity({ x: 4, y: 4 }, 1.6);
+    const full = getAimVelocity({ x: 1, y: 1 }, 1.6);
+    expect(Math.hypot(capped.x, capped.y)).toBeCloseTo(Math.hypot(full.x, full.y), 8);
+  });
+
   it('clamps the cursor inside the playable field', () => {
     expect(moveAim({ x: 1270, y: 710 }, { x: 1, y: 1 }, 2.5, 50, 1280, 720))
       .toEqual({ x: 1262, y: 590 });

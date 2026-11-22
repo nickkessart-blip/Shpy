@@ -12,16 +12,15 @@ function clamp(value: number, min: number, max: number): number {
 
 /** Converts a normalized radial stick vector into cursor velocity in world pixels per millisecond. */
 export function getAimVelocity(vector: AimVector, sensitivity: number): AimVector {
-  const length = Math.min(1, Math.hypot(vector.x, vector.y));
-  if (!Number.isFinite(length) || length <= DEAD_ZONE) return { x: 0, y: 0 };
-
-  const normalizedPower = (length - DEAD_ZONE) / (1 - DEAD_ZONE);
+  const magnitude = Math.hypot(vector.x, vector.y);
+  if (!Number.isFinite(magnitude) || magnitude <= DEAD_ZONE) return { x: 0, y: 0 };
+  const normalizedPower = (Math.min(1, magnitude) - DEAD_ZONE) / (1 - DEAD_ZONE);
   const response = normalizedPower * (0.38 + normalizedPower * 0.62);
   const safeSensitivity = clamp(Number.isFinite(sensitivity) ? sensitivity : 1.4, 0.5, 2.5);
   const speed = BASE_SPEED_PER_MS * safeSensitivity * response;
   return {
-    x: (vector.x / length) * speed,
-    y: (vector.y / length) * speed,
+    x: (vector.x / magnitude) * speed,
+    y: (vector.y / magnitude) * speed,
   };
 }
 
