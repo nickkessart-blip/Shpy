@@ -1,14 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 188">
-<defs><linearGradient id="wood" x2="0" y2="1"><stop stop-color="#8b6844"/><stop offset=".5" stop-color="#4f3c2e"/><stop offset="1" stop-color="#231e1c"/></linearGradient><linearGradient id="metal" x2="0" y2="1"><stop stop-color="#8b9ba4"/><stop offset="1" stop-color="#2d3b45"/></linearGradient></defs>
-<ellipse cx="260" cy="170" rx="250" ry="15" fill="#000" opacity=".45"/>
-<path d="M8 38 444 12 512 46 74 78Z" fill="#b08a5c" stroke="#17191b" stroke-width="8"/>
-<path d="M74 78 512 46V153L74 180Z" fill="url(#wood)" stroke="#14191e" stroke-width="9"/>
-<path d="M8 38 74 78V180L8 137Z" fill="#4d3829" stroke="#14191e" stroke-width="9"/>
-<path d="M103 81 103 169M206 74 206 163M310 66 310 157M414 58 414 150" stroke="#bc9565" stroke-opacity=".6" stroke-width="7"/>
-<path d="M75 108 511 80M75 143 511 115" stroke="#1e2020" stroke-width="7" opacity=".65"/>
-<path d="M22 52 59 74V145L22 122Z" fill="#876849" stroke="#bd9a6d" stroke-width="4"/>
-<path d="M10 140 75 180 512 153" fill="none" stroke="#b68e5b" stroke-width="5"/>
-<path d="M20 18 448 0 496 25 66 55Z" fill="#c09a68" opacity=".65"/>
-<g stroke="url(#metal)" stroke-width="7" fill="none"><path d="M28 35 28 143M492 37 492 154M90 72 90 174M438 45 438 156"/></g>
-<g fill="#d3b17c"><circle cx="80" cy="87" r="6"/><circle cx="460" cy="53" r="6"/><circle cx="80" cy="157" r="5"/><circle cx="460" cy="139" r="5"/></g>
+<defs><linearGradient id="felt" x2="0" y2="1"><stop stop-color="#31745d"/><stop offset=".55" stop-color="#164839"/><stop offset="1" stop-color="#0b2a27"/></linearGradient><linearGradient id="velvet" x2="0" y2="1"><stop stop-color="#8c3039"/><stop offset="1" stop-color="#401b25"/></linearGradient><linearGradient id="gold" x2="0" y2="1"><stop stop-color="#f8df9d"/><stop offset=".42" stop-color="#b98843"/><stop offset="1" stop-color="#51371f"/></linearGradient></defs>
+<ellipse cx="260" cy="174" rx="245" ry="12" fill="#000" opacity=".55"/>
+<!-- casino table top -->
+<path d="M13 39 431 7 511 38 78 80Z" fill="url(#gold)" stroke="#171a1e" stroke-width="8"/>
+<path d="M29 40 431 16 490 39 78 67Z" fill="url(#felt)" stroke="#f2d091" stroke-width="4"/>
+<path d="M71 49 427 28" stroke="#d4b36f" stroke-width="2" opacity=".8"/>
+<path d="M80 78 511 40V149L80 183Z" fill="url(#velvet)" stroke="#16191d" stroke-width="9"/>
+<path d="M80 78 511 40V57L80 96Z" fill="url(#gold)"/>
+<path d="M105 104 481 73V136L105 165Z" fill="#202832" stroke="#c39551" stroke-width="5"/>
+<path d="M121 112 466 84V127L121 154Z" fill="#632a34" stroke="#e0b76c" stroke-width="3"/>
+<path d="M145 116 262 106 380 96 409 116 263 138Z" fill="#2b574b" stroke="#e3c17e" stroke-width="3"/>
+<path d="M80 78 80 182" stroke="#edc77f" stroke-width="5"/>
+<path d="M511 40 511 148" stroke="#edc77f" stroke-width="5"/>
+<path d="M107 164 480 136" stroke="#1b1718" stroke-width="8"/>
+<g fill="#e4c17e"><circle cx="111" cy="91" r="5"/><circle cx="484" cy="58" r="5"/><circle cx="111" cy="170" r="5"/><circle cx="482" cy="143" r="5"/></g>
+<path d="M187 87 207 82 219 94 199 100ZM295 78 315 73 327 84 307 89" fill="#e0bf80" opacity=".7"/>
 </svg>
