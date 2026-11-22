@@ -60,25 +60,41 @@ body {
 }
 
 html[data-device="mobile"] body { background: #05090e; }
-html[data-device="mobile"] #game { width: min(100vw, calc(100dvh * 16 / 9)); height: min(100dvh, calc(100vw * 9 / 16)); }
+html[data-device="mobile"] #game {
+  width: min(100vw, calc(100dvh * 16 / 9));
+  height: min(100dvh, calc(100vw * 9 / 16));
+}
 
 @media (max-aspect-ratio: 1 / 1) {
+  html[data-device="mobile"] #app {
+    background: #080e15;
+  }
+
+  html[data-device="mobile"] #game {
+    display: none;
+  }
+
   html[data-device="mobile"]::before {
-    content: "ПОВЕРНИТЕ ТЕЛЕФОН ГОРИЗОНТАЛЬНО";
+    content: "↻\A ПОВЕРНИТЕ ТЕЛЕФОН ГОРИЗОНТАЛЬНО\A Игра продолжится автоматически";
     position: fixed;
     z-index: 1000;
-    inset: auto 0 0;
-    padding: 14px 12px max(14px, env(safe-area-inset-bottom));
+    inset: 0;
+    display: grid;
+    place-content: center;
+    padding: 28px;
     color: #edf3fa;
-    background: #101923f2;
-    border-top: 1px solid #526171;
+    background: radial-gradient(ellipse at 50% 42%, #1a2a39 0%, #0a1119 72%);
     text-align: center;
-    font: 800 13px/1.4 Inter, Arial, sans-serif;
-    letter-spacing: .08em;
-    pointer-events: none;
+    white-space: pre-line;
+    font: 800 18px/1.8 Inter, Arial, sans-serif;
+    letter-spacing: .06em;
+    pointer-events: auto;
   }
 }
 
 @media (orientation: landscape) and (max-height: 420px) {
-  #game { width: min(100vw, calc(100dvh * 16 / 9)); height: min(100dvh, calc(100vw * 9 / 16)); }
+  #game {
+    width: min(100vw, calc(100dvh * 16 / 9));
+    height: min(100dvh, calc(100vw * 9 / 16));
+  }
 }
