@@ -9,6 +9,9 @@ import { AssetCatalog } from '../assets/AssetCatalog';
 import { getCosmetic } from '../data/cosmetics';
 import { findVisiblePeekX, pointInRect, resolveHit, type Point } from '../systems/combat/combatMath';
 import { runSession } from '../systems/missions/runSession';
+import { settingsService, type GameSettings } from '../../settings/SettingsService';
+import { moveAim } from '../systems/input/aimMath';
+import { FeedbackService, triggerHaptic } from '../systems/feedback/FeedbackService';
 
 type EnemyState = 'Exposed' | 'Aiming' | 'Attacking' | 'SeekingCover' | 'Hidden' | 'Peeking' | 'Repositioning' | 'Defeated';
 interface RuntimeEnemy {
@@ -17,9 +20,6 @@ interface RuntimeEnemy {
 }
 
 const MUZZLE: Point = { x: GAME_WIDTH / 2, y: 662 };
-const MOBILE_FIRE = { x: GAME_WIDTH - 116, y: GAME_HEIGHT - 190 };
-const MOBILE_RELOAD = { x: GAME_WIDTH - 116, y: GAME_HEIGHT - 58 };
-const MOBILE_PAUSE = { x: GAME_WIDTH - 58, y: 58 };
 const SPRITES: Record<EnemyType, string> = {
   guard: 'enemy-guard', armored: 'enemy-armored', assault: 'enemy-assault', boss: 'enemy-boss',
 };
@@ -40,6 +40,12 @@ export class MissionScene extends Phaser.Scene {
   private weaponRecoil = 0;
   private playerHitFlash = 0;
   private hud!: Phaser.GameObjects.Text;
+  private hudPanel!: Phaser.GameObjects.Graphics;
+  private hudBars!: Phaser.GameObjects.Graphics;
+  private parallaxFar?: Phaser.GameObjects.Graphics;
+  private parallaxMid?: Phaser.GameObjects.Graphics;
+  private parallaxNear?: Phaser.GameObjects.Graphics;
+  private currentSettings: GameSettings = settingsService.load();
   private message!: Phaser.GameObjects.Text;
   private reloadHint!: Phaser.GameObjects.Text;
   private backgroundArt?: Phaser.GameObjects.Image;
@@ -77,18 +83,25 @@ export class MissionScene extends Phaser.Scene {
   private mobileFireHeld = false;
   private mobileControlsElement?: HTMLDivElement;
   private mobileSwitchButton?: HTMLButtonElement;
+  private mobileFireButton?: HTMLButtonElement;
+  private mobileAimStick?: HTMLDivElement;
   private mobileGrenadeButton?: HTMLButtonElement;
   private mobileMedkitButton?: HTMLButtonElement;
   private mobileReleaseHandler?: (event: PointerEvent) => void;
   private mobileFirePointerId: number | null = null;
   private aimStickVector: Point = { x: 0, y: 0 };
   private aimStickActive = false;
+  private aimStickPointerId: number | null = null;
+  private appliedMobileControlMode: 'tap' | 'stick' = 'stick';
 
   constructor() { super('Mission'); }
 
   create(): void {
     // Phaser reuses Scene instances. Reset every run-scoped value before building the scene again.
     const initialSave = saveService.load();
+    this.currentSettings = settingsService.load();
+    this.appliedMobileControlMode = this.currentSettings.mobileControlMode;
+    FeedbackService.ensureMusic(this);
     this.startedAt = Date.now();
     this.aim = { x: GAME_WIDTH / 2, y: GAME_HEIGHT / 2 };
     this.enemies = [];
@@ -137,20 +150,29 @@ export class MissionScene extends Phaser.Scene {
     this.mobileFirePointerId = null;
     this.aimStickVector = { x: 0, y: 0 };
     this.aimStickActive = false;
+    this.aimStickPointerId = null;
+    this.mobileFireButton = undefined;
+    this.mobileAimStick = undefined;
     this.mobileControlsElement?.remove();
     this.mobileControlsElement = undefined;
     this.impactEffects = [];
     this.weaponRecoil = 0;
     this.playerHitFlash = 0;
     this.backdrop = this.add.graphics().setDepth(-20);
+    this.parallaxFar = this.add.graphics().setDepth(-9);
+    this.parallaxMid = this.add.graphics().setDepth(-7);
+    this.parallaxNear = this.add.graphics().setDepth(-4);
     this.world = this.add.graphics().setDepth(0);
     this.coverLayer = this.add.graphics().setDepth(8);
     this.fx = this.add.graphics().setDepth(20);
     this.buildWeaponRig();
-    this.hud = this.add.text(26, 20, '', {
-      fontSize: this.isMobileControls ? '21px' : '16px', color: '#edf2f7', fontStyle: 'bold',
-      backgroundColor: '#0b1119cc', padding: { x: 12, y: 10 },
-    }).setDepth(30);
+    this.hudPanel = this.add.graphics().setDepth(29);
+    this.hudBars = this.add.graphics().setDepth(30);
+    this.hud = this.add.text(30, 24, '', {
+      fontSize: '16px', color: '#edf2f7', fontStyle: 'bold',
+      fontFamily: 'Arial, sans-serif', lineSpacing: 5,
+      shadow: { offsetX: 1, offsetY: 2, color: '#000000', blur: 3, fill: true },
+    }).setDepth(31);
     this.message = this.add.text(GAME_WIDTH / 2, 112, '', {
       fontSize: this.isMobileControls ? '26px' : '18px', color: '#f0c16d', fontStyle: 'bold', align: 'center',
       backgroundColor: '#111821cc', padding: { x: 12, y: 8 },
@@ -161,30 +183,22 @@ export class MissionScene extends Phaser.Scene {
     this.reloadHint.setVisible(!this.isMobileControls);
 
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-      if (!this.isMobileControlPoint(pointer.x, pointer.y)) this.aim = { x: pointer.x, y: pointer.y };
+      const tapMode = !this.isMobileControls || this.currentSettings.mobileControlMode === 'tap';
+      if (tapMode && !this.isMobileControlPoint(pointer.x, pointer.y)) {
+        this.aim = { x: pointer.x, y: pointer.y };
+      }
     });
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      if (this.phase !== 'active' || this.isMobileControlPoint(pointer.x, pointer.y)) return;
+      const tapMode = !this.isMobileControls || this.currentSettings.mobileControlMode === 'tap';
+      if (this.phase !== 'active' || !tapMode || this.isMobileControlPoint(pointer.x, pointer.y)) return;
       this.aim = { x: pointer.x, y: pointer.y };
       this.shoot();
     });
-    this.input.on('pointerup', () => { this.mobileFireHeld = false; });
+    this.events.on(Phaser.Scenes.Events.RESUME, this.onMissionResume, this);
     if (this.isMobileControls) this.buildMobileControls();
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.mobileFireHeld = false;
-      this.mobileFirePointerId = null;
-      this.aimStickActive = false;
-      this.aimStickVector = { x: 0, y: 0 };
-      if (this.mobileReleaseHandler) {
-        window.removeEventListener('pointerup', this.mobileReleaseHandler);
-        window.removeEventListener('pointercancel', this.mobileReleaseHandler);
-        this.mobileReleaseHandler = undefined;
-      }
-      this.mobileControlsElement?.remove();
-      this.mobileControlsElement = undefined;
-      this.mobileSwitchButton = undefined;
-      this.mobileGrenadeButton = undefined;
-      this.mobileMedkitButton = undefined;
+      this.events.off(Phaser.Scenes.Events.RESUME, this.onMissionResume, this);
+      this.disposeMobileControls();
     });
     this.input.keyboard?.on('keydown-R', () => this.reload());
     this.input.keyboard?.on('keydown-ESC', () => this.togglePause());
@@ -256,9 +270,16 @@ export class MissionScene extends Phaser.Scene {
     const dt = Math.min(delta, 50);
     this.shotCooldown = Math.max(0, this.shotCooldown - dt);
     if (this.aimStickActive && this.phase === 'active') {
-      this.aim.x = Phaser.Math.Clamp(this.aim.x + this.aimStickVector.x * dt * 0.38, 18, GAME_WIDTH - 18);
-      this.aim.y = Phaser.Math.Clamp(this.aim.y + this.aimStickVector.y * dt * 0.38, 90, GAME_HEIGHT - 130);
+      this.aim = moveAim(this.aim, this.aimStickVector, this.currentSettings.aimSensitivity,
+        dt, GAME_WIDTH, GAME_HEIGHT);
     }
+    const lookX = this.aim.x / GAME_WIDTH - 0.5;
+    const lookY = this.aim.y / GAME_HEIGHT - 0.5;
+    const parallaxEnabled = this.currentSettings.parallaxEnabled && this.currentSettings.graphicsQuality !== 'low';
+    this.parallaxFar?.setPosition(parallaxEnabled ? -lookX * 4 : 0, parallaxEnabled ? -lookY * 2 : 0);
+    this.parallaxMid?.setPosition(parallaxEnabled ? -lookX * 9 : 0, parallaxEnabled ? -lookY * 4 : 0);
+    this.parallaxNear?.setPosition(parallaxEnabled ? lookX * 13 : 0, parallaxEnabled ? lookY * 6 : 0);
+    if (this.parallaxFar) this.parallaxFar.setAlpha(parallaxEnabled ? 0.84 + Math.sin(this.time.now / 900) * 0.025 : 0);
     if (this.mobileFireHeld && this.phase === 'active') this.shoot();
     this.shotFlash = Math.max(0, this.shotFlash - dt);
     this.weaponRecoil = Math.max(0, this.weaponRecoil - dt * 0.16);
@@ -320,6 +341,55 @@ export class MissionScene extends Phaser.Scene {
     this.backdrop.fillStyle(0x8c242b, 0.5); this.backdrop.fillRect(0, 515, GAME_WIDTH, 90);
     this.backdrop.lineStyle(2, 0xc58c4b, 0.36); this.backdrop.lineBetween(0, 515, GAME_WIDTH, 515);
     this.backdrop.fillStyle(0x242c37, 1); this.backdrop.fillRect(0, 590, GAME_WIDTH, 130);
+    this.drawParallaxLayers();
+  }
+
+  private drawParallaxLayers(): void {
+    const far = this.parallaxFar;
+    const mid = this.parallaxMid;
+    const near = this.parallaxNear;
+    if (!far || !mid || !near) return;
+    far.clear(); mid.clear(); near.clear();
+    if (this.currentSettings.graphicsQuality === 'low') return;
+
+    far.fillStyle(0x09131e, 0.52);
+    for (let i = 0; i < 13; i += 1) {
+      const x = -24 + i * 108;
+      const top = 92 + (i % 4) * 22;
+      const width = 82 + (i % 3) * 14;
+      far.fillRect(x, top, width, 360 - top);
+      far.fillStyle(0xd4a56b, 0.16);
+      for (let row = 0; row < 7; row += 1) {
+        for (let col = 0; col < 3; col += 1) {
+          if ((i + row + col) % 3 !== 0) far.fillRect(x + 12 + col * 21, top + 28 + row * 34, 7, 12);
+        }
+      }
+      far.fillStyle(0x09131e, 0.52);
+    }
+
+    mid.fillStyle(0x14202b, 0.34);
+    for (let i = 0; i < 8; i += 1) {
+      const x = i * 188 - 42;
+      mid.fillRoundedRect(x, 138 + (i % 2) * 12, 42, 388, 7);
+      mid.fillStyle(0xd2a26d, 0.12);
+      mid.fillRect(x + 9, 154, 4, 300);
+      mid.fillStyle(0x14202b, 0.34);
+    }
+
+    near.fillStyle(0x080e15, 0.18);
+    near.fillRoundedRect(-40, 476, 250, 118, 22);
+    near.fillRoundedRect(GAME_WIDTH - 230, 462, 270, 132, 22);
+    near.lineStyle(2, 0xd4ad72, 0.17);
+    near.lineBetween(0, 520, 214, 520);
+    near.lineBetween(GAME_WIDTH - 210, 510, GAME_WIDTH, 510);
+    if (this.currentSettings.graphicsQuality === 'high') {
+      near.fillStyle(0xf0c16d, 0.11);
+      for (let i = 0; i < 24; i += 1) {
+        const x = (i * 173) % GAME_WIDTH;
+        const y = 470 + ((i * 47) % 105);
+        near.fillCircle(x, y, 1 + (i % 2));
+      }
+    }
   }
 
   private spawnWave(): void {
@@ -582,6 +652,8 @@ export class MissionScene extends Phaser.Scene {
     this.shotCooldown = weaponStats.shotCooldownMs;
     this.shotFlash = 135;
     this.weaponRecoil = 18;
+    FeedbackService.play(this, 'shot', this.currentWeaponId === 'shotgun' ? 1.15 : 1);
+    triggerHaptic('shot');
 
     let chosen: { enemy: RuntimeEnemy; part: 'head' | 'body'; target: Point } | null = null;
     let chosenDistance = Number.POSITIVE_INFINITY;
@@ -605,6 +677,8 @@ export class MissionScene extends Phaser.Scene {
 
     if (chosen) {
       this.hits += 1;
+      FeedbackService.play(this, 'hit', 0.55);
+      triggerHaptic('hit');
       const damage = weaponStats.damage
         * (chosen.part === 'head' ? BALANCE.weapon.headMultiplier[save.upgrades.precision] : 1);
       chosen.enemy.hp = Math.max(0, chosen.enemy.hp - damage);
@@ -659,6 +733,8 @@ export class MissionScene extends Phaser.Scene {
     if (this.magazine >= weaponStats.magazine || this.reserve <= 0) return;
     this.reloading = weaponStats.reloadSeconds * 1000;
     this.reloadPose = 1;
+    FeedbackService.play(this, 'reload', 0.75);
+    triggerHaptic('reload');
     this.showToast('ПЕРЕЗАРЯДКА…', this.reloading);
   }
 
@@ -708,6 +784,8 @@ export class MissionScene extends Phaser.Scene {
   private useGrenade(): void {
     if (this.phase !== 'active' || this.grenadeCount <= 0) return;
     this.grenadeCount -= 1;
+    FeedbackService.play(this, 'grenade', 0.95);
+    triggerHaptic('grenade');
     let defeated = 0;
     for (const enemy of this.enemies) {
       if (enemy.state === 'Defeated') continue;
@@ -739,6 +817,8 @@ export class MissionScene extends Phaser.Scene {
     if (this.phase !== 'active' || this.medkitCount <= 0) return;
     if (this.hp >= this.maxHp) { this.showToast('ЗДОРОВЬЕ УЖЕ ПОЛНОЕ', 700); return; }
     this.medkitCount -= 1;
+    FeedbackService.play(this, 'confirm', 0.55);
+    triggerHaptic('medkit');
     const medkitRatio = Math.min(0.8, LOADOUT_UNLOCKS.medkitHealRatio + saveService.load().gearUpgrades.medkitEfficiency * 0.1);
     const healed = Math.min(this.maxHp - this.hp, Math.round(this.maxHp * medkitRatio));
     this.hp += healed;
@@ -747,6 +827,18 @@ export class MissionScene extends Phaser.Scene {
   }
 
   private refreshMobileControls(): void {
+    const stickMode = this.currentSettings.mobileControlMode === 'stick';
+    if (this.mobileFireButton) this.mobileFireButton.style.display = stickMode ? 'grid' : 'none';
+    if (this.mobileAimStick) this.mobileAimStick.style.display = stickMode ? 'block' : 'none';
+    if (this.mobileSwitchButton) this.mobileSwitchButton.style.display = stickMode && this.selectedWeapons.length > 1 ? 'grid' : 'none';
+    if (this.appliedMobileControlMode !== this.currentSettings.mobileControlMode) {
+      this.aimStickActive = false;
+      this.aimStickPointerId = null;
+      this.aimStickVector = { x: 0, y: 0 };
+      this.mobileFireHeld = false;
+      this.mobileFirePointerId = null;
+      this.appliedMobileControlMode = this.currentSettings.mobileControlMode;
+    }
     if (this.mobileSwitchButton) {
       const index = this.selectedWeapons.indexOf(this.currentWeaponId);
       this.mobileSwitchButton.textContent = this.selectedWeapons.length > 1
@@ -771,6 +863,9 @@ export class MissionScene extends Phaser.Scene {
     this.hp = Math.max(0, this.hp - appliedDamage);
     this.playerHitFlash = 190;
     this.damageTaken += appliedDamage;
+    FeedbackService.play(this, 'hit', 0.85);
+    triggerHaptic('damage');
+    if (this.currentSettings.screenShakeEnabled) this.cameras.main.shake(110, 0.0025);
     this.showToast('ВРАГ ПОПАЛ • −' + appliedDamage + ' HP', 750);
   }
 
@@ -785,7 +880,11 @@ export class MissionScene extends Phaser.Scene {
     if (this.resultSent) return;
     this.resultSent = true;
     this.phase = 'finished';
-    if (success) this.award(BALANCE.rewards.xp.mission, BALANCE.rewards.dollars.mission);
+    triggerHaptic(success ? 'success' : 'failure');
+    if (success) {
+      FeedbackService.play(this, 'confirm', 0.85);
+      this.award(BALANCE.rewards.xp.mission, BALANCE.rewards.dollars.mission);
+    }
     runSession.result = {
       success,
       elapsedSeconds: Math.max(1, Math.round((Date.now() - this.startedAt) / 1000)),
@@ -796,17 +895,9 @@ export class MissionScene extends Phaser.Scene {
     this.scene.start('Results');
   }
 
-  private isMobileControlPoint(x: number, y: number): boolean {
-    if (!this.isMobileControls) return false;
-    const zones = [
-      { x: MOBILE_FIRE.x - 76, y: MOBILE_FIRE.y - 76, width: 152, height: 152 },
-      { x: MOBILE_RELOAD.x - 54, y: MOBILE_RELOAD.y - 54, width: 108, height: 108 },
-      { x: MOBILE_PAUSE.x - 42, y: MOBILE_PAUSE.y - 42, width: 84, height: 84 },
-      { x: GAME_WIDTH - 172, y: GAME_HEIGHT - 290, width: 158, height: 82 },
-      { x: 8, y: GAME_HEIGHT - 112, width: 300, height: 104 },
-    ];
-    return zones.some((zone) => x >= zone.x && x <= zone.x + zone.width
-      && y >= zone.y && y <= zone.y + zone.height);
+  private isMobileControlPoint(_x: number, _y: number): boolean {
+    // DOM controls capture their own pointer events above the canvas; every other tap is valid gameplay input.
+    return false;
   }
 
   private buildMobileControls(): void {
@@ -869,6 +960,7 @@ export class MissionScene extends Phaser.Scene {
     reload.style.fontSize = '12px';
     reload.style.whiteSpace = 'pre-line';
     const fire = makeButton('ОГОНЬ', 92, '#a52f38f2');
+    this.mobileFireButton = fire;
     const switchButton = makeButton('ОРУЖИЕ', 58, '#40566bee');
     switchButton.style.borderRadius = '16px';
     switchButton.style.fontSize = '11px';
@@ -940,9 +1032,12 @@ export class MissionScene extends Phaser.Scene {
       pointerEvents: 'none', transform: 'translate(0, 0)',
     });
     stick.append(knob, stickLabel);
+    this.mobileAimStick = stick;
     const stickCenter = 71;
     const stickRadius = 43;
-    const resetStick = (): void => {
+    const resetStick = (event?: PointerEvent): void => {
+      if (event && event.pointerId !== this.aimStickPointerId) return;
+      this.aimStickPointerId = null;
       this.aimStickActive = false;
       this.aimStickVector = { x: 0, y: 0 };
       knob.style.transform = 'translate(0px, 0px)';
@@ -959,15 +1054,17 @@ export class MissionScene extends Phaser.Scene {
     };
     stick.addEventListener('pointerdown', (event) => {
       consume(event);
+      if (this.aimStickPointerId !== null || this.currentSettings.mobileControlMode !== 'stick') return;
+      this.aimStickPointerId = event.pointerId;
       stick.setPointerCapture(event.pointerId);
       updateStick(event);
     });
     stick.addEventListener('pointermove', (event) => {
-      if (this.aimStickActive && stick.hasPointerCapture(event.pointerId)) updateStick(event);
+      if (event.pointerId === this.aimStickPointerId && stick.hasPointerCapture(event.pointerId)) updateStick(event);
     });
-    stick.addEventListener('pointerup', (event) => { consume(event); resetStick(); });
-    stick.addEventListener('pointercancel', resetStick);
-    stick.addEventListener('lostpointercapture', resetStick);
+    stick.addEventListener('pointerup', (event) => { consume(event); resetStick(event); });
+    stick.addEventListener('pointercancel', (event) => resetStick(event));
+    stick.addEventListener('lostpointercapture', (event) => resetStick(event));
 
     const utilityRow = document.createElement('div');
     Object.assign(utilityRow.style, {
@@ -992,6 +1089,44 @@ export class MissionScene extends Phaser.Scene {
     this.refreshMobileControls();
   }
 
+  private disposeMobileControls(): void {
+    this.mobileFireHeld = false;
+    this.mobileFirePointerId = null;
+    this.aimStickActive = false;
+    this.aimStickPointerId = null;
+    this.aimStickVector = { x: 0, y: 0 };
+    if (this.mobileReleaseHandler && typeof window !== 'undefined') {
+      window.removeEventListener('pointerup', this.mobileReleaseHandler);
+      window.removeEventListener('pointercancel', this.mobileReleaseHandler);
+    }
+    this.mobileReleaseHandler = undefined;
+    this.mobileControlsElement?.remove();
+    this.mobileControlsElement = undefined;
+    this.mobileSwitchButton = undefined;
+    this.mobileFireButton = undefined;
+    this.mobileAimStick = undefined;
+    this.mobileGrenadeButton = undefined;
+    this.mobileMedkitButton = undefined;
+  }
+
+  private onMissionResume(): void {
+    this.currentSettings = settingsService.load();
+    this.appliedMobileControlMode = this.currentSettings.mobileControlMode;
+    if (this.isMobileControls && !this.mobileControlsElement) this.buildMobileControls();
+    this.refreshMobileControls();
+    FeedbackService.applyMusicVolume();
+  }
+
+  private openSettings(): void {
+    if (this.phase === 'finished' || this.phase === 'transition') return;
+    this.pauseOverlay?.destroy(true);
+    this.pauseOverlay = undefined;
+    this.phase = 'active';
+    this.disposeMobileControls();
+    this.scene.pause('Mission');
+    this.scene.launch('Settings', { returnTo: 'Mission' });
+  }
+
   private togglePause(): void {
     if (this.phase === 'finished' || this.phase === 'transition') return;
     if (this.phase === 'paused') {
@@ -1006,11 +1141,19 @@ export class MissionScene extends Phaser.Scene {
     const hint = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 25, this.isMobileControls ? 'НАЖМИТЕ КНОПКУ ПАУЗЫ ДЛЯ ПРОДОЛЖЕНИЯ' : 'ESC — ПРОДОЛЖИТЬ', { fontSize: '16px', color: '#e0b763' }).setOrigin(0.5);
     const resume = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 88, 250, 52, 0x8c3036, 0.98)
       .setStrokeStyle(2, 0xe2b96e, 1).setInteractive();
-    const resumeLabel = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 88, 'ПРОДОЛЖИТЬ', {
+    const resumeLabel = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 76, 'ПРОДОЛЖИТЬ', {
       fontSize: '18px', color: '#ffffff', fontStyle: 'bold',
     }).setOrigin(0.5);
+    resume.setPosition(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 76);
+    const settingsButton = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 146, 250, 48, 0x39495a, 0.98)
+      .setStrokeStyle(1, 0xe2b96e, 0.65).setInteractive();
+    const settingsLabel = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 146, 'НАСТРОЙКИ', {
+      fontSize: '16px', color: '#ffffff', fontStyle: 'bold',
+    }).setOrigin(0.5);
     resume.on('pointerdown', () => this.togglePause());
-    this.pauseOverlay = this.add.container(0, 0, [shade, label, hint, resume, resumeLabel]).setDepth(100);
+    settingsButton.on('pointerdown', () => this.openSettings());
+    this.pauseOverlay = this.add.container(0, 0,
+      [shade, label, hint, resume, resumeLabel, settingsButton, settingsLabel]).setDepth(100);
   }
 
   private getDisplayedWaveNumber(): number {
@@ -1026,13 +1169,30 @@ export class MissionScene extends Phaser.Scene {
       : 'ПАТРОНЫ ' + this.magazine + '/' + this.reserve;
     const weaponIndex = this.selectedWeapons.indexOf(this.currentWeaponId) + 1;
     const weaponLabel = getWeapon(this.currentWeaponId).name + ' [' + weaponIndex + '/' + this.selectedWeapons.length + ']';
+    this.hudPanel.clear();
+    this.hudBars.clear();
+    const panelWidth = this.isMobileControls ? 488 : 830;
+    const panelHeight = this.isMobileControls ? 128 : 82;
+    this.hudPanel.fillStyle(0x09131d, 0.9);
+    this.hudPanel.fillRoundedRect(16, 14, panelWidth, panelHeight, 10);
+    this.hudPanel.lineStyle(1, 0x9aa8b5, 0.22);
+    this.hudPanel.strokeRoundedRect(16, 14, panelWidth, panelHeight, 10);
+    this.hudPanel.fillStyle(0xa43a3e, 0.95);
+    this.hudPanel.fillRoundedRect(16, 14, 5, panelHeight, 3);
     this.hud.setText(this.isMobileControls
       ? weaponLabel + '\nКАЗИНО ' + (this.sceneIndex + 1) + '/' + CASINO_MISSION.length + ' • ВОЛНА ' + this.getDisplayedWaveNumber() + '/' + this.sceneDef.waves.length
-        + '\nHP ' + this.hp + '/' + this.maxHp + ' • ' + ammoText + ' • G:' + this.grenadeCount + ' Q:' + this.medkitCount
+        + '\nЗДОРОВЬЕ ' + this.hp + '/' + this.maxHp + ' • ' + ammoText
+        + ' • G:' + this.grenadeCount + ' Q:' + this.medkitCount
       : 'ОПЕРАЦИЯ: КАЗИНО     СЦЕНА ' + (this.sceneIndex + 1) + '/' + CASINO_MISSION.length +
         '     ВОЛНА ' + this.getDisplayedWaveNumber() + '/' + this.sceneDef.waves.length +
         '\n' + weaponLabel + '     ЗДОРОВЬЕ ' + this.hp + '/' + this.maxHp + '     ' + ammoText
         + '     ГРАНАТЫ ' + this.grenadeCount + '     АПТЕЧКИ ' + this.medkitCount + '     XP ' + this.totalAccountXp);
+    if (this.isMobileControls) {
+      this.hudBars.fillStyle(0x293744, 0.95);
+      this.hudBars.fillRoundedRect(31, 108, 438, 7, 4);
+      this.hudBars.fillStyle(this.hp / Math.max(1, this.maxHp) > 0.4 ? 0x69b58b : 0xc84d4d, 0.98);
+      this.hudBars.fillRoundedRect(31, 108, 438 * (this.hp / Math.max(1, this.maxHp)), 7, 4);
+    }
     this.message.setText(this.toastText).setVisible(this.toastTimer > 0);
     this.reloadHint.setText(this.reloading > 0 ? 'ПЕРЕЗАРЯДКА…' : 'R  ПЕРЕЗАРЯДКА');
   }
@@ -1059,6 +1219,7 @@ export class MissionScene extends Phaser.Scene {
           isBoss ? 224 : enemy.type === 'armored' ? 154 : 146).setVisible(true);
         if (enemy.hitFlash > 0) image.setAlpha(0.72 + Math.sin(this.time.now / 20) * 0.28);
         else image.setAlpha(1);
+        image.setAngle(Math.sin((this.time.now + enemy.uid * 113) / 420) * 1.1);
       } else {
         this.world.fillStyle(0x05080c, 0.45); this.world.fillEllipse(drawX, enemy.y + 3, 65, 15);
         this.world.fillStyle(def.color, 1); this.world.fillRoundedRect(drawX - 24, drawY - 18, 48, 76, 8);
@@ -1128,7 +1289,9 @@ export class MissionScene extends Phaser.Scene {
       this.fx.fillStyle(0xffd58a, alpha);
       this.fx.fillCircle(muzzle.x, muzzle.y, 9 + (135 - this.shotFlash) * 0.18);
       this.fx.lineStyle(3, 0xfff0c5, alpha);
-      for (let i = 0; i < 8; i += 1) {
+      const rayCount = this.currentSettings.graphicsQuality === 'high' ? 12
+        : this.currentSettings.graphicsQuality === 'low' ? 4 : 8;
+      for (let i = 0; i < rayCount; i += 1) {
         const angle = (Math.PI * 2 * i) / 8;
         this.fx.lineBetween(
           muzzle.x + Math.cos(angle) * 10, muzzle.y + Math.sin(angle) * 10,
