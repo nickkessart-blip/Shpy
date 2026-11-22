@@ -3,12 +3,12 @@ import { BootScene } from '../game/scenes/BootScene';
 import { HQScene } from '../game/scenes/HQScene';
 import { MissionScene } from '../game/scenes/MissionScene';
 import { ResultsScene } from '../game/scenes/ResultsScene';
+import { hasTouchInput } from '../input/deviceCapabilities';
 
 export const GAME_WIDTH = 1280;
 export const GAME_HEIGHT = 720;
 
-const isTouchDevice = typeof window !== 'undefined'
-  && (('ontouchstart' in window) || navigator.maxTouchPoints > 0);
+const isTouchDevice = hasTouchInput();
 
 if (typeof document !== 'undefined') {
   document.documentElement.dataset.device = isTouchDevice ? 'mobile' : 'desktop';
