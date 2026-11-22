@@ -2,9 +2,7 @@ import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH } from '../../app/GameConfig';
 import { BALANCE } from '../data/balance';
 import { saveService, type UpgradeKind } from '../../persistence/SaveService';
-import {
-  getAccountLevel, getAccountRank, getNextAccountRank, getAccountProgress,
-} from '../data/progression';
+import { getAccountLevel, getAccountRank } from '../data/progression';
 
 const COLORS = { panel: 0x1d2936, edge: 0x46576a, red: 0xb93838, muted: '#aab6c4', green: 0x64c58b };
 const UPGRADES: Array<{ kind: UpgradeKind; label: string }> = [
