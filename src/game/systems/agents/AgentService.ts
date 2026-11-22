@@ -78,11 +78,12 @@ export class AgentService {
     const save = this.saves.load();
     const index = save.agentMissions.findIndex((run) => run.id === runId);
     if (index < 0) return null;
-    const [run] = save.agentMissions.splice(index, 1);
+    const run = save.agentMissions[index];
     if (!run || run.completesAt > now) return null;
 
     const mission = getAgentMission(run.missionId);
     if (!mission) return null;
+    save.agentMissions.splice(index, 1);
     const componentsEarned = run.success ? mission.componentReward : 0;
     save.components += componentsEarned;
     save.agents = save.agents.map((agent) => {
