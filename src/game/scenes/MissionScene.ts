@@ -21,6 +21,7 @@ const SPRITES: Record<EnemyType, string> = {
 
 export class MissionScene extends Phaser.Scene {
   private world!: Phaser.GameObjects.Graphics;
+  private coverLayer!: Phaser.GameObjects.Graphics;
   private fx!: Phaser.GameObjects.Graphics;
   private hud!: Phaser.GameObjects.Text;
   private message!: Phaser.GameObjects.Text;
@@ -87,6 +88,7 @@ export class MissionScene extends Phaser.Scene {
     this.pauseOverlay = undefined;
     this.backgroundArt = undefined;
     this.world = this.add.graphics().setDepth(0);
+    this.coverLayer = this.add.graphics().setDepth(8);
     this.fx = this.add.graphics().setDepth(20);
     this.hud = this.add.text(26, 20, '', {
       fontSize: '16px', color: '#edf2f7', fontStyle: 'bold',
@@ -403,18 +405,19 @@ export class MissionScene extends Phaser.Scene {
   }
 
   private drawCovers(): void {
+    this.coverLayer.clear();
     for (const cover of this.sceneDef.covers) {
       if (AssetCatalog.hasTexture(this, 'cover-crate')) {
         const key = 'cover-image-' + cover.id;
         let image = this.children.getByName(key) as Phaser.GameObjects.Image | null;
-        if (!image) image = this.add.image(cover.x + cover.width / 2, cover.y + cover.height / 2, 'cover-crate').setName(key).setDepth(8);
+        if (!image) image = this.add.image(cover.x + cover.width / 2, cover.y + cover.height / 2, 'cover-crate').setName(key).setDepth(9);
         image.setPosition(cover.x + cover.width / 2, cover.y + cover.height / 2).setDisplaySize(cover.width, cover.height);
       } else {
-        this.world.fillStyle(0x101820, 0.98); this.world.fillRoundedRect(cover.x, cover.y, cover.width, cover.height, 7);
-        this.world.lineStyle(3, 0x778391, 0.9); this.world.strokeRoundedRect(cover.x, cover.y, cover.width, cover.height, 7);
-        this.world.lineStyle(2, 0x3c4a58, 0.9);
-        this.world.lineBetween(cover.x + 12, cover.y + 14, cover.x + cover.width - 12, cover.y + cover.height - 14);
-        this.world.lineBetween(cover.x + cover.width - 12, cover.y + 14, cover.x + 12, cover.y + cover.height - 14);
+        this.coverLayer.fillStyle(0x101820, 0.98); this.coverLayer.fillRoundedRect(cover.x, cover.y, cover.width, cover.height, 7);
+        this.coverLayer.lineStyle(3, 0x778391, 0.9); this.coverLayer.strokeRoundedRect(cover.x, cover.y, cover.width, cover.height, 7);
+        this.coverLayer.lineStyle(2, 0x3c4a58, 0.9);
+        this.coverLayer.lineBetween(cover.x + 12, cover.y + 14, cover.x + cover.width - 12, cover.y + cover.height - 14);
+        this.coverLayer.lineBetween(cover.x + cover.width - 12, cover.y + 14, cover.x + 12, cover.y + cover.height - 14);
       }
     }
   }
