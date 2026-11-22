@@ -43,7 +43,8 @@ export class MissionScene extends Phaser.Scene {
   private waveIndex = 0;
   private spawnTimer = 300;
   private phase: 'active' | 'transition' | 'finished' | 'paused' = 'active';
-  private hp: number = BALANCE.player.maxHp;
+  private maxHp: number = BALANCE.player.maxHp[0];
+  private hp: number = BALANCE.player.maxHp[0];
   private magazine: number = BALANCE.weapon.magazine[0];
   private reserve = BALANCE.weapon.reserveAmmo;
   private reloading = 0;
@@ -80,7 +81,8 @@ export class MissionScene extends Phaser.Scene {
     this.waveIndex = 0;
     this.spawnTimer = 300;
     this.phase = 'active';
-    this.hp = BALANCE.player.maxHp;
+    this.maxHp = BALANCE.player.maxHp[initialSave.upgrades.health];
+    this.hp = this.maxHp;
     this.magazine = BALANCE.weapon.magazine[initialSave.upgrades.magazine];
     this.reserve = BALANCE.weapon.reserveAmmo;
     this.reloading = 0;
@@ -317,7 +319,7 @@ export class MissionScene extends Phaser.Scene {
     this.phase = 'transition';
     this.mobileFireHeld = false;
     this.reloading = 0;
-    this.hp = Math.min(BALANCE.player.maxHp, this.hp + BALANCE.supplies.intermissionHealing);
+    this.hp = Math.min(this.maxHp, this.hp + BALANCE.supplies.intermissionHealing);
     this.reserve += BALANCE.supplies.intermissionAmmo;
 
     const hallway = this.add.graphics();
@@ -537,7 +539,7 @@ export class MissionScene extends Phaser.Scene {
     if (chosen) {
       this.hits += 1;
       const damage = BALANCE.weapon.damage[save.upgrades.damage]
-        * (chosen.part === 'head' ? BALANCE.weapon.headMultiplier : 1);
+        * (chosen.part === 'head' ? BALANCE.weapon.headMultiplier[save.upgrades.precision] : 1);
       chosen.enemy.hp = Math.max(0, chosen.enemy.hp - damage);
       chosen.enemy.hitFlash = 230;
       let bossPhaseChanged: 0 | 1 | 2 | null = null;
@@ -603,10 +605,13 @@ export class MissionScene extends Phaser.Scene {
 
   private damagePlayer(amount: number): void {
     if (this.phase !== 'active') return;
-    this.hp = Math.max(0, this.hp - amount);
+    const armorLevel = saveService.load().upgrades.armor;
+    const reduction = BALANCE.player.damageReduction[armorLevel];
+    const appliedDamage = Math.max(1, Math.round(amount * (1 - reduction)));
+    this.hp = Math.max(0, this.hp - appliedDamage);
     this.playerHitFlash = 190;
-    this.damageTaken += amount;
-    this.showToast('ВРАГ ПОПАЛ • −' + amount + ' HP', 750);
+    this.damageTaken += appliedDamage;
+    this.showToast('ВРАГ ПОПАЛ • −' + appliedDamage + ' HP', 750);
   }
 
   private award(amount: number): void {
@@ -770,10 +775,10 @@ export class MissionScene extends Phaser.Scene {
     const ammoText = this.reloading > 0 ? 'ПЕРЕЗАРЯДКА ' + (this.reloading / 1000).toFixed(1) + 'с' : 'ПАТРОНЫ ' + this.magazine + '/' + this.reserve;
     this.hud.setText(this.isMobileControls
       ? 'КАЗИНО ' + (this.sceneIndex + 1) + '/' + CASINO_MISSION.length + ' • ВОЛНА ' + this.getDisplayedWaveNumber() + '/' + this.sceneDef.waves.length
-        + '\nHP ' + this.hp + '/' + BALANCE.player.maxHp + ' • ' + ammoText + ' • XP ' + this.totalReputation
+        + '\nHP ' + this.hp + '/' + this.maxHp + ' • ' + ammoText + ' • XP ' + this.totalReputation
       : 'ОПЕРАЦИЯ: КАЗИНО     СЦЕНА ' + (this.sceneIndex + 1) + '/' + CASINO_MISSION.length +
         '     ВОЛНА ' + this.getDisplayedWaveNumber() + '/' + this.sceneDef.waves.length +
-        '\nЗДОРОВЬЕ ' + this.hp + '/' + BALANCE.player.maxHp + '     ' + ammoText + '     XP ' + this.totalReputation);
+        '\nЗДОРОВЬЕ ' + this.hp + '/' + this.maxHp + '     ' + ammoText + '     XP ' + this.totalReputation);
     this.message.setText(this.toastText).setVisible(this.toastTimer > 0);
     this.reloadHint.setText(this.reloading > 0 ? 'ПЕРЕЗАРЯДКА…' : 'R  ПЕРЕЗАРЯДКА');
   }

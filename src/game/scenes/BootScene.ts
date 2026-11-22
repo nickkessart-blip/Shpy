@@ -60,6 +60,6 @@ export class BootScene extends Phaser.Scene {
         + this.failedAssets.join(', ');
       this.time.delayedCall(7000, () => { status.hidden = true; });
     }
-    this.scene.start('HQ');
+    this.scene.start('Start');
   }
 }

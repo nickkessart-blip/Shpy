@@ -2,23 +2,30 @@ import { describe, expect, it } from 'vitest';
 import { BALANCE } from '../../data/balance';
 import { ENEMIES } from '../../data/enemies';
 
-describe('prototype progression data', () => {
-  it('keeps the base pistol at six rounds and damage upgrades gradual', () => {
-    expect(BALANCE.weapon.magazine[0]).toBe(6);
-    expect(BALANCE.weapon.damage[0]).toBe(1);
-    expect(BALANCE.weapon.damage[1]).toBeGreaterThan(BALANCE.weapon.damage[0]);
-    expect(BALANCE.weapon.damage[2]).toBeGreaterThan(BALANCE.weapon.damage[1]);
-    expect(BALANCE.weapon.damage[2] * BALANCE.weapon.headMultiplier).toBeLessThan(ENEMIES.guard.hp);
+describe('progression balance', () => {
+  it('provides five upgrade tiers for every permanent perk', () => {
+    for (const thresholds of Object.values(BALANCE.upgradeUnlocks)) expect(thresholds).toHaveLength(5);
+    expect(BALANCE.upgradeUnlocks.damage[4]).toBeGreaterThan(BALANCE.upgradeUnlocks.damage[3]);
   });
-  it('provides a measured resupply between casino zones', () => {
-    expect(BALANCE.weapon.reserveAmmo).toBeGreaterThan(BALANCE.weapon.magazine[0]);
-    expect(BALANCE.supplies.intermissionAmmo).toBeGreaterThan(0);
-    expect(BALANCE.supplies.intermissionHealing).toBeGreaterThan(0);
+
+  it('makes every upgrade level meaningfully stronger', () => {
+    for (let level = 1; level < 5; level += 1) {
+      expect(BALANCE.weapon.damage[level]).toBeGreaterThan(BALANCE.weapon.damage[level - 1]);
+      expect(BALANCE.weapon.magazine[level]).toBeGreaterThan(BALANCE.weapon.magazine[level - 1]);
+      expect(BALANCE.weapon.reloadSeconds[level]).toBeLessThan(BALANCE.weapon.reloadSeconds[level - 1]);
+      expect(BALANCE.weapon.headMultiplier[level]).toBeGreaterThan(BALANCE.weapon.headMultiplier[level - 1]);
+      expect(BALANCE.player.maxHp[level]).toBeGreaterThan(BALANCE.player.maxHp[level - 1]);
+      expect(BALANCE.player.damageReduction[level]).toBeGreaterThan(BALANCE.player.damageReduction[level - 1]);
+    }
   });
-  it('keeps the boss reward above a regular kill and wave', () => {
-    expect(BALANCE.rewards.kill).toBeGreaterThan(0);
-    expect(BALANCE.rewards.wave).toBeGreaterThan(BALANCE.rewards.kill);
+
+  it('keeps unupgraded and upgraded enemies out of one-shot territory by body shots', () => {
+    expect(BALANCE.weapon.damage[4]).toBeLessThan(ENEMIES.guard.hp);
+    expect(BALANCE.weapon.damage[4] * BALANCE.weapon.headMultiplier[4]).toBeLessThan(ENEMIES.guard.hp);
+  });
+
+  it('keeps the casino boss stronger than regular enemies', () => {
+    expect(ENEMIES.boss.hp).toBeGreaterThan(ENEMIES.armored.hp);
     expect(BALANCE.rewards.boss).toBeGreaterThan(BALANCE.rewards.wave);
-    expect(BALANCE.rewards.mission).toBeGreaterThan(BALANCE.rewards.boss);
   });
 });

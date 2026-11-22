@@ -3,6 +3,7 @@ import { BootScene } from '../game/scenes/BootScene';
 import { HQScene } from '../game/scenes/HQScene';
 import { MissionScene } from '../game/scenes/MissionScene';
 import { ResultsScene } from '../game/scenes/ResultsScene';
+import { StartScene } from '../game/scenes/StartScene';
 
 export const GAME_WIDTH = 1280;
 export const GAME_HEIGHT = 720;
@@ -38,6 +39,6 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
     height: GAME_HEIGHT,
   },
   input: { activePointers: 3, mouse: { preventDefaultWheel: true }, touch: { capture: true } },
-  scene: [BootScene, HQScene, MissionScene, ResultsScene],
+  scene: [BootScene, StartScene, HQScene, MissionScene, ResultsScene],
   render: { powerPreference: 'low-power', roundPixels: true },
 };
