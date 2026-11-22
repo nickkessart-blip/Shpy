@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME_WIDTH } from '../../app/GameConfig';
+import { GAME_HEIGHT, GAME_WIDTH } from '../../app/GameConfig';
 import { saveService } from '../../persistence/SaveService';
 import { BALANCE } from '../data/balance';
 import { ENEMIES, type EnemyType } from '../data/enemies';
