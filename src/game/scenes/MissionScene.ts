@@ -104,16 +104,17 @@ export class MissionScene extends Phaser.Scene {
     this.fx = this.add.graphics().setDepth(20);
     this.buildWeaponRig();
     this.hud = this.add.text(26, 20, '', {
-      fontSize: '16px', color: '#edf2f7', fontStyle: 'bold',
+      fontSize: this.isMobileControls ? '21px' : '16px', color: '#edf2f7', fontStyle: 'bold',
       backgroundColor: '#0b1119cc', padding: { x: 12, y: 10 },
     }).setDepth(30);
     this.message = this.add.text(GAME_WIDTH / 2, 112, '', {
-      fontSize: '18px', color: '#f0c16d', fontStyle: 'bold', align: 'center',
+      fontSize: this.isMobileControls ? '26px' : '18px', color: '#f0c16d', fontStyle: 'bold', align: 'center',
       backgroundColor: '#111821cc', padding: { x: 12, y: 8 },
     }).setOrigin(0.5).setDepth(30);
     this.reloadHint = this.add.text(1120, 653, 'R  ПЕРЕЗАРЯДКА', {
       fontSize: '13px', color: '#ffffff', backgroundColor: '#7d2930', padding: { x: 12, y: 9 },
     }).setOrigin(0.5).setDepth(30);
+    this.reloadHint.setVisible(!this.isMobileControls);
 
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
       if (!this.isMobileControlPoint(pointer.x, pointer.y)) this.aim = { x: pointer.x, y: pointer.y };
@@ -134,6 +135,12 @@ export class MissionScene extends Phaser.Scene {
 
   private buildWeaponRig(): void {
     const rig = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT + 95).setDepth(18);
+    if (AssetCatalog.hasTexture(this, 'weapon-pistol')) {
+      rig.add(this.add.image(0, -190, 'weapon-pistol').setDisplaySize(180, 380));
+      this.weaponRig = rig;
+      this.updateWeaponRig();
+      return;
+    }
     const art = this.add.graphics();
     // Arm, hand and service pistol rotate as one rig and track the reticle.
     art.fillStyle(0x111923, 1); art.fillRoundedRect(-58, -218, 116, 190, 28);
@@ -495,11 +502,12 @@ export class MissionScene extends Phaser.Scene {
     this.drawCovers();
     this.drawEffects();
     const ammoText = this.reloading > 0 ? 'ПЕРЕЗАРЯДКА ' + (this.reloading / 1000).toFixed(1) + 'с' : 'ПАТРОНЫ ' + this.magazine + '/' + this.reserve;
-    this.hud.setText(
-      'ОПЕРАЦИЯ: КАЗИНО     СЦЕНА ' + (this.sceneIndex + 1) + '/' + CASINO_MISSION.length +
-      '     ВОЛНА ' + (this.waveIndex + 1) + '/' + this.sceneDef.waves.length +
-      '\nЗДОРОВЬЕ ' + this.hp + '/' + BALANCE.player.maxHp + '     ' + ammoText + '     XP ' + this.totalReputation,
-    );
+    this.hud.setText(this.isMobileControls
+      ? 'КАЗИНО ' + (this.sceneIndex + 1) + '/' + CASINO_MISSION.length + ' • ВОЛНА ' + (this.waveIndex + 1) + '/' + this.sceneDef.waves.length
+        + '\nHP ' + this.hp + '/' + BALANCE.player.maxHp + ' • ' + ammoText + ' • XP ' + this.totalReputation
+      : 'ОПЕРАЦИЯ: КАЗИНО     СЦЕНА ' + (this.sceneIndex + 1) + '/' + CASINO_MISSION.length +
+        '     ВОЛНА ' + (this.waveIndex + 1) + '/' + this.sceneDef.waves.length +
+        '\nЗДОРОВЬЕ ' + this.hp + '/' + BALANCE.player.maxHp + '     ' + ammoText + '     XP ' + this.totalReputation);
     this.message.setText(this.toastText).setVisible(this.toastTimer > 0);
     this.reloadHint.setText(this.reloading > 0 ? 'ПЕРЕЗАРЯДКА…' : 'R  ПЕРЕЗАРЯДКА');
   }
@@ -515,8 +523,8 @@ export class MissionScene extends Phaser.Scene {
       const def = ENEMIES[enemy.type];
       if (AssetCatalog.hasTexture(this, SPRITES[enemy.type])) {
         let image = sprite;
-        if (!image) image = this.add.image(enemy.x, enemy.y - 35, SPRITES[enemy.type]).setName(spriteKey).setDepth(2);
-        image.setPosition(enemy.x, enemy.y - 35).setDisplaySize(enemy.type === 'armored' ? 80 : 66, 118).setVisible(true);
+        if (!image) image = this.add.image(enemy.x, enemy.y - 20, SPRITES[enemy.type]).setName(spriteKey).setDepth(2);
+        image.setPosition(enemy.x, enemy.y - 20).setDisplaySize(enemy.type === 'armored' ? 92 : 84, enemy.type === 'armored' ? 154 : 146).setVisible(true);
       } else {
         this.world.fillStyle(0x05080c, 0.45); this.world.fillEllipse(enemy.x, enemy.y + 3, 65, 15);
         this.world.fillStyle(def.color, 1); this.world.fillRoundedRect(enemy.x - 24, enemy.y - 38, 48, 76, 8);
