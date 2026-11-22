@@ -54,6 +54,8 @@ export class MissionScene extends Phaser.Scene {
   private sceneDef!: MissionSceneDefinition;
   private pauseOverlay?: Phaser.GameObjects.Container;
   private resultSent = false;
+  private isMobileControls = false;
+  private mobileFireHeld = false;
 
   constructor() { super('Mission'); }
 
@@ -87,6 +89,8 @@ export class MissionScene extends Phaser.Scene {
     this.resultSent = false;
     this.pauseOverlay = undefined;
     this.backgroundArt = undefined;
+    this.isMobileControls = document.documentElement.dataset.device === 'mobile';
+    this.mobileFireHeld = false;
     this.world = this.add.graphics().setDepth(0);
     this.coverLayer = this.add.graphics().setDepth(8);
     this.fx = this.add.graphics().setDepth(20);
@@ -106,11 +110,12 @@ export class MissionScene extends Phaser.Scene {
       this.aim = { x: pointer.x, y: pointer.y };
     });
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      if (this.phase !== 'active') return;
+      if (this.phase !== 'active' || this.isMobileControlPoint(pointer.x, pointer.y)) return;
       this.aim = { x: pointer.x, y: pointer.y };
-      if (pointer.x > 1040 && pointer.y > 600) this.reload();
-      else this.shoot();
+      this.shoot();
     });
+    this.input.on('pointerup', () => { this.mobileFireHeld = false; });
+    if (this.isMobileControls) this.buildMobileControls();
     this.input.keyboard?.on('keydown-R', () => this.reload());
     this.input.keyboard?.on('keydown-ESC', () => this.togglePause());
 
@@ -122,6 +127,7 @@ export class MissionScene extends Phaser.Scene {
     if (this.phase === 'paused' || this.phase === 'finished') return;
     const dt = Math.min(delta, 50);
     this.shotCooldown = Math.max(0, this.shotCooldown - dt);
+    if (this.mobileFireHeld && this.phase === 'active') this.shoot();
     this.shotFlash = Math.max(0, this.shotFlash - dt);
     this.toastTimer = Math.max(0, this.toastTimer - dt);
 
@@ -364,6 +370,39 @@ export class MissionScene extends Phaser.Scene {
     this.scene.start('Results');
   }
 
+  private isMobileControlPoint(x: number, y: number): boolean {
+    if (!this.isMobileControls) return false;
+    return Math.hypot(x - 1160, y - 548) < 76
+      || Math.hypot(x - 1160, y - 655) < 54
+      || Math.hypot(x - 1220, y - 48) < 38;
+  }
+
+  private buildMobileControls(): void {
+    const fire = this.add.circle(1160, 548, 66, 0x9d3036, 0.88)
+      .setStrokeStyle(4, 0xffd7b0, 0.9).setDepth(40).setInteractive();
+    const fireLabel = this.add.text(1160, 548, 'ОГОНЬ', {
+      fontSize: '20px', color: '#ffffff', fontStyle: 'bold',
+    }).setOrigin(0.5).setDepth(41);
+    fire.on('pointerdown', () => { this.mobileFireHeld = true; this.shoot(); });
+    fire.on('pointerup', () => { this.mobileFireHeld = false; });
+    fire.on('pointerout', () => { this.mobileFireHeld = false; });
+
+    const reload = this.add.circle(1160, 655, 43, 0x263747, 0.94)
+      .setStrokeStyle(3, 0xe2b96e, 0.9).setDepth(40).setInteractive();
+    this.add.text(1160, 655, 'R', { fontSize: '27px', color: '#ffffff', fontStyle: 'bold' })
+      .setOrigin(0.5).setDepth(41);
+    reload.on('pointerdown', () => this.reload());
+
+    const pause = this.add.circle(1220, 48, 30, 0x263747, 0.94)
+      .setStrokeStyle(2, 0xe2b96e, 0.9).setDepth(40).setInteractive();
+    this.add.text(1220, 48, 'Ⅱ', { fontSize: '23px', color: '#ffffff', fontStyle: 'bold' })
+      .setOrigin(0.5).setDepth(41);
+    pause.on('pointerdown', () => this.togglePause());
+
+    this.add.text(1040, 625, 'ПЕРЕЗАРЯДКА', { fontSize: '10px', color: '#e8edf3' })
+      .setOrigin(0.5).setDepth(41);
+  }
+
   private togglePause(): void {
     if (this.phase === 'finished' || this.phase === 'transition') return;
     if (this.phase === 'paused') {
@@ -375,7 +414,7 @@ export class MissionScene extends Phaser.Scene {
     this.phase = 'paused';
     const shade = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x05080c, 0.78);
     const label = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 30, 'ПАУЗА', { fontSize: '42px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
-    const hint = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 25, 'ESC — ПРОДОЛЖИТЬ', { fontSize: '16px', color: '#e0b763' }).setOrigin(0.5);
+    const hint = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 25, this.isMobileControls ? 'НАЖМИТЕ КНОПКУ ПАУЗЫ ДЛЯ ПРОДОЛЖЕНИЯ' : 'ESC — ПРОДОЛЖИТЬ', { fontSize: '16px', color: '#e0b763' }).setOrigin(0.5);
     this.pauseOverlay = this.add.container(0, 0, [shade, label, hint]).setDepth(100);
   }
 
