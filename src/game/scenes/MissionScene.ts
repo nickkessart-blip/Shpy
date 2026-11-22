@@ -554,11 +554,12 @@ export class MissionScene extends Phaser.Scene {
   private drawCovers(): void {
     this.coverLayer.clear();
     for (const cover of this.sceneDef.covers) {
-      if (AssetCatalog.hasTexture(this, 'cover-crate')) {
+      const textureKey = cover.id === 'bar-counter' ? 'cover-bar' : 'cover-crate';
+      if (AssetCatalog.hasTexture(this, textureKey)) {
         const key = 'cover-image-' + cover.id;
         let image = this.children.getByName(key) as Phaser.GameObjects.Image | null;
-        if (!image) image = this.add.image(cover.x + cover.width / 2, cover.y + cover.height / 2, 'cover-crate').setName(key).setDepth(9);
-        image.setPosition(cover.x + cover.width / 2, cover.y + cover.height / 2).setDisplaySize(cover.width, cover.height);
+        if (!image) image = this.add.image(cover.x + cover.width / 2, cover.y + cover.height / 2, textureKey).setName(key).setDepth(9);
+        image.setTexture(textureKey).setPosition(cover.x + cover.width / 2, cover.y + cover.height / 2).setDisplaySize(cover.width, cover.height);
       } else {
         this.coverLayer.fillStyle(0x101820, 0.98); this.coverLayer.fillRoundedRect(cover.x, cover.y, cover.width, cover.height, 7);
         this.coverLayer.lineStyle(3, 0x778391, 0.9); this.coverLayer.strokeRoundedRect(cover.x, cover.y, cover.width, cover.height, 7);
