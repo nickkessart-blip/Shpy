@@ -66,6 +66,7 @@ export class MissionScene extends Phaser.Scene {
   private isMobileControls = false;
   private mobileFireHeld = false;
   private mobileControlsElement?: HTMLDivElement;
+  private mobileReleaseHandler?: () => void;
 
   constructor() { super('Mission'); }
 
@@ -100,7 +101,8 @@ export class MissionScene extends Phaser.Scene {
     this.backgroundArt = undefined;
     this.transitionOverlay = undefined;
     this.transitionWalkTweens = [];
-    this.isMobileControls = hasTouchInput();
+    this.isMobileControls = hasTouchInput()
+      || (typeof window !== 'undefined' && Math.min(window.innerWidth, window.innerHeight) <= 800);
     this.mobileFireHeld = false;
     this.mobileControlsElement?.remove();
     this.mobileControlsElement = undefined;
@@ -137,6 +139,11 @@ export class MissionScene extends Phaser.Scene {
     if (this.isMobileControls) this.buildMobileControls();
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.mobileFireHeld = false;
+      if (this.mobileReleaseHandler) {
+        window.removeEventListener('pointerup', this.mobileReleaseHandler);
+        window.removeEventListener('pointercancel', this.mobileReleaseHandler);
+        this.mobileReleaseHandler = undefined;
+      }
       this.mobileControlsElement?.remove();
       this.mobileControlsElement = undefined;
     });
@@ -686,6 +693,7 @@ export class MissionScene extends Phaser.Scene {
       event.stopPropagation();
     };
     const stopFire = (): void => { this.mobileFireHeld = false; };
+    this.mobileReleaseHandler = stopFire;
     fire.addEventListener('pointerdown', (event) => {
       consume(event);
       if (this.phase !== 'active') return;
