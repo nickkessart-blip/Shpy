@@ -29,6 +29,7 @@ export class MissionScene extends Phaser.Scene {
   private weaponRig?: Phaser.GameObjects.Container;
   private impactEffects: Array<{ x: number; y: number; life: number; maxLife: number; kind: 'hit' | 'cover' | 'miss'; damage: number }> = [];
   private weaponRecoil = 0;
+  private playerHitFlash = 0;
   private hud!: Phaser.GameObjects.Text;
   private message!: Phaser.GameObjects.Text;
   private reloadHint!: Phaser.GameObjects.Text;
@@ -99,6 +100,7 @@ export class MissionScene extends Phaser.Scene {
     this.mobileFireHeld = false;
     this.impactEffects = [];
     this.weaponRecoil = 0;
+    this.playerHitFlash = 0;
     this.world = this.add.graphics().setDepth(0);
     this.coverLayer = this.add.graphics().setDepth(8);
     this.fx = this.add.graphics().setDepth(20);
@@ -183,6 +185,7 @@ export class MissionScene extends Phaser.Scene {
     if (this.mobileFireHeld && this.phase === 'active') this.shoot();
     this.shotFlash = Math.max(0, this.shotFlash - dt);
     this.weaponRecoil = Math.max(0, this.weaponRecoil - dt * 0.16);
+    this.playerHitFlash = Math.max(0, this.playerHitFlash - dt);
     for (const effect of this.impactEffects) effect.life -= dt;
     this.impactEffects = this.impactEffects.filter((effect) => effect.life > 0);
     this.toastTimer = Math.max(0, this.toastTimer - dt);
@@ -373,7 +376,18 @@ export class MissionScene extends Phaser.Scene {
         * (chosen.part === 'head' ? BALANCE.weapon.headMultiplier : 1);
       chosen.enemy.hp -= damage;
       chosen.enemy.hitFlash = 230;
-      this.impactEffects.push({ x: chosen.target.x, y: chosen.target.y, life: 420, maxLife: 420, kind: 'hit', damage });
+      this.impactEffects.push({ x: chosen.target.x, y: chosen.target.y, life: 520, maxLife: 520, kind: 'hit', damage });
+      const damageLabel = this.add.text(
+        chosen.target.x + 20, chosen.target.y - 24,
+        chosen.part === 'head' ? 'В ГОЛОВУ  −' + damage : '−' + damage,
+        { fontSize: chosen.part === 'head' ? '22px' : '24px', color: '#ffe0a0', fontStyle: 'bold',
+          stroke: '#10161d', strokeThickness: 5 },
+      ).setOrigin(0.5).setDepth(26);
+      this.tweens.add({
+        targets: damageLabel, y: damageLabel.y - 42, alpha: 0,
+        duration: 560, ease: 'Cubic.easeOut',
+        onComplete: () => damageLabel.destroy(),
+      });
       this.showToast((chosen.part === 'head' ? 'ПОПАДАНИЕ В ГОЛОВУ' : 'ПОПАДАНИЕ') + ' • −' + damage, 450);
       if (chosen.enemy.hp <= 0) {
         this.tweens.killTweensOf(chosen.enemy);
@@ -417,6 +431,7 @@ export class MissionScene extends Phaser.Scene {
   private damagePlayer(amount: number): void {
     if (this.phase !== 'active') return;
     this.hp = Math.max(0, this.hp - amount);
+    this.playerHitFlash = 190;
     this.damageTaken += amount;
     this.showToast('ВРАГ ПОПАЛ • −' + amount + ' HP', 750);
   }
@@ -522,19 +537,21 @@ export class MissionScene extends Phaser.Scene {
       }
       const def = ENEMIES[enemy.type];
       const hitOffset = enemy.hitFlash > 0 ? Math.sin(this.time.now / 24) * 5 * (enemy.hitFlash / 230) : 0;
+      const idleBob = Math.sin((this.time.now + enemy.uid * 97) / 270) * 2.2;
       const drawX = enemy.x + hitOffset;
+      const drawY = enemy.y - 20 + idleBob;
       if (AssetCatalog.hasTexture(this, SPRITES[enemy.type])) {
         let image = sprite;
-        if (!image) image = this.add.image(drawX, enemy.y - 20, SPRITES[enemy.type]).setName(spriteKey).setDepth(2);
-        image.setPosition(drawX, enemy.y - 20).setDisplaySize(enemy.type === 'armored' ? 92 : 84, enemy.type === 'armored' ? 154 : 146).setVisible(true);
+        if (!image) image = this.add.image(drawX, drawY, SPRITES[enemy.type]).setName(spriteKey).setDepth(2);
+        image.setPosition(drawX, drawY).setDisplaySize(enemy.type === 'armored' ? 92 : 84, enemy.type === 'armored' ? 154 : 146).setVisible(true);
         if (enemy.hitFlash > 0) image.setAlpha(0.72 + Math.sin(this.time.now / 20) * 0.28);
         else image.setAlpha(1);
       } else {
         this.world.fillStyle(0x05080c, 0.45); this.world.fillEllipse(drawX, enemy.y + 3, 65, 15);
-        this.world.fillStyle(def.color, 1); this.world.fillRoundedRect(drawX - 24, enemy.y - 38, 48, 76, 8);
-        this.world.fillStyle(0x17202a, 1); this.world.fillCircle(drawX, enemy.y - 52, enemy.type === 'armored' ? 18 : 14);
-        this.world.fillStyle(0x0a1018, 1); this.world.fillRect(drawX - 33, enemy.y - 13, 66, 10);
-        this.world.fillStyle(0x263342, 1); this.world.fillRect(drawX + 15, enemy.y - 8, 40, 7);
+        this.world.fillStyle(def.color, 1); this.world.fillRoundedRect(drawX - 24, drawY - 18, 48, 76, 8);
+        this.world.fillStyle(0x17202a, 1); this.world.fillCircle(drawX, drawY - 32, enemy.type === 'armored' ? 18 : 14);
+        this.world.fillStyle(0x0a1018, 1); this.world.fillRect(drawX - 33, drawY + 7, 66, 10);
+        this.world.fillStyle(0x263342, 1); this.world.fillRect(drawX + 15, drawY + 12, 40, 7);
         if (enemy.type === 'armored') {
           this.world.lineStyle(4, 0xefd1a2, 0.8); this.world.strokeRoundedRect(enemy.x - 28, enemy.y - 42, 56, 88, 10);
         }
@@ -572,6 +589,10 @@ export class MissionScene extends Phaser.Scene {
 
   private drawEffects(): void {
     this.fx.clear();
+    if (this.playerHitFlash > 0) {
+      this.fx.fillStyle(0xc62b37, (this.playerHitFlash / 190) * 0.2);
+      this.fx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    }
     this.drawEnemyOverlays();
     this.updateWeaponRig();
 
@@ -636,6 +657,13 @@ export class MissionScene extends Phaser.Scene {
       }
       if (enemy.state === 'Peeking') {
         this.fx.fillStyle(0xf1c16d, 1); this.fx.fillCircle(enemy.x, enemy.y - 105, 4);
+      }
+      if (enemy.state === 'Attacking') {
+        const muzzleX = enemy.x + (enemy.x < GAME_WIDTH / 2 ? 22 : -22);
+        const muzzleY = enemy.y - 62;
+        this.fx.fillStyle(0xffd58a, 0.95); this.fx.fillCircle(muzzleX, muzzleY, 10);
+        this.fx.lineStyle(3, 0xffe5af, 0.9); this.fx.strokeCircle(muzzleX, muzzleY, 17);
+        this.fx.lineStyle(2, 0xe65a50, 0.55); this.fx.lineBetween(muzzleX, muzzleY, MUZZLE.x, MUZZLE.y - 20);
       }
       if (enemy.hitFlash > 0) {
         this.fx.lineStyle(4, 0xffffff, enemy.hitFlash / 230);
