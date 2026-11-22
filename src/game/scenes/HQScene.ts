@@ -2,7 +2,6 @@ import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH, hasTouchInput } from '../../app/GameConfig';
 import { BALANCE } from '../data/balance';
 import { saveService, type UpgradeKind } from '../../persistence/SaveService';
-import { runSession } from '../systems/missions/runSession';
 import { AssetCatalog } from '../assets/AssetCatalog';
 
 const COLORS = { panel: 0x1d2936, edge: 0x46576a, red: 0xb93838, muted: '#aab6c4', green: 0x64c58b };
@@ -47,8 +46,7 @@ export class HQScene extends Phaser.Scene {
       fontSize: '14px', color: COLORS.muted, wordWrap: { width: 610 },
     });
     this.button(108, 510, 260, 46, 'НАЧАТЬ ОПЕРАЦИЮ', COLORS.red, () => {
-      runSession.reset();
-      this.scene.start('Mission');
+      this.scene.start('Loadout');
     });
 
     this.panel(830, 205, 378, 420, 'УЛУЧШЕНИЯ И ПЕРКИ');
@@ -82,8 +80,7 @@ export class HQScene extends Phaser.Scene {
     this.add.text(92, 423, 'Главный зал  →  Бар и VIP-проход', { fontSize: '19px', color: '#c7d0d9' });
     this.add.text(92, 462, '10 волн охраны и начальник казино в финале операции.', { fontSize: '16px', color: COLORS.muted });
     this.button(92, 526, 465, 78, 'НАЧАТЬ ОПЕРАЦИЮ', COLORS.red, () => {
-      runSession.reset();
-      this.scene.start('Mission');
+      this.scene.start('Loadout');
     });
 
     this.add.text(684, 150, 'СНАРЯЖЕНИЕ И ПЕРКИ', { fontSize: '22px', color: '#b9c8d5', fontStyle: 'bold', letterSpacing: 1 });

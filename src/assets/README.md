@@ -6,7 +6,7 @@
 |---|---|---|
 | backgrounds | casino-main.png, casino-bar.png | Фоны сцен казино |
 | enemies | guard.png, armored.png, assault.png | Враги |
-| weapons | pistol.png | Пистолет |
+| weapons | pistol.svg, smg.svg, shotgun.svg, rifle.svg | Пистолет |
 | props | cover-crate.png | Укрытия |
 | ui | logo.png, cursor.png | Логотип/прицел |
 | audio | Любые имена ogg/mp3/wav | Звуковые ресурсы |

@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH, hasTouchInput } from '../../app/GameConfig';
 import { saveService } from '../../persistence/SaveService';
 import { BALANCE } from '../data/balance';
+import { getWeapon, getWeaponStats, LOADOUT_UNLOCKS, type WeaponId } from '../data/arsenal';
 import { ENEMIES, type EnemyType } from '../data/enemies';
 import { CASINO_MISSION, type MissionSceneDefinition, type SpawnPoint } from '../data/missions';
 import { AssetCatalog } from '../assets/AssetCatalog';
@@ -28,7 +29,13 @@ export class MissionScene extends Phaser.Scene {
   private coverLayer!: Phaser.GameObjects.Graphics;
   private fx!: Phaser.GameObjects.Graphics;
   private weaponRig?: Phaser.GameObjects.Container;
-  private impactEffects: Array<{ x: number; y: number; life: number; maxLife: number; kind: 'hit' | 'cover' | 'miss'; damage: number }> = [];
+  private impactEffects: Array<{ x: number; y: number; life: number; maxLife: number; kind: 'hit' | 'cover' | 'miss' | 'explosion'; damage: number }> = [];
+  private selectedWeapons: WeaponId[] = ['pistol'];
+  private currentWeaponId: WeaponId = 'pistol';
+  private weaponAmmo = new Map<WeaponId, { magazine: number; reserve: number }>();
+  private grenadeCount = 0;
+  private medkitCount = 0;
+  private reloadPose = 0;
   private weaponRecoil = 0;
   private playerHitFlash = 0;
   private hud!: Phaser.GameObjects.Text;
@@ -67,6 +74,9 @@ export class MissionScene extends Phaser.Scene {
   private isMobileControls = false;
   private mobileFireHeld = false;
   private mobileControlsElement?: HTMLDivElement;
+  private mobileSwitchButton?: HTMLButtonElement;
+  private mobileGrenadeButton?: HTMLButtonElement;
+  private mobileMedkitButton?: HTMLButtonElement;
   private mobileReleaseHandler?: () => void;
 
   constructor() { super('Mission'); }
@@ -83,9 +93,20 @@ export class MissionScene extends Phaser.Scene {
     this.phase = 'active';
     this.maxHp = BALANCE.player.maxHp[initialSave.upgrades.health];
     this.hp = this.maxHp;
-    this.magazine = BALANCE.weapon.magazine[initialSave.upgrades.magazine];
-    this.reserve = BALANCE.weapon.reserveAmmo;
+    this.selectedWeapons = initialSave.loadout.weapons.length > 0 ? [...initialSave.loadout.weapons] : ['pistol'];
+    this.currentWeaponId = this.selectedWeapons[0] ?? 'pistol';
+    this.weaponAmmo = new Map();
+    for (const weaponId of this.selectedWeapons) {
+      const stats = getWeaponStats(weaponId, initialSave.upgrades);
+      this.weaponAmmo.set(weaponId, { magazine: stats.magazine, reserve: stats.reserveAmmo });
+    }
+    const startingAmmo = this.weaponAmmo.get(this.currentWeaponId);
+    this.magazine = startingAmmo?.magazine ?? BALANCE.weapon.magazine[initialSave.upgrades.magazine];
+    this.reserve = startingAmmo?.reserve ?? BALANCE.weapon.reserveAmmo;
+    this.grenadeCount = initialSave.loadout.tacticalItem === 'grenade' ? LOADOUT_UNLOCKS.grenadesPerMission : 0;
+    this.medkitCount = initialSave.loadout.activeItem === 'medkit' ? LOADOUT_UNLOCKS.medkitsPerMission : 0;
     this.reloading = 0;
+    this.reloadPose = 0;
     this.shotCooldown = 0;
     this.shotFlash = 0;
     this.toastTimer = 0;
@@ -148,9 +169,19 @@ export class MissionScene extends Phaser.Scene {
       }
       this.mobileControlsElement?.remove();
       this.mobileControlsElement = undefined;
+      this.mobileSwitchButton = undefined;
+      this.mobileGrenadeButton = undefined;
+      this.mobileMedkitButton = undefined;
     });
     this.input.keyboard?.on('keydown-R', () => this.reload());
     this.input.keyboard?.on('keydown-ESC', () => this.togglePause());
+    this.input.keyboard?.on('keydown', (event: KeyboardEvent) => {
+      if (event.code === 'Digit1' || event.code === 'Numpad1') this.selectWeaponSlot(0);
+      if (event.code === 'Digit2' || event.code === 'Numpad2') this.selectWeaponSlot(1);
+      if (event.code === 'Digit3' || event.code === 'Numpad3') this.selectWeaponSlot(2);
+      if (event.code === 'KeyG') this.useGrenade();
+      if (event.code === 'KeyQ') this.useMedkit();
+    });
 
     this.loadMissionScene(0);
     this.showToast('УСТРАНИТЕ ВСЕХ ПРОТИВНИКОВ', 1800);
@@ -158,8 +189,9 @@ export class MissionScene extends Phaser.Scene {
 
   private buildWeaponRig(): void {
     const rig = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT + 95).setDepth(18);
-    if (AssetCatalog.hasTexture(this, 'weapon-pistol')) {
-      rig.add(this.add.image(0, -190, 'weapon-pistol').setDisplaySize(180, 380));
+    const textureKey = 'weapon-' + this.currentWeaponId;
+    if (AssetCatalog.hasTexture(this, textureKey)) {
+      rig.add(this.add.image(0, -190, textureKey).setDisplaySize(180, 380));
       this.weaponRig = rig;
       this.updateWeaponRig();
       return;
@@ -187,9 +219,10 @@ export class MissionScene extends Phaser.Scene {
   private updateWeaponRig(): void {
     if (!this.weaponRig) return;
     const originX = GAME_WIDTH / 2;
-    const originY = GAME_HEIGHT + 95 + this.weaponRecoil;
+    const originY = GAME_HEIGHT + 95 + this.weaponRecoil + this.reloadPose * 38;
     this.weaponRig.setPosition(originX, originY);
-    this.weaponRig.setRotation(Phaser.Math.Angle.Between(originX, originY, this.aim.x, this.aim.y) + Math.PI / 2);
+    this.weaponRig.setRotation(Phaser.Math.Angle.Between(originX, originY, this.aim.x, this.aim.y)
+      + Math.PI / 2 + this.reloadPose * 0.12);
   }
 
   private getWeaponMuzzle(): Point {
@@ -206,6 +239,7 @@ export class MissionScene extends Phaser.Scene {
     if (this.mobileFireHeld && this.phase === 'active') this.shoot();
     this.shotFlash = Math.max(0, this.shotFlash - dt);
     this.weaponRecoil = Math.max(0, this.weaponRecoil - dt * 0.16);
+    this.reloadPose = Math.max(0, this.reloadPose - dt * 0.0045);
     this.playerHitFlash = Math.max(0, this.playerHitFlash - dt);
     for (const effect of this.impactEffects) effect.life -= dt;
     this.impactEffects = this.impactEffects.filter((effect) => effect.life > 0);
@@ -320,7 +354,14 @@ export class MissionScene extends Phaser.Scene {
     this.mobileFireHeld = false;
     this.reloading = 0;
     this.hp = Math.min(this.maxHp, this.hp + BALANCE.supplies.intermissionHealing);
-    this.reserve += BALANCE.supplies.intermissionAmmo;
+    const upgrades = saveService.load().upgrades;
+    for (const weaponId of this.selectedWeapons) {
+      const ammo = this.weaponAmmo.get(weaponId);
+      const supply = getWeaponStats(weaponId, upgrades).intermissionAmmo;
+      if (ammo) ammo.reserve += supply;
+    }
+    const currentAmmo = this.weaponAmmo.get(this.currentWeaponId);
+    if (currentAmmo) { this.magazine = currentAmmo.magazine; this.reserve = currentAmmo.reserve; }
 
     const hallway = this.add.graphics();
     hallway.fillGradientStyle(0x101821, 0x101821, 0x26313b, 0x111820, 1);
@@ -509,10 +550,12 @@ export class MissionScene extends Phaser.Scene {
   private shoot(): void {
     if (this.phase !== 'active' || this.reloading > 0 || this.shotCooldown > 0) return;
     const save = saveService.load();
+    const weaponStats = getWeaponStats(this.currentWeaponId, save.upgrades);
     if (this.magazine <= 0) { this.showToast('ПУСТО • НАЖМИТЕ R ДЛЯ ПЕРЕЗАРЯДКИ', 900); return; }
     this.magazine -= 1;
+    this.storeCurrentAmmo();
     this.shots += 1;
-    this.shotCooldown = BALANCE.weapon.shotCooldownMs;
+    this.shotCooldown = weaponStats.shotCooldownMs;
     this.shotFlash = 135;
     this.weaponRecoil = 18;
 
@@ -538,7 +581,7 @@ export class MissionScene extends Phaser.Scene {
 
     if (chosen) {
       this.hits += 1;
-      const damage = BALANCE.weapon.damage[save.upgrades.damage]
+      const damage = weaponStats.damage
         * (chosen.part === 'head' ? BALANCE.weapon.headMultiplier[save.upgrades.precision] : 1);
       chosen.enemy.hp = Math.max(0, chosen.enemy.hp - damage);
       chosen.enemy.hitFlash = 230;
@@ -587,20 +630,108 @@ export class MissionScene extends Phaser.Scene {
   private reload(): void {
     if (this.phase !== 'active' || this.reloading > 0) return;
     const save = saveService.load();
-    const capacity = BALANCE.weapon.magazine[save.upgrades.magazine];
-    if (this.magazine >= capacity || this.reserve <= 0) return;
-    this.reloading = BALANCE.weapon.reloadSeconds[save.upgrades.reload] * 1000;
+    const weaponStats = getWeaponStats(this.currentWeaponId, save.upgrades);
+    if (this.magazine >= weaponStats.magazine || this.reserve <= 0) return;
+    this.reloading = weaponStats.reloadSeconds * 1000;
+    this.reloadPose = 1;
     this.showToast('ПЕРЕЗАРЯДКА…', this.reloading);
   }
 
   private finishReload(): void {
     const save = saveService.load();
-    const capacity = BALANCE.weapon.magazine[save.upgrades.magazine];
+    const capacity = getWeaponStats(this.currentWeaponId, save.upgrades).magazine;
     const loaded = Math.min(capacity - this.magazine, this.reserve);
     this.magazine += loaded;
     this.reserve -= loaded;
     this.reloading = 0;
+    this.storeCurrentAmmo();
     this.showToast('ГОТОВО', 500);
+  }
+
+  private storeCurrentAmmo(): void {
+    this.weaponAmmo.set(this.currentWeaponId, { magazine: this.magazine, reserve: this.reserve });
+  }
+
+  private selectWeaponSlot(index: number): void {
+    const weaponId = this.selectedWeapons[index];
+    if (weaponId) this.switchWeapon(weaponId);
+  }
+
+  private switchWeapon(weaponId: WeaponId): void {
+    if (!this.selectedWeapons.includes(weaponId) || weaponId === this.currentWeaponId || this.phase !== 'active') return;
+    this.storeCurrentAmmo();
+    this.currentWeaponId = weaponId;
+    this.reloading = 0;
+    this.reloadPose = 0;
+    const stored = this.weaponAmmo.get(weaponId);
+    const stats = getWeaponStats(weaponId, saveService.load().upgrades);
+    this.magazine = stored?.magazine ?? stats.magazine;
+    this.reserve = stored?.reserve ?? stats.reserveAmmo;
+    this.weaponRig?.destroy(true);
+    this.weaponRig = undefined;
+    this.buildWeaponRig();
+    this.refreshMobileControls();
+    this.showToast('ОРУЖИЕ: ' + getWeapon(weaponId).name, 900);
+  }
+
+  private cycleWeapon(): void {
+    if (this.selectedWeapons.length < 2) return;
+    const current = this.selectedWeapons.indexOf(this.currentWeaponId);
+    this.switchWeapon(this.selectedWeapons[(current + 1) % this.selectedWeapons.length] ?? this.currentWeaponId);
+  }
+
+  private useGrenade(): void {
+    if (this.phase !== 'active' || this.grenadeCount <= 0) return;
+    this.grenadeCount -= 1;
+    let defeated = 0;
+    for (const enemy of this.enemies) {
+      if (enemy.state === 'Defeated') continue;
+      const distance = Math.hypot(enemy.x - this.aim.x, enemy.y - 35 - this.aim.y);
+      if (distance > LOADOUT_UNLOCKS.grenadeRadius) continue;
+      enemy.hp = Math.max(0, enemy.hp - LOADOUT_UNLOCKS.grenadeDamage);
+      enemy.hitFlash = 280;
+      if (enemy.type === 'boss' && enemy.hp > 0) {
+        enemy.bossPhase = enemy.hp <= enemy.maxHp / 3 ? 2 : enemy.hp <= enemy.maxHp * 2 / 3 ? 1 : 0;
+      }
+      if (enemy.hp <= 0) {
+        enemy.state = 'Defeated';
+        this.tweens.killTweensOf(enemy);
+        this.kills += 1;
+        this.award(enemy.type === 'boss' ? BALANCE.rewards.boss : BALANCE.rewards.kill);
+        defeated += 1;
+      }
+    }
+    this.impactEffects.push({ x: this.aim.x, y: this.aim.y, life: 760, maxLife: 760, kind: 'explosion', damage: 0 });
+    this.refreshMobileControls();
+    this.showToast('ГРАНАТА • УСТРАНЕНО: ' + defeated + ' • ОСТАЛОСЬ: ' + this.grenadeCount, 1200);
+    this.drawFrame();
+  }
+
+  private useMedkit(): void {
+    if (this.phase !== 'active' || this.medkitCount <= 0) return;
+    if (this.hp >= this.maxHp) { this.showToast('ЗДОРОВЬЕ УЖЕ ПОЛНОЕ', 700); return; }
+    this.medkitCount -= 1;
+    const healed = Math.min(this.maxHp - this.hp, Math.round(this.maxHp * LOADOUT_UNLOCKS.medkitHealRatio));
+    this.hp += healed;
+    this.refreshMobileControls();
+    this.showToast('АПТЕЧКА • +' + healed + ' HP • ОСТАЛОСЬ: ' + this.medkitCount, 1100);
+  }
+
+  private refreshMobileControls(): void {
+    if (this.mobileSwitchButton) {
+      const index = this.selectedWeapons.indexOf(this.currentWeaponId);
+      this.mobileSwitchButton.textContent = this.selectedWeapons.length > 1
+        ? 'ОРУЖИЕ ' + (index + 1) + '/' + this.selectedWeapons.length : 'ОРУЖИЕ';
+      this.mobileSwitchButton.style.display = this.selectedWeapons.length > 1 ? 'grid' : 'none';
+    }
+    if (this.mobileGrenadeButton) {
+      this.mobileGrenadeButton.textContent = 'ГРАНАТА ×' + this.grenadeCount;
+      this.mobileGrenadeButton.style.display = this.grenadeCount > 0 ? 'grid' : 'none';
+    }
+    if (this.mobileMedkitButton) {
+      this.mobileMedkitButton.textContent = 'АПТЕЧКА ×' + this.medkitCount;
+      this.mobileMedkitButton.style.display = this.medkitCount > 0 ? 'grid' : 'none';
+    }
   }
 
   private damagePlayer(amount: number): void {
@@ -640,6 +771,8 @@ export class MissionScene extends Phaser.Scene {
       { x: MOBILE_FIRE.x - 76, y: MOBILE_FIRE.y - 76, width: 152, height: 152 },
       { x: MOBILE_RELOAD.x - 54, y: MOBILE_RELOAD.y - 54, width: 108, height: 108 },
       { x: MOBILE_PAUSE.x - 42, y: MOBILE_PAUSE.y - 42, width: 84, height: 84 },
+      { x: GAME_WIDTH - 172, y: GAME_HEIGHT - 290, width: 158, height: 82 },
+      { x: 8, y: GAME_HEIGHT - 112, width: 300, height: 104 },
     ];
     return zones.some((zone) => x >= zone.x && x <= zone.x + zone.width
       && y >= zone.y && y <= zone.y + zone.height);
@@ -705,6 +838,10 @@ export class MissionScene extends Phaser.Scene {
     reload.style.fontSize = '12px';
     reload.style.whiteSpace = 'pre-line';
     const fire = makeButton('ОГОНЬ', 92, '#a52f38f2');
+    const switchButton = makeButton('ОРУЖИЕ', 58, '#40566bee');
+    switchButton.style.borderRadius = '16px';
+    switchButton.style.fontSize = '11px';
+    this.mobileSwitchButton = switchButton;
     const pause = makeButton('Ⅱ', 48, '#263747ee');
     Object.assign(pause.style, {
       position: 'absolute',
@@ -731,15 +868,37 @@ export class MissionScene extends Phaser.Scene {
       consume(event);
       if (this.phase === 'active') this.reload();
     });
+    switchButton.addEventListener('pointerdown', (event) => {
+      consume(event);
+      this.cycleWeapon();
+    });
     pause.addEventListener('pointerdown', (event) => {
       consume(event);
       this.togglePause();
     });
 
-    stack.append(reload, fire);
-    overlay.append(stack, pause);
+    stack.append(switchButton, reload, fire);
+    const utilityRow = document.createElement('div');
+    Object.assign(utilityRow.style, {
+      position: 'absolute', left: 'max(10px, env(safe-area-inset-left))',
+      bottom: 'max(16px, env(safe-area-inset-bottom))', display: 'flex', gap: '8px',
+      pointerEvents: 'none',
+    });
+    const grenade = makeButton('ГРАНАТА ×' + this.grenadeCount, 66, '#78603eee');
+    const medkit = makeButton('АПТЕЧКА ×' + this.medkitCount, 66, '#356d58ee');
+    grenade.style.borderRadius = '16px'; grenade.style.fontSize = '10px';
+    medkit.style.borderRadius = '16px'; medkit.style.fontSize = '10px';
+    grenade.style.display = this.grenadeCount > 0 ? 'grid' : 'none';
+    medkit.style.display = this.medkitCount > 0 ? 'grid' : 'none';
+    this.mobileGrenadeButton = grenade;
+    this.mobileMedkitButton = medkit;
+    grenade.addEventListener('pointerdown', (event) => { consume(event); this.useGrenade(); });
+    medkit.addEventListener('pointerdown', (event) => { consume(event); this.useMedkit(); });
+    utilityRow.append(grenade, medkit);
+    overlay.append(stack, pause, utilityRow);
     host.append(overlay);
     this.mobileControlsElement = overlay;
+    this.refreshMobileControls();
   }
 
   private togglePause(): void {
@@ -772,13 +931,17 @@ export class MissionScene extends Phaser.Scene {
     this.drawEnemies();
     this.drawCovers();
     this.drawEffects();
-    const ammoText = this.reloading > 0 ? 'ПЕРЕЗАРЯДКА ' + (this.reloading / 1000).toFixed(1) + 'с' : 'ПАТРОНЫ ' + this.magazine + '/' + this.reserve;
+    const ammoText = this.reloading > 0 ? 'ПЕРЕЗАРЯДКА ' + (this.reloading / 1000).toFixed(1) + 'с'
+      : 'ПАТРОНЫ ' + this.magazine + '/' + this.reserve;
+    const weaponIndex = this.selectedWeapons.indexOf(this.currentWeaponId) + 1;
+    const weaponLabel = getWeapon(this.currentWeaponId).name + ' [' + weaponIndex + '/' + this.selectedWeapons.length + ']';
     this.hud.setText(this.isMobileControls
-      ? 'КАЗИНО ' + (this.sceneIndex + 1) + '/' + CASINO_MISSION.length + ' • ВОЛНА ' + this.getDisplayedWaveNumber() + '/' + this.sceneDef.waves.length
-        + '\nHP ' + this.hp + '/' + this.maxHp + ' • ' + ammoText + ' • XP ' + this.totalReputation
+      ? weaponLabel + '\nКАЗИНО ' + (this.sceneIndex + 1) + '/' + CASINO_MISSION.length + ' • ВОЛНА ' + this.getDisplayedWaveNumber() + '/' + this.sceneDef.waves.length
+        + '\nHP ' + this.hp + '/' + this.maxHp + ' • ' + ammoText + ' • G:' + this.grenadeCount + ' Q:' + this.medkitCount
       : 'ОПЕРАЦИЯ: КАЗИНО     СЦЕНА ' + (this.sceneIndex + 1) + '/' + CASINO_MISSION.length +
         '     ВОЛНА ' + this.getDisplayedWaveNumber() + '/' + this.sceneDef.waves.length +
-        '\nЗДОРОВЬЕ ' + this.hp + '/' + this.maxHp + '     ' + ammoText + '     XP ' + this.totalReputation);
+        '\n' + weaponLabel + '     ЗДОРОВЬЕ ' + this.hp + '/' + this.maxHp + '     ' + ammoText
+        + '     ГРАНАТЫ ' + this.grenadeCount + '     АПТЕЧКИ ' + this.medkitCount + '     XP ' + this.totalReputation);
     this.message.setText(this.toastText).setVisible(this.toastTimer > 0);
     this.reloadHint.setText(this.reloading > 0 ? 'ПЕРЕЗАРЯДКА…' : 'R  ПЕРЕЗАРЯДКА');
   }
@@ -885,6 +1048,13 @@ export class MissionScene extends Phaser.Scene {
 
     for (const effect of this.impactEffects) {
       const alpha = Math.max(0, effect.life / effect.maxLife);
+      if (effect.kind === 'explosion') {
+        const radius = 34 + (1 - alpha) * LOADOUT_UNLOCKS.grenadeRadius;
+        this.fx.fillStyle(0xff9a45, alpha * 0.14); this.fx.fillCircle(effect.x, effect.y, radius);
+        this.fx.lineStyle(7, 0xffb15b, alpha * 0.85); this.fx.strokeCircle(effect.x, effect.y, radius);
+        this.fx.lineStyle(3, 0xffe4a8, alpha); this.fx.strokeCircle(effect.x, effect.y, radius * 0.62);
+        continue;
+      }
       const size = effect.kind === 'hit' ? 16 + (1 - alpha) * 18 : 13 + (1 - alpha) * 12;
       const color = effect.kind === 'hit' ? 0x70f0ad : effect.kind === 'cover' ? 0xffc46a : 0xb9c7d4;
       this.fx.lineStyle(4, color, alpha);

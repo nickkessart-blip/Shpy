@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 620">
+<defs><linearGradient id="metal" x2="1" y2="1"><stop stop-color="#8a969c"/><stop offset=".34" stop-color="#303c45"/><stop offset=".72" stop-color="#111820"/><stop offset="1" stop-color="#697780"/></linearGradient><linearGradient id="sleeve" x2="1" y2="0"><stop stop-color="#101923"/><stop offset=".5" stop-color="#34475a"/><stop offset="1" stop-color="#0d151e"/></linearGradient><linearGradient id="skin" x2="0" y2="1"><stop stop-color="#d9b092"/><stop offset="1" stop-color="#91684f"/></linearGradient></defs>
+<ellipse cx="180" cy="585" rx="135" ry="28" fill="#000" opacity=".45"/>
+<path d="M82 620Q68 553 94 468L130 366 231 363 271 492Q294 562 280 620Z" fill="url(#sleeve)" stroke="#080d13" stroke-width="12"/>
+<path d="M118 620Q111 549 147 476L166 405 210 404 247 500Q261 560 251 620Z" fill="#253546"/>
+<path d="M112 380Q95 340 119 304L152 268 214 270 246 318 230 394 194 420 139 416Z" fill="url(#skin)" stroke="#291d18" stroke-width="8"/>
+<path d="M124 62H238V294H124Z" fill="url(#metal)" stroke="#080d13" stroke-width="11"/>
+<path d="M154 35H208V74H154Z" fill="#151d25" stroke="#71808a" stroke-width="5"/>
+<path d="M169 24H193V54H169Z" fill="#303e49"/>
+<path d="M136 96H226V218H136Z" fill="#2e3b45" stroke="#111820" stroke-width="6"/>
+<path d="M145 111H217V126H145Z" fill="#9ba7ac" opacity=".55"/>
+<path d="M122 210H242L228 282H134Z" fill="#17212a" stroke="#080e14" stroke-width="8"/>
+<path d="M145 230H216V345H145Z" fill="#202b34" stroke="#080e14" stroke-width="8"/>
+<path d="M153 244H208M153 266H208M153 288H208M153 310H208" stroke="#75818a" stroke-width="4" opacity=".65"/>
+<path d="M158 284Q156 324 184 332Q211 330 208 287" fill="none" stroke="#0b1117" stroke-width="8"/>
+<path d="M111 329Q143 340 158 369L162 399Q144 412 129 389L107 362Z" fill="url(#skin)" stroke="#694c3d" stroke-width="5"/>
+<path d="M210 318Q240 315 252 343L240 368Q225 368 214 348" fill="url(#skin)" stroke="#694c3d" stroke-width="5"/>
+<path d="M140 85H225M140 194H226" stroke="#a9b4bb" stroke-width="3" opacity=".35"/>
+<circle cx="233" cy="248" r="5" fill="#b8c2c7"/>
+</svg>

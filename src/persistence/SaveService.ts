@@ -1,4 +1,7 @@
 import { BALANCE } from '../game/data/balance';
+import {
+  DEFAULT_LOADOUT, normalizeLoadout, type LoadoutSelection, type WeaponId,
+} from '../game/data/arsenal';
 
 const STORAGE_KEY = 'shpy_save_v1';
 const RECOVERY_KEY = 'shpy_save_recovery_backup';
@@ -6,15 +9,17 @@ const RECOVERY_KEY = 'shpy_save_recovery_backup';
 export type UpgradeKind = 'damage' | 'magazine' | 'reload' | 'health' | 'armor' | 'precision';
 
 export interface SaveData {
-  schemaVersion: 2;
+  schemaVersion: 3;
   reputation: number;
   upgrades: Record<UpgradeKind, number>;
+  loadout: LoadoutSelection;
 }
 
 const DEFAULT_SAVE: SaveData = {
-  schemaVersion: 2,
+  schemaVersion: 3,
   reputation: 0,
   upgrades: { damage: 0, magazine: 0, reload: 0, health: 0, armor: 0, precision: 0 },
+  loadout: structuredClone(DEFAULT_LOADOUT),
 };
 
 export class SaveService {
@@ -45,8 +50,9 @@ export class SaveService {
         schemaVersion?: unknown;
         reputation?: unknown;
         upgrades?: Partial<Record<UpgradeKind, unknown>>;
+        loadout?: unknown;
       };
-      if ((data.schemaVersion !== 1 && data.schemaVersion !== 2)
+      if ((data.schemaVersion !== 1 && data.schemaVersion !== 2 && data.schemaVersion !== 3)
         || typeof data.reputation !== 'number' || !data.upgrades || typeof data.upgrades !== 'object') {
         this.backupCorruptSave(raw);
         this.volatileSave = structuredClone(DEFAULT_SAVE);
@@ -54,9 +60,10 @@ export class SaveService {
         return structuredClone(DEFAULT_SAVE);
       }
 
+      const reputation = Number.isFinite(data.reputation) ? Math.max(0, Math.floor(data.reputation)) : 0;
       const normalized: SaveData = {
-        schemaVersion: 2,
-        reputation: Number.isFinite(data.reputation) ? Math.max(0, Math.floor(data.reputation)) : 0,
+        schemaVersion: 3,
+        reputation,
         upgrades: {
           damage: clampLevel(data.upgrades.damage, BALANCE.upgradeUnlocks.damage.length - 1),
           magazine: clampLevel(data.upgrades.magazine, BALANCE.upgradeUnlocks.magazine.length - 1),
@@ -65,11 +72,12 @@ export class SaveService {
           armor: clampLevel(data.upgrades.armor, BALANCE.upgradeUnlocks.armor.length - 1),
           precision: clampLevel(data.upgrades.precision, BALANCE.upgradeUnlocks.precision.length - 1),
         },
+        loadout: normalizeLoadout(data.schemaVersion === 3 ? data.loadout : DEFAULT_LOADOUT, reputation),
       };
 
       this.volatileSave = structuredClone(normalized);
       this.volatileSaveExists = true;
-      if (data.schemaVersion === 1) this.save(normalized);
+      if (data.schemaVersion !== 3) this.save(normalized);
       return normalized;
     } catch {
       this.backupCorruptSave(raw);
@@ -89,7 +97,7 @@ export class SaveService {
         return false;
       }
       const data = parsed as { schemaVersion?: unknown; reputation?: unknown; upgrades?: unknown };
-      const valid = (data.schemaVersion === 1 || data.schemaVersion === 2)
+      const valid = (data.schemaVersion === 1 || data.schemaVersion === 2 || data.schemaVersion === 3)
         && typeof data.reputation === 'number'
         && Boolean(data.upgrades && typeof data.upgrades === 'object');
       if (!valid) this.backupCorruptSave(raw);
@@ -124,6 +132,13 @@ export class SaveService {
     } catch {
       this.warnStorageUnavailable();
     }
+  }
+
+  setLoadout(loadout: LoadoutSelection): SaveData {
+    const data = this.load();
+    data.loadout = normalizeLoadout(loadout, data.reputation);
+    this.save(data);
+    return data;
   }
 
   reset(): SaveData {
