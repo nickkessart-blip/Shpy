@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME_HEIGHT, GAME_WIDTH, hasTouchInput } from '../../app/GameConfig';
+import { GAME_HEIGHT, GAME_WIDTH } from '../../app/GameConfig';
 import { BALANCE } from '../data/balance';
 import { saveService, type UpgradeKind } from '../../persistence/SaveService';
 import { AssetCatalog } from '../assets/AssetCatalog';
