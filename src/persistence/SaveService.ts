@@ -1,6 +1,7 @@
 import { BALANCE } from '../game/data/balance';
 
 const STORAGE_KEY = 'shpy_save_v1';
+const RECOVERY_KEY = 'shpy_save_recovery_backup';
 
 export interface SaveData {
   schemaVersion: 1;
@@ -23,6 +24,7 @@ export class SaveService {
       if (!parsed || typeof parsed !== 'object') return structuredClone(DEFAULT_SAVE);
       const data = parsed as Partial<SaveData>;
       if (data.schemaVersion !== 1 || typeof data.reputation !== 'number' || !data.upgrades) {
+        this.backupCorruptSave(raw);
         return structuredClone(DEFAULT_SAVE);
       }
       return {
@@ -36,6 +38,15 @@ export class SaveService {
       };
     } catch {
       return structuredClone(DEFAULT_SAVE);
+    }
+  }
+
+  private backupCorruptSave(raw: string): void {
+    try {
+      localStorage.setItem(RECOVERY_KEY, raw);
+      console.warn('[SHPY] Некорректное сохранение скопировано в резервный ключ:', RECOVERY_KEY);
+    } catch {
+      console.error('[SHPY] Не удалось создать резервную копию повреждённого сохранения.');
     }
   }
 
