@@ -415,7 +415,13 @@ export class MissionScene extends Phaser.Scene {
     const shade = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x05080c, 0.78);
     const label = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 30, 'ПАУЗА', { fontSize: '42px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
     const hint = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 25, this.isMobileControls ? 'НАЖМИТЕ КНОПКУ ПАУЗЫ ДЛЯ ПРОДОЛЖЕНИЯ' : 'ESC — ПРОДОЛЖИТЬ', { fontSize: '16px', color: '#e0b763' }).setOrigin(0.5);
-    this.pauseOverlay = this.add.container(0, 0, [shade, label, hint]).setDepth(100);
+    const resume = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 88, 250, 52, 0x8c3036, 0.98)
+      .setStrokeStyle(2, 0xe2b96e, 1).setInteractive();
+    const resumeLabel = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 88, 'ПРОДОЛЖИТЬ', {
+      fontSize: '18px', color: '#ffffff', fontStyle: 'bold',
+    }).setOrigin(0.5);
+    resume.on('pointerdown', () => this.togglePause());
+    this.pauseOverlay = this.add.container(0, 0, [shade, label, hint, resume, resumeLabel]).setDepth(100);
   }
 
   private drawFrame(): void {
