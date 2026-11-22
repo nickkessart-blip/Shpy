@@ -78,7 +78,8 @@ export class MissionScene extends Phaser.Scene {
   private mobileSwitchButton?: HTMLButtonElement;
   private mobileGrenadeButton?: HTMLButtonElement;
   private mobileMedkitButton?: HTMLButtonElement;
-  private mobileReleaseHandler?: () => void;
+  private mobileReleaseHandler?: (event: PointerEvent) => void;
+  private mobileFirePointerId: number | null = null;
   private aimStickVector: Point = { x: 0, y: 0 };
   private aimStickActive = false;
 
@@ -131,6 +132,7 @@ export class MissionScene extends Phaser.Scene {
     this.isMobileControls = hasTouchInput()
       || (typeof window !== 'undefined' && Math.min(window.innerWidth, window.innerHeight) <= 800);
     this.mobileFireHeld = false;
+    this.mobileFirePointerId = null;
     this.aimStickVector = { x: 0, y: 0 };
     this.aimStickActive = false;
     this.mobileControlsElement?.remove();
@@ -168,6 +170,7 @@ export class MissionScene extends Phaser.Scene {
     if (this.isMobileControls) this.buildMobileControls();
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.mobileFireHeld = false;
+      this.mobileFirePointerId = null;
       this.aimStickActive = false;
       this.aimStickVector = { x: 0, y: 0 };
       if (this.mobileReleaseHandler) {
@@ -872,11 +875,17 @@ export class MissionScene extends Phaser.Scene {
       event.preventDefault();
       event.stopPropagation();
     };
-    const stopFire = (): void => { this.mobileFireHeld = false; };
+    const stopFire = (event: PointerEvent): void => {
+      // Releasing the aim-stick finger must not cancel a second finger holding fire.
+      if (event.pointerId !== this.mobileFirePointerId) return;
+      this.mobileFireHeld = false;
+      this.mobileFirePointerId = null;
+    };
     this.mobileReleaseHandler = stopFire;
     fire.addEventListener('pointerdown', (event) => {
       consume(event);
-      if (this.phase !== 'active') return;
+      if (this.phase !== 'active' || this.mobileFirePointerId !== null) return;
+      this.mobileFirePointerId = event.pointerId;
       this.mobileFireHeld = true;
       this.shoot();
     });
