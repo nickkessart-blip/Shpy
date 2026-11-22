@@ -380,7 +380,7 @@ export class MissionScene extends Phaser.Scene {
   private buildMobileControls(): void {
     const fire = this.add.circle(1160, 548, 66, 0x9d3036, 0.88)
       .setStrokeStyle(4, 0xffd7b0, 0.9).setDepth(40).setInteractive();
-    const fireLabel = this.add.text(1160, 548, 'ОГОНЬ', {
+    this.add.text(1160, 548, 'ОГОНЬ', {
       fontSize: '20px', color: '#ffffff', fontStyle: 'bold',
     }).setOrigin(0.5).setDepth(41);
     fire.on('pointerdown', () => { this.mobileFireHeld = true; this.shoot(); });
