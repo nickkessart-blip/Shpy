@@ -23,6 +23,7 @@ const SPRITES: Record<EnemyType, string> = {
 };
 
 export class MissionScene extends Phaser.Scene {
+  private backdrop!: Phaser.GameObjects.Graphics;
   private world!: Phaser.GameObjects.Graphics;
   private coverLayer!: Phaser.GameObjects.Graphics;
   private fx!: Phaser.GameObjects.Graphics;
@@ -101,6 +102,7 @@ export class MissionScene extends Phaser.Scene {
     this.impactEffects = [];
     this.weaponRecoil = 0;
     this.playerHitFlash = 0;
+    this.backdrop = this.add.graphics().setDepth(-20);
     this.world = this.add.graphics().setDepth(0);
     this.coverLayer = this.add.graphics().setDepth(8);
     this.fx = this.add.graphics().setDepth(20);
@@ -231,20 +233,19 @@ export class MissionScene extends Phaser.Scene {
   }
 
   private drawBackground(): void {
-    this.world.clear();
-    if (this.backgroundArt) return;
-    this.world.fillGradientStyle(0x18212c, 0x18212c, 0x292a31, 0x121820, 1);
-    this.world.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-    this.world.fillStyle(0x8c3333, 0.13); this.world.fillRect(0, 100, GAME_WIDTH, 340);
-    this.world.fillStyle(0xe9b868, 0.09); this.world.fillRect(0, 100, GAME_WIDTH, 10);
+    this.backdrop.clear();
+    this.backdrop.fillGradientStyle(0x18212c, 0x18212c, 0x292a31, 0x121820, 1);
+    this.backdrop.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    this.backdrop.fillStyle(0x8c3333, 0.13); this.backdrop.fillRect(0, 100, GAME_WIDTH, 340);
+    this.backdrop.fillStyle(0xe9b868, 0.09); this.backdrop.fillRect(0, 100, GAME_WIDTH, 10);
     for (let i = 0; i < 9; i += 1) {
       const x = 80 + i * 140;
-      this.world.fillStyle(0xf3bd66, 0.09); this.world.fillCircle(x, 180, 54);
-      this.world.fillStyle(0x111820, 0.42); this.world.fillRect(x - 43, 230, 86, 190);
+      this.backdrop.fillStyle(0xf3bd66, 0.09); this.backdrop.fillCircle(x, 180, 54);
+      this.backdrop.fillStyle(0x111820, 0.42); this.backdrop.fillRect(x - 43, 230, 86, 190);
     }
-    this.world.fillStyle(0x8c242b, 0.5); this.world.fillRect(0, 515, GAME_WIDTH, 90);
-    this.world.lineStyle(2, 0xc58c4b, 0.36); this.world.lineBetween(0, 515, GAME_WIDTH, 515);
-    this.world.fillStyle(0x242c37, 1); this.world.fillRect(0, 590, GAME_WIDTH, 130);
+    this.backdrop.fillStyle(0x8c242b, 0.5); this.backdrop.fillRect(0, 515, GAME_WIDTH, 90);
+    this.backdrop.lineStyle(2, 0xc58c4b, 0.36); this.backdrop.lineBetween(0, 515, GAME_WIDTH, 515);
+    this.backdrop.fillStyle(0x242c37, 1); this.backdrop.fillRect(0, 590, GAME_WIDTH, 130);
   }
 
   private spawnWave(): void {
@@ -464,29 +465,58 @@ export class MissionScene extends Phaser.Scene {
   }
 
   private buildMobileControls(): void {
-    const fire = this.add.circle(MOBILE_FIRE.x, MOBILE_FIRE.y, 66, 0x9d3036, 0.9)
-      .setStrokeStyle(4, 0xffd7b0, 0.95).setDepth(40).setInteractive();
+    // Draw the touch controls as one explicit UI layer. Hit zones are separate,
+    // so touch input remains reliable even if a browser has trouble with Circle objects.
+    const controls = this.add.graphics().setDepth(40).setScrollFactor(0);
+    controls.fillStyle(0x9d3036, 0.96);
+    controls.fillCircle(MOBILE_FIRE.x, MOBILE_FIRE.y, 66);
+    controls.lineStyle(5, 0xffdfb4, 1);
+    controls.strokeCircle(MOBILE_FIRE.x, MOBILE_FIRE.y, 66);
+    controls.fillStyle(0x263747, 0.98);
+    controls.fillCircle(MOBILE_RELOAD.x, MOBILE_RELOAD.y, 44);
+    controls.lineStyle(4, 0xe2b96e, 1);
+    controls.strokeCircle(MOBILE_RELOAD.x, MOBILE_RELOAD.y, 44);
+    controls.fillStyle(0x263747, 0.98);
+    controls.fillCircle(MOBILE_PAUSE.x, MOBILE_PAUSE.y, 31);
+    controls.lineStyle(3, 0xe2b96e, 1);
+    controls.strokeCircle(MOBILE_PAUSE.x, MOBILE_PAUSE.y, 31);
+
     this.add.text(MOBILE_FIRE.x, MOBILE_FIRE.y, 'ОГОНЬ', {
-      fontSize: '19px', color: '#ffffff', fontStyle: 'bold',
-    }).setOrigin(0.5).setDepth(41);
-    fire.on('pointerdown', () => { this.mobileFireHeld = true; this.shoot(); });
-    fire.on('pointerup', () => { this.mobileFireHeld = false; });
-    fire.on('pointerout', () => { this.mobileFireHeld = false; });
+      fontSize: '20px', color: '#ffffff', fontStyle: 'bold',
+      stroke: '#551c22', strokeThickness: 4,
+    }).setOrigin(0.5).setDepth(41).setScrollFactor(0);
 
-    const reload = this.add.circle(MOBILE_RELOAD.x, MOBILE_RELOAD.y, 43, 0x263747, 0.96)
-      .setStrokeStyle(3, 0xe2b96e, 0.95).setDepth(40).setInteractive();
-    this.add.text(MOBILE_RELOAD.x, MOBILE_RELOAD.y, 'R', { fontSize: '26px', color: '#ffffff', fontStyle: 'bold' })
-      .setOrigin(0.5).setDepth(41);
-    reload.on('pointerdown', () => this.reload());
+    this.add.text(MOBILE_RELOAD.x, MOBILE_RELOAD.y, 'R', {
+      fontSize: '30px', color: '#ffffff', fontStyle: 'bold',
+      stroke: '#101820', strokeThickness: 3,
+    }).setOrigin(0.5).setDepth(41).setScrollFactor(0);
 
-    const pause = this.add.circle(MOBILE_PAUSE.x, MOBILE_PAUSE.y, 30, 0x263747, 0.96)
-      .setStrokeStyle(2, 0xe2b96e, 0.95).setDepth(40).setInteractive();
-    this.add.text(MOBILE_PAUSE.x, MOBILE_PAUSE.y, 'Ⅱ', { fontSize: '22px', color: '#ffffff', fontStyle: 'bold' })
-      .setOrigin(0.5).setDepth(41);
-    pause.on('pointerdown', () => this.togglePause());
+    this.add.text(MOBILE_PAUSE.x, MOBILE_PAUSE.y, 'Ⅱ', {
+      fontSize: '23px', color: '#ffffff', fontStyle: 'bold',
+      stroke: '#101820', strokeThickness: 3,
+    }).setOrigin(0.5).setDepth(41).setScrollFactor(0);
 
-    this.add.text(GAME_WIDTH - 244, GAME_HEIGHT - 120, 'ПЕРЕЗАРЯДКА', { fontSize: '10px', color: '#e8edf3' })
-      .setOrigin(0.5).setDepth(41);
+    const fireZone = this.add.zone(MOBILE_FIRE.x, MOBILE_FIRE.y, 142, 142)
+      .setDepth(42).setScrollFactor(0).setInteractive();
+    fireZone.on('pointerdown', () => {
+      this.mobileFireHeld = true;
+      this.shoot();
+    });
+    fireZone.on('pointerup', () => { this.mobileFireHeld = false; });
+    fireZone.on('pointerout', () => { this.mobileFireHeld = false; });
+
+    const reloadZone = this.add.zone(MOBILE_RELOAD.x, MOBILE_RELOAD.y, 100, 100)
+      .setDepth(42).setScrollFactor(0).setInteractive();
+    reloadZone.on('pointerdown', () => this.reload());
+
+    const pauseZone = this.add.zone(MOBILE_PAUSE.x, MOBILE_PAUSE.y, 76, 76)
+      .setDepth(42).setScrollFactor(0).setInteractive();
+    pauseZone.on('pointerdown', () => this.togglePause());
+
+    this.add.text(MOBILE_RELOAD.x, MOBILE_RELOAD.y - 58, 'ПЕРЕЗАРЯДКА', {
+      fontSize: '12px', color: '#e8edf3', fontStyle: 'bold',
+      stroke: '#101820', strokeThickness: 3,
+    }).setOrigin(0.5).setDepth(41).setScrollFactor(0);
   }
 
   private togglePause(): void {
@@ -512,7 +542,6 @@ export class MissionScene extends Phaser.Scene {
 
   private drawFrame(): void {
     this.world.clear();
-    if (!this.backgroundArt) this.drawBackground();
     this.drawEnemies();
     this.drawCovers();
     this.drawEffects();
