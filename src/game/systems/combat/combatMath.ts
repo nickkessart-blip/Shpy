@@ -35,6 +35,10 @@ export function segmentIntersectsRect(start: Point, end: Point, rect: Rect): boo
   return true;
 }
 
+export function findVisiblePeekX(muzzle: Point, cover: Rect, padding = 70): number {
+  return muzzle.x < cover.x ? cover.x - padding : cover.x + cover.width + padding;
+}
+
 export function isShotBlocked(muzzle: Point, target: Point, covers: Rect[]): boolean {
   return covers.some((cover) => segmentIntersectsRect(muzzle, target, cover));
 }
