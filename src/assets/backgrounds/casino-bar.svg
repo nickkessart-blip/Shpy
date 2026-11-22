@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
+<defs>
+ <linearGradient id="wall" x2="0" y2="1"><stop stop-color="#17232c"/><stop offset="1" stop-color="#422d2d"/></linearGradient>
+ <linearGradient id="floor" x2="0" y2="1"><stop stop-color="#5c3c3b"/><stop offset="1" stop-color="#101820"/></linearGradient>
+ <linearGradient id="brass" x2="0" y2="1"><stop stop-color="#f1d28d"/><stop offset=".5" stop-color="#a66d36"/><stop offset="1" stop-color="#52351f"/></linearGradient>
+ <linearGradient id="bottle" x2="0" y2="1"><stop stop-color="#8dbb9b" stop-opacity=".8"/><stop offset="1" stop-color="#234c47"/></linearGradient>
+ <radialGradient id="glow"><stop stop-color="#e99c58" stop-opacity=".65"/><stop offset="1" stop-color="#e99c58" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="1280" height="720" fill="#0d141b"/>
+<path d="M0 0H1280V490L640 410 0 490Z" fill="#121b24"/>
+<path d="M80 70H1200V465H80Z" fill="url(#wall)" stroke="#a47748" stroke-width="5"/>
+<path d="M0 490 640 404 1280 490V720H0Z" fill="url(#floor)"/>
+<path d="M0 490 640 404 1280 490V720H0Z" fill="#271d24" opacity=".65"/>
+<path d="M0 490 640 404 1280 490" stroke="#d1a26a" stroke-width="5" fill="none"/>
+<g>
+ <path d="M135 110H390V405H135Z" fill="#111b24" stroke="url(#brass)" stroke-width="7"/>
+ <path d="M155 130H370V384H155Z" fill="#263b45"/>
+ <path d="M890 110H1145V405H890Z" fill="#111b24" stroke="url(#brass)" stroke-width="7"/>
+ <path d="M910 130H1125V384H910Z" fill="#263b45"/>
+ <path d="M170 150H355V365H170ZM925 150H1110V365H925Z" fill="#182933" stroke="#89623c" stroke-width="3"/>
+</g>
+<g>
+ <rect x="198" y="150" width="12" height="210" rx="5" fill="#c79b5b"/>
+ <rect x="245" y="145" width="12" height="215" rx="5" fill="#c79b5b"/>
+ <rect x="292" y="155" width="12" height="205" rx="5" fill="#c79b5b"/>
+ <rect x="955" y="150" width="12" height="210" rx="5" fill="#c79b5b"/>
+ <rect x="1002" y="145" width="12" height="215" rx="5" fill="#c79b5b"/>
+ <rect x="1049" y="155" width="12" height="205" rx="5" fill="#c79b5b"/>
+</g>
+<g fill="#c58f50">
+ <path d="M160 185H365V198H160ZM160 245H365V257H160ZM160 305H365V317H160Z"/>
+ <path d="M915 185H1120V198H915ZM915 245H1120V257H915ZM915 305H1120V317H915Z"/>
+</g>
+<g fill="url(#bottle)" stroke="#b7d2b7" stroke-width="2">
+ <path d="M430 220H450V250L465 270V355H415V270L430 250Z"/><path d="M475 195H494V235L510 255V355H460V255L475 235Z"/>
+ <path d="M520 230H540V260L555 280V355H505V280L520 260Z"/><path d="M740 215H760V245L775 265V355H725V265L740 245Z"/>
+ <path d="M785 190H804V230L820 250V355H770V250L785 230Z"/><path d="M830 225H850V255L865 275V355H815V275L830 255Z"/>
+</g>
+<g fill="#d6bc80" opacity=".7"><rect x="407" y="355" width="470" height="8"/><rect x="407" y="365" width="470" height="4"/></g>
+<path d="M370 0V70M910 0V70" stroke="#d4ae75" stroke-width="6"/>
+<g fill="#f3d6a1"><path d="M330 70H410L398 105H342Z"/><path d="M870 70H950L938 105H882Z"/></g>
+<ellipse cx="640" cy="100" rx="300" ry="80" fill="url(#glow)"/>
+<path d="M0 520 640 430 1280 520M210 720 540 436M1070 720 740 436M450 720 590 430M830 720 690 430" fill="none" stroke="#c38d59" stroke-opacity=".28" stroke-width="4"/>
+<text x="640" y="145" text-anchor="middle" font-family="Georgia,serif" font-size="30" fill="#f1d5a1" letter-spacing="9">THE ROYALE BAR</text>
+<path d="M0 473H1280" stroke="#e4bd7c" stroke-opacity=".25" stroke-width="4"/>
+<rect width="1280" height="720" fill="none" stroke="#080d13" stroke-width="28"/>
+</svg>
