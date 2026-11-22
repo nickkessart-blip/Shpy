@@ -5,7 +5,7 @@ import { BALANCE } from '../data/balance';
 import { ENEMIES, type EnemyType } from '../data/enemies';
 import { CASINO_MISSION, type MissionSceneDefinition, type SpawnPoint } from '../data/missions';
 import { AssetCatalog } from '../assets/AssetCatalog';
-import { isShotBlocked, resolveHit, type Point, type Rect } from '../systems/combat/combatMath';
+import { findVisiblePeekX, isShotBlocked, resolveHit, type Point, type Rect } from '../systems/combat/combatMath';
 import { runSession } from '../systems/missions/runSession';
 
 type EnemyState = 'Exposed' | 'Aiming' | 'Attacking' | 'SeekingCover' | 'Hidden' | 'Peeking' | 'Repositioning' | 'Defeated';
@@ -212,9 +212,7 @@ export class MissionScene extends Phaser.Scene {
           const cover = this.sceneDef.covers.find((item) => item.id === enemy.coverId);
           if (cover) {
             // Move to the side of the cover facing the player so the enemy can be hit while peeking.
-            enemy.x = MUZZLE.x < cover.x
-              ? cover.x - 70
-              : cover.x + cover.width + 70;
+            enemy.x = findVisiblePeekX(MUZZLE, cover);
           } else {
             enemy.x = enemy.baseX + (enemy.phase % 2 === 0 ? -52 : 52);
           }
