@@ -5,16 +5,19 @@ import { BALANCE } from '../data/balance';
 import { ENEMIES, type EnemyType } from '../data/enemies';
 import { CASINO_MISSION, type MissionSceneDefinition, type SpawnPoint } from '../data/missions';
 import { AssetCatalog } from '../assets/AssetCatalog';
-import { findVisiblePeekX, isShotBlocked, resolveHit, type Point, type Rect } from '../systems/combat/combatMath';
+import { findVisiblePeekX, pointInRect, resolveHit, type Point } from '../systems/combat/combatMath';
 import { runSession } from '../systems/missions/runSession';
 
 type EnemyState = 'Exposed' | 'Aiming' | 'Attacking' | 'SeekingCover' | 'Hidden' | 'Peeking' | 'Repositioning' | 'Defeated';
 interface RuntimeEnemy {
   uid: number; type: EnemyType; x: number; baseX: number; y: number; originY: number; hp: number; maxHp: number;
-  coverId?: string; state: EnemyState; timer: number; phase: number;
+  coverId?: string; state: EnemyState; timer: number; phase: number; hitFlash: number;
 }
 
 const MUZZLE: Point = { x: GAME_WIDTH / 2, y: 662 };
+const MOBILE_FIRE = { x: GAME_WIDTH - 116, y: GAME_HEIGHT - 172 };
+const MOBILE_RELOAD = { x: GAME_WIDTH - 116, y: GAME_HEIGHT - 66 };
+const MOBILE_PAUSE = { x: GAME_WIDTH - 58, y: 58 };
 const SPRITES: Record<EnemyType, string> = {
   guard: 'enemy-guard', armored: 'enemy-armored', assault: 'enemy-assault',
 };
@@ -23,6 +26,9 @@ export class MissionScene extends Phaser.Scene {
   private world!: Phaser.GameObjects.Graphics;
   private coverLayer!: Phaser.GameObjects.Graphics;
   private fx!: Phaser.GameObjects.Graphics;
+  private weaponRig?: Phaser.GameObjects.Container;
+  private impactEffects: Array<{ x: number; y: number; life: number; maxLife: number; kind: 'hit' | 'cover' | 'miss'; damage: number }> = [];
+  private weaponRecoil = 0;
   private hud!: Phaser.GameObjects.Text;
   private message!: Phaser.GameObjects.Text;
   private reloadHint!: Phaser.GameObjects.Text;
@@ -91,9 +97,12 @@ export class MissionScene extends Phaser.Scene {
     this.backgroundArt = undefined;
     this.isMobileControls = document.documentElement.dataset.device === 'mobile';
     this.mobileFireHeld = false;
+    this.impactEffects = [];
+    this.weaponRecoil = 0;
     this.world = this.add.graphics().setDepth(0);
     this.coverLayer = this.add.graphics().setDepth(8);
     this.fx = this.add.graphics().setDepth(20);
+    this.buildWeaponRig();
     this.hud = this.add.text(26, 20, '', {
       fontSize: '16px', color: '#edf2f7', fontStyle: 'bold',
       backgroundColor: '#0b1119cc', padding: { x: 12, y: 10 },
@@ -123,12 +132,52 @@ export class MissionScene extends Phaser.Scene {
     this.showToast('УСТРАНИТЕ ВСЕХ ПРОТИВНИКОВ', 1800);
   }
 
+  private buildWeaponRig(): void {
+    const rig = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT + 95).setDepth(18);
+    const art = this.add.graphics();
+    // Arm, hand and service pistol rotate as one rig and track the reticle.
+    art.fillStyle(0x111923, 1); art.fillRoundedRect(-58, -218, 116, 190, 28);
+    art.fillStyle(0x293747, 1); art.fillRoundedRect(-51, -211, 102, 176, 24);
+    art.fillStyle(0x485564, 1); art.fillRoundedRect(-48, -208, 96, 14, 7);
+    art.fillStyle(0xb78365, 1); art.fillRoundedRect(-28, -202, 56, 76, 15);
+    art.fillStyle(0x9b6b52, 1); art.fillRoundedRect(-23, -180, 46, 46, 12);
+    art.fillStyle(0x11161d, 1); art.fillRoundedRect(-22, -354, 44, 188, 7);
+    art.fillStyle(0x394550, 1); art.fillRoundedRect(-18, -350, 36, 143, 5);
+    art.fillStyle(0x1b242d, 1); art.fillRoundedRect(-16, -218, 32, 70, 5);
+    art.fillStyle(0x0c1117, 1); art.fillRoundedRect(-13, -166, 26, 67, 5);
+    art.fillStyle(0x687783, 1); art.fillRect(-10, -338, 20, 4);
+    art.fillStyle(0x0b1016, 1); art.fillRoundedRect(-8, -357, 16, 9, 3);
+    art.lineStyle(2, 0x9eabb5, 0.65); art.lineBetween(-15, -310, 15, -310);
+    art.lineStyle(2, 0x4f5d69, 0.8); art.lineBetween(-17, -235, 17, -235);
+    rig.add(art);
+    this.weaponRig = rig;
+    this.updateWeaponRig();
+  }
+
+  private updateWeaponRig(): void {
+    if (!this.weaponRig) return;
+    const originX = GAME_WIDTH / 2;
+    const originY = GAME_HEIGHT + 95 + this.weaponRecoil;
+    this.weaponRig.setPosition(originX, originY);
+    this.weaponRig.setRotation(Phaser.Math.Angle.Between(originX, originY, this.aim.x, this.aim.y) + Math.PI / 2);
+  }
+
+  private getWeaponMuzzle(): Point {
+    const rotation = this.weaponRig?.rotation ?? 0;
+    const originX = GAME_WIDTH / 2;
+    const originY = GAME_HEIGHT + 95 + this.weaponRecoil;
+    return { x: originX + 357 * Math.sin(rotation), y: originY - 357 * Math.cos(rotation) };
+  }
+
   update(_time: number, delta: number): void {
     if (this.phase === 'paused' || this.phase === 'finished') return;
     const dt = Math.min(delta, 50);
     this.shotCooldown = Math.max(0, this.shotCooldown - dt);
     if (this.mobileFireHeld && this.phase === 'active') this.shoot();
     this.shotFlash = Math.max(0, this.shotFlash - dt);
+    this.weaponRecoil = Math.max(0, this.weaponRecoil - dt * 0.16);
+    for (const effect of this.impactEffects) effect.life -= dt;
+    this.impactEffects = this.impactEffects.filter((effect) => effect.life > 0);
     this.toastTimer = Math.max(0, this.toastTimer - dt);
 
     if (this.phase === 'transition') {
@@ -196,7 +245,7 @@ export class MissionScene extends Phaser.Scene {
       return {
         uid: this.uniqueId++, type, x: spawn.x, baseX: spawn.x, y: spawn.y, originY: spawn.y,
         hp: ENEMIES[type].hp, maxHp: ENEMIES[type].hp, coverId: spawn.coverId,
-        state: 'Exposed', timer: ENEMIES[type].exposeMs * (0.4 + index * 0.22), phase: 0,
+        state: 'Exposed', timer: ENEMIES[type].exposeMs * (0.4 + index * 0.22), phase: 0, hitFlash: 0,
       };
     });
     this.waveAwarded = false;
@@ -228,6 +277,7 @@ export class MissionScene extends Phaser.Scene {
 
   private updateEnemies(dt: number): void {
     for (const enemy of this.enemies) {
+      enemy.hitFlash = Math.max(0, enemy.hitFlash - dt);
       if (enemy.state === 'Defeated') continue;
       enemy.timer -= dt;
       if (enemy.timer > 0) continue;
@@ -288,21 +338,26 @@ export class MissionScene extends Phaser.Scene {
     this.magazine -= 1;
     this.shots += 1;
     this.shotCooldown = BALANCE.weapon.shotCooldownMs;
-    this.shotFlash = 90;
+    this.shotFlash = 135;
+    this.weaponRecoil = 18;
 
-    let chosen: { enemy: RuntimeEnemy; part: 'head' | 'body' } | null = null;
+    let chosen: { enemy: RuntimeEnemy; part: 'head' | 'body'; target: Point } | null = null;
     let chosenDistance = Number.POSITIVE_INFINITY;
-    const blockers: Rect[] = this.sceneDef.covers.map((c) => ({ x: c.x, y: c.y, width: c.width, height: c.height }));
+
+    // Screen-space target checks come first. The previous muzzle-to-target ray
+    // crossed foreground rectangles even when the reticle was visibly on an enemy.
     for (const enemy of this.enemies) {
       if (enemy.state === 'Defeated' || enemy.state === 'Hidden') continue;
       const head = { x: enemy.x, y: enemy.y - 48 };
       const body = { x: enemy.x, y: enemy.y - 5 };
-      const part = resolveHit(this.aim, head, body, 18, 31);
+      const part = resolveHit(this.aim, head, body, 32, 48);
       if (!part) continue;
       const target = part === 'head' ? head : body;
-      if (isShotBlocked(MUZZLE, target, blockers)) continue;
-      const d = Math.hypot(this.aim.x - target.x, this.aim.y - target.y);
-      if (d < chosenDistance) { chosen = { enemy, part }; chosenDistance = d; }
+      const distance = Math.hypot(this.aim.x - target.x, this.aim.y - target.y);
+      if (distance < chosenDistance) {
+        chosen = { enemy, part, target };
+        chosenDistance = distance;
+      }
     }
 
     if (chosen) {
@@ -310,16 +365,25 @@ export class MissionScene extends Phaser.Scene {
       const damage = BALANCE.weapon.damage[save.upgrades.damage]
         * (chosen.part === 'head' ? BALANCE.weapon.headMultiplier : 1);
       chosen.enemy.hp -= damage;
-      if (chosen.enemy.hp <= 0) this.tweens.killTweensOf(chosen.enemy);
+      chosen.enemy.hitFlash = 230;
+      this.impactEffects.push({ x: chosen.target.x, y: chosen.target.y, life: 420, maxLife: 420, kind: 'hit', damage });
       this.showToast((chosen.part === 'head' ? 'ПОПАДАНИЕ В ГОЛОВУ' : 'ПОПАДАНИЕ') + ' • −' + damage, 450);
       if (chosen.enemy.hp <= 0) {
+        this.tweens.killTweensOf(chosen.enemy);
         chosen.enemy.state = 'Defeated';
         this.kills += 1;
         this.award(BALANCE.rewards.kill);
         this.showToast(ENEMIES[chosen.enemy.type].name.toUpperCase() + ' УСТРАНЁН • +' + BALANCE.rewards.kill + ' XP', 800);
       }
-    } else if (blockers.some((r) => isShotBlocked(MUZZLE, this.aim, [r]))) {
-      this.showToast('ПОПАДАНИЕ В УКРЫТИЕ', 450);
+    } else {
+      const cover = this.sceneDef.covers.find((item) => pointInRect(this.aim, item));
+      if (cover) {
+        this.impactEffects.push({ x: this.aim.x, y: this.aim.y, life: 380, maxLife: 380, kind: 'cover', damage: 0 });
+        this.showToast('ПОПАДАНИЕ В УКРЫТИЕ', 450);
+      } else {
+        this.impactEffects.push({ x: this.aim.x, y: this.aim.y, life: 280, maxLife: 280, kind: 'miss', damage: 0 });
+        this.showToast('ПРОМАХ', 300);
+      }
     }
     this.drawFrame();
   }
@@ -372,34 +436,34 @@ export class MissionScene extends Phaser.Scene {
 
   private isMobileControlPoint(x: number, y: number): boolean {
     if (!this.isMobileControls) return false;
-    return Math.hypot(x - 1160, y - 548) < 76
-      || Math.hypot(x - 1160, y - 655) < 54
-      || Math.hypot(x - 1220, y - 48) < 38;
+    return Math.hypot(x - MOBILE_FIRE.x, y - MOBILE_FIRE.y) < 76
+      || Math.hypot(x - MOBILE_RELOAD.x, y - MOBILE_RELOAD.y) < 54
+      || Math.hypot(x - MOBILE_PAUSE.x, y - MOBILE_PAUSE.y) < 38;
   }
 
   private buildMobileControls(): void {
-    const fire = this.add.circle(1160, 548, 66, 0x9d3036, 0.88)
-      .setStrokeStyle(4, 0xffd7b0, 0.9).setDepth(40).setInteractive();
-    this.add.text(1160, 548, 'ОГОНЬ', {
-      fontSize: '20px', color: '#ffffff', fontStyle: 'bold',
+    const fire = this.add.circle(MOBILE_FIRE.x, MOBILE_FIRE.y, 66, 0x9d3036, 0.9)
+      .setStrokeStyle(4, 0xffd7b0, 0.95).setDepth(40).setInteractive();
+    this.add.text(MOBILE_FIRE.x, MOBILE_FIRE.y, 'ОГОНЬ', {
+      fontSize: '19px', color: '#ffffff', fontStyle: 'bold',
     }).setOrigin(0.5).setDepth(41);
     fire.on('pointerdown', () => { this.mobileFireHeld = true; this.shoot(); });
     fire.on('pointerup', () => { this.mobileFireHeld = false; });
     fire.on('pointerout', () => { this.mobileFireHeld = false; });
 
-    const reload = this.add.circle(1160, 655, 43, 0x263747, 0.94)
-      .setStrokeStyle(3, 0xe2b96e, 0.9).setDepth(40).setInteractive();
-    this.add.text(1160, 655, 'R', { fontSize: '27px', color: '#ffffff', fontStyle: 'bold' })
+    const reload = this.add.circle(MOBILE_RELOAD.x, MOBILE_RELOAD.y, 43, 0x263747, 0.96)
+      .setStrokeStyle(3, 0xe2b96e, 0.95).setDepth(40).setInteractive();
+    this.add.text(MOBILE_RELOAD.x, MOBILE_RELOAD.y, 'R', { fontSize: '26px', color: '#ffffff', fontStyle: 'bold' })
       .setOrigin(0.5).setDepth(41);
     reload.on('pointerdown', () => this.reload());
 
-    const pause = this.add.circle(1220, 48, 30, 0x263747, 0.94)
-      .setStrokeStyle(2, 0xe2b96e, 0.9).setDepth(40).setInteractive();
-    this.add.text(1220, 48, 'Ⅱ', { fontSize: '23px', color: '#ffffff', fontStyle: 'bold' })
+    const pause = this.add.circle(MOBILE_PAUSE.x, MOBILE_PAUSE.y, 30, 0x263747, 0.96)
+      .setStrokeStyle(2, 0xe2b96e, 0.95).setDepth(40).setInteractive();
+    this.add.text(MOBILE_PAUSE.x, MOBILE_PAUSE.y, 'Ⅱ', { fontSize: '22px', color: '#ffffff', fontStyle: 'bold' })
       .setOrigin(0.5).setDepth(41);
     pause.on('pointerdown', () => this.togglePause());
 
-    this.add.text(1040, 625, 'ПЕРЕЗАРЯДКА', { fontSize: '10px', color: '#e8edf3' })
+    this.add.text(GAME_WIDTH - 244, GAME_HEIGHT - 99, 'ПЕРЕЗАРЯДКА', { fontSize: '10px', color: '#e8edf3' })
       .setOrigin(0.5).setDepth(41);
   }
 
@@ -495,32 +559,55 @@ export class MissionScene extends Phaser.Scene {
 
   private drawEffects(): void {
     this.fx.clear();
-    // Enemy HUD and telegraphs are redrawn after clear.
     this.drawEnemyOverlays();
-    if (AssetCatalog.hasTexture(this, 'weapon-pistol')) {
-      let weapon = this.children.getByName('weapon-pistol-image') as Phaser.GameObjects.Image | null;
-      if (!weapon) weapon = this.add.image(GAME_WIDTH / 2, 654, 'weapon-pistol').setName('weapon-pistol-image').setDepth(12);
-      weapon.setPosition(GAME_WIDTH / 2, 654).setDisplaySize(105, 138).setVisible(true);
-    } else {
-      this.fx.fillStyle(0x080c11, 1); this.fx.fillRoundedRect(GAME_WIDTH / 2 - 54, 622, 108, 98, 20);
-      this.fx.fillStyle(0x343d48, 1); this.fx.fillRoundedRect(GAME_WIDTH / 2 - 24, 586, 48, 120, 10);
-      this.fx.fillStyle(0x151c25, 1); this.fx.fillRoundedRect(GAME_WIDTH / 2 - 14, 586, 28, 80, 5);
-    }
+    this.updateWeaponRig();
+
     if (this.shotFlash > 0) {
-      this.fx.fillStyle(0xffd58a, this.shotFlash / 90); this.fx.fillCircle(MUZZLE.x, 570, 17 + (90 - this.shotFlash) / 3);
-      this.fx.lineStyle(3, 0xffd58a, this.shotFlash / 90); this.fx.lineBetween(MUZZLE.x, 590, this.aim.x, this.aim.y);
+      const muzzle = this.getWeaponMuzzle();
+      const alpha = this.shotFlash / 135;
+      this.fx.lineStyle(5, 0xffd58a, alpha * 0.9);
+      this.fx.lineBetween(muzzle.x, muzzle.y, this.aim.x, this.aim.y);
+      this.fx.lineStyle(2, 0xffffff, alpha);
+      this.fx.lineBetween(muzzle.x, muzzle.y, this.aim.x, this.aim.y);
+      this.fx.fillStyle(0xffd58a, alpha);
+      this.fx.fillCircle(muzzle.x, muzzle.y, 9 + (135 - this.shotFlash) * 0.18);
+      this.fx.lineStyle(3, 0xfff0c5, alpha);
+      for (let i = 0; i < 8; i += 1) {
+        const angle = (Math.PI * 2 * i) / 8;
+        this.fx.lineBetween(
+          muzzle.x + Math.cos(angle) * 10, muzzle.y + Math.sin(angle) * 10,
+          muzzle.x + Math.cos(angle) * 25, muzzle.y + Math.sin(angle) * 25,
+        );
+      }
     }
+
+    for (const effect of this.impactEffects) {
+      const alpha = Math.max(0, effect.life / effect.maxLife);
+      const size = effect.kind === 'hit' ? 16 + (1 - alpha) * 18 : 13 + (1 - alpha) * 12;
+      const color = effect.kind === 'hit' ? 0x70f0ad : effect.kind === 'cover' ? 0xffc46a : 0xb9c7d4;
+      this.fx.lineStyle(4, color, alpha);
+      this.fx.strokeCircle(effect.x, effect.y, size);
+      this.fx.lineBetween(effect.x - size * 0.72, effect.y - size * 0.72, effect.x + size * 0.72, effect.y + size * 0.72);
+      this.fx.lineBetween(effect.x + size * 0.72, effect.y - size * 0.72, effect.x - size * 0.72, effect.y + size * 0.72);
+      if (effect.kind === 'hit') {
+        this.fx.fillStyle(0xffd88b, alpha);
+        this.fx.fillCircle(effect.x, effect.y - 28 - (1 - alpha) * 18, 3 + alpha * 2);
+      }
+    }
+
     if (AssetCatalog.hasTexture(this, 'ui-cursor')) {
       let cursor = this.children.getByName('cursor-image') as Phaser.GameObjects.Image | null;
       if (!cursor) cursor = this.add.image(this.aim.x, this.aim.y, 'ui-cursor').setName('cursor-image').setDepth(25);
       cursor.setPosition(this.aim.x, this.aim.y).setDisplaySize(48, 48).setVisible(true);
     } else {
-      this.fx.lineStyle(2, 0xf5f7fa, 0.92);
-      this.fx.strokeCircle(this.aim.x, this.aim.y, 12);
-      this.fx.lineBetween(this.aim.x - 22, this.aim.y, this.aim.x - 6, this.aim.y);
-      this.fx.lineBetween(this.aim.x + 6, this.aim.y, this.aim.x + 22, this.aim.y);
-      this.fx.lineBetween(this.aim.x, this.aim.y - 22, this.aim.x, this.aim.y - 6);
-      this.fx.lineBetween(this.aim.x, this.aim.y + 6, this.aim.x, this.aim.y + 22);
+      this.fx.lineStyle(3, 0xf5f7fa, 0.96);
+      this.fx.strokeCircle(this.aim.x, this.aim.y, 13);
+      this.fx.lineBetween(this.aim.x - 25, this.aim.y, this.aim.x - 7, this.aim.y);
+      this.fx.lineBetween(this.aim.x + 7, this.aim.y, this.aim.x + 25, this.aim.y);
+      this.fx.lineBetween(this.aim.x, this.aim.y - 25, this.aim.x, this.aim.y - 7);
+      this.fx.lineBetween(this.aim.x, this.aim.y + 7, this.aim.x, this.aim.y + 25);
+      this.fx.fillStyle(0xffffff, 1);
+      this.fx.fillCircle(this.aim.x, this.aim.y, 2);
     }
   }
 
@@ -536,6 +623,10 @@ export class MissionScene extends Phaser.Scene {
       }
       if (enemy.state === 'Peeking') {
         this.fx.fillStyle(0xf1c16d, 1); this.fx.fillCircle(enemy.x, enemy.y - 105, 4);
+      }
+      if (enemy.hitFlash > 0) {
+        this.fx.lineStyle(4, 0xffffff, enemy.hitFlash / 230);
+        this.fx.strokeCircle(enemy.x, enemy.y - 42, 42);
       }
     }
   }
