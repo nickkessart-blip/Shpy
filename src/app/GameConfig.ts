@@ -7,6 +7,13 @@ import { ResultsScene } from '../game/scenes/ResultsScene';
 export const GAME_WIDTH = 1280;
 export const GAME_HEIGHT = 720;
 
+const isTouchDevice = typeof window !== 'undefined'
+  && (('ontouchstart' in window) || navigator.maxTouchPoints > 0);
+
+if (typeof document !== 'undefined') {
+  document.documentElement.dataset.device = isTouchDevice ? 'mobile' : 'desktop';
+}
+
 export const gameConfig: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   parent: 'game',
@@ -21,7 +28,7 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
     width: GAME_WIDTH,
     height: GAME_HEIGHT,
   },
-  input: { activePointers: 3, mouse: { preventDefaultWheel: true } },
+  input: { activePointers: 3, mouse: { preventDefaultWheel: true }, touch: { capture: true } },
   scene: [BootScene, HQScene, MissionScene, ResultsScene],
   render: { powerPreference: 'low-power', roundPixels: true },
 };
