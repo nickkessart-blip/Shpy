@@ -3,31 +3,22 @@ import { gameConfig } from './GameConfig';
 import './style.css';
 
 const game = new Phaser.Game(gameConfig);
-const scenesPausedForPortrait = new Set<Phaser.Scene>();
 
 function syncMobileOrientation(): void {
-  const isPortraitMobile = document.documentElement.dataset.device === 'mobile'
-    && window.matchMedia('(max-aspect-ratio: 1 / 1)').matches;
-
-  if (isPortraitMobile) {
-    for (const scene of game.scene.getScenes(true)) {
-      if (scene.scene.isActive()) {
-        scenesPausedForPortrait.add(scene);
-        scene.scene.pause();
-      }
-    }
-    return;
-  }
-
-  game.scale.refresh();
-  for (const scene of scenesPausedForPortrait) {
-    scene.scene.resume();
-  }
-  scenesPausedForPortrait.clear();
+  // Let Android Chrome finish changing its visual viewport before Phaser
+  // recalculates the FIT canvas bounds. Do not pause/resume Scene instances:
+  // doing so during orientationchange can leave the active scene black.
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      game.scale.refresh();
+    });
+  });
 }
 
-game.events.once(Phaser.Core.Events.READY, syncMobileOrientation);
 window.addEventListener('resize', syncMobileOrientation, { passive: true });
 window.addEventListener('orientationchange', syncMobileOrientation, { passive: true });
+window.addEventListener('pageshow', syncMobileOrientation, { passive: true });
+
+game.events.once(Phaser.Core.Events.READY, syncMobileOrientation);
 
 window.addEventListener('beforeunload', () => game.destroy(true));
