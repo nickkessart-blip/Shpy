@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME_HEIGHT, GAME_WIDTH } from '../../app/GameConfig';
+import { GAME_WIDTH } from '../../app/GameConfig';
 import { saveService } from '../../persistence/SaveService';
 import { BALANCE } from '../data/balance';
 import { ENEMIES, type EnemyType } from '../data/enemies';
@@ -58,7 +58,9 @@ export class MissionScene extends Phaser.Scene {
 
   create(): void {
     this.startedAt = Date.now();
-    this.totalReputation = saveService.load().reputation;
+    const initialSave = saveService.load();
+    this.totalReputation = initialSave.reputation;
+    this.magazine = BALANCE.weapon.magazine[initialSave.upgrades.magazine];
     this.world = this.add.graphics().setDepth(0);
     this.fx = this.add.graphics().setDepth(20);
     this.hud = this.add.text(26, 20, '', {
@@ -215,7 +217,6 @@ export class MissionScene extends Phaser.Scene {
   private shoot(): void {
     if (this.phase !== 'active' || this.reloading > 0 || this.shotCooldown > 0) return;
     const save = saveService.load();
-    const capacity = BALANCE.weapon.magazine[save.upgrades.magazine];
     if (this.magazine <= 0) { this.showToast('ПУСТО • НАЖМИТЕ R ДЛЯ ПЕРЕЗАРЯДКИ', 900); return; }
     this.magazine -= 1;
     this.shots += 1;
