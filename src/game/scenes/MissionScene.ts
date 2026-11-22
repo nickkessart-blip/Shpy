@@ -57,10 +57,35 @@ export class MissionScene extends Phaser.Scene {
   constructor() { super('Mission'); }
 
   create(): void {
-    this.startedAt = Date.now();
+    // Phaser reuses Scene instances. Reset every run-scoped value before building the scene again.
     const initialSave = saveService.load();
-    this.totalReputation = initialSave.reputation;
+    this.startedAt = Date.now();
+    this.aim = { x: GAME_WIDTH / 2, y: GAME_HEIGHT / 2 };
+    this.enemies = [];
+    this.sceneIndex = 0;
+    this.waveIndex = 0;
+    this.spawnTimer = 300;
+    this.phase = 'active';
+    this.transitionTimer = 0;
+    this.hp = BALANCE.player.maxHp;
     this.magazine = BALANCE.weapon.magazine[initialSave.upgrades.magazine];
+    this.reserve = 48;
+    this.reloading = 0;
+    this.shotCooldown = 0;
+    this.shotFlash = 0;
+    this.toastTimer = 0;
+    this.toastText = '';
+    this.kills = 0;
+    this.shots = 0;
+    this.hits = 0;
+    this.damageTaken = 0;
+    this.reputationEarned = 0;
+    this.totalReputation = initialSave.reputation;
+    this.waveAwarded = false;
+    this.uniqueId = 1;
+    this.resultSent = false;
+    this.pauseOverlay = undefined;
+    this.backgroundArt = undefined;
     this.world = this.add.graphics().setDepth(0);
     this.fx = this.add.graphics().setDepth(20);
     this.hud = this.add.text(26, 20, '', {
