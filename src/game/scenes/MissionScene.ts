@@ -206,9 +206,20 @@ export class MissionScene extends Phaser.Scene {
         case 'Attacking': enemy.state = 'SeekingCover'; enemy.timer = 320; break;
         case 'SeekingCover': enemy.state = 'Hidden'; enemy.timer = def.hiddenMs; break;
         case 'Hidden': enemy.state = 'Peeking'; enemy.timer = def.peekMs; enemy.phase += 1; break;
-        case 'Peeking':
-          enemy.state = 'Repositioning'; enemy.timer = enemy.type === 'assault' ? 260 : 390;
-          enemy.x = enemy.baseX + (enemy.phase % 2 === 0 ? -52 : 52); break;
+        case 'Peeking': {
+          enemy.state = 'Repositioning';
+          enemy.timer = enemy.type === 'assault' ? 260 : 390;
+          const cover = this.sceneDef.covers.find((item) => item.id === enemy.coverId);
+          if (cover) {
+            // Move to the side of the cover facing the player so the enemy can be hit while peeking.
+            enemy.x = MUZZLE.x < cover.x
+              ? cover.x - 70
+              : cover.x + cover.width + 70;
+          } else {
+            enemy.x = enemy.baseX + (enemy.phase % 2 === 0 ? -52 : 52);
+          }
+          break;
+        }
         case 'Repositioning': enemy.state = 'Exposed'; enemy.baseX = enemy.x; enemy.timer = def.exposeMs; break;
       }
     }
