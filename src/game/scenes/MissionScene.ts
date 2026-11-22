@@ -346,7 +346,7 @@ export class MissionScene extends Phaser.Scene {
       fontSize: '18px', color: '#d5dee7', fontStyle: 'bold',
       stroke: '#10161d', strokeThickness: 4, letterSpacing: 2,
     }).setOrigin(0.5);
-    this.transitionOverlay = this.add.container(0, 0, [hallway, exit, actor, title, subtitle]).setDepth(80);
+    this.transitionOverlay = this.add.container(0, 0, [hallway, exit, actor, title, subtitle]).setDepth(100);
 
     this.transitionWalkTweens.push(this.tweens.add({
       targets: actor,
@@ -627,7 +627,7 @@ export class MissionScene extends Phaser.Scene {
       stroke: '#551c22', strokeThickness: 4,
     }).setOrigin(0.5).setDepth(41).setScrollFactor(0);
 
-    this.add.text(MOBILE_RELOAD.x, MOBILE_RELOAD.y, 'R', {
+    this.add.text(MOBILE_RELOAD.x, MOBILE_RELOAD.y, '↻', {
       fontSize: '30px', color: '#ffffff', fontStyle: 'bold',
       stroke: '#101820', strokeThickness: 3,
     }).setOrigin(0.5).setDepth(41).setScrollFactor(0);

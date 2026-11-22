@@ -9,8 +9,9 @@ export const GAME_HEIGHT = 720;
 
 export function hasTouchInput(): boolean {
   if (typeof window === 'undefined') return false;
-  const coarsePointer = window.matchMedia('(pointer: coarse)').matches
-    || window.matchMedia('(any-pointer: coarse)').matches;
+  const coarsePointer = typeof window.matchMedia === 'function'
+    && (window.matchMedia('(pointer: coarse)').matches
+      || window.matchMedia('(any-pointer: coarse)').matches);
   return 'ontouchstart' in window
     || (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0)
     || coarsePointer;
