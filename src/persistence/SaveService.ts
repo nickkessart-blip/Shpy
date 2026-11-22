@@ -1,6 +1,6 @@
 import { BALANCE } from '../game/data/balance';
 import {
-  DEFAULT_LOADOUT, normalizeLoadout, type LoadoutSelection, type WeaponId,
+  DEFAULT_LOADOUT, normalizeLoadout, type LoadoutSelection,
 } from '../game/data/arsenal';
 
 const STORAGE_KEY = 'shpy_save_v1';

@@ -53,7 +53,7 @@ export class MissionScene extends Phaser.Scene {
   private maxHp: number = BALANCE.player.maxHp[0];
   private hp: number = BALANCE.player.maxHp[0];
   private magazine: number = BALANCE.weapon.magazine[0];
-  private reserve = BALANCE.weapon.reserveAmmo;
+  private reserve: number = BALANCE.weapon.reserveAmmo;
   private reloading = 0;
   private shotCooldown = 0;
   private shotFlash = 0;
