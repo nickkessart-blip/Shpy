@@ -125,10 +125,10 @@ export class SettingsScene extends Phaser.Scene {
     label: string, color: number, action: () => void): void {
     const bg = this.add.rectangle(x + width / 2, y + height / 2, width, height, color, 1)
       .setStrokeStyle(1, 0xffffff, 0.2).setInteractive({ useHandCursor: true });
-    this.add.text(x + width / 2, y + height / 2, label, {
+    const labelText = this.add.text(x + width / 2, y + height / 2, label, {
       fontSize: '13px', color: '#ffffff', fontStyle: 'bold', align: 'center',
     }).setOrigin(0.5);
-    this.content?.add([bg, text]);
+    this.content?.add([bg, labelText]);
     bg.on('pointerdown', () => {
       FeedbackService.play(this, 'ui');
       action();

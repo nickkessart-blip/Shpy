@@ -18,8 +18,12 @@ const EFFECT_KEYS: Record<SoundEffect, string[]> = {
 
 const MUSIC_KEY = 'audio-audio/music/agency-theme';
 
+// Phaser's concrete WebAudioSound and HTML5AudioSound implementations expose setVolume();
+// BaseSound's shared typings omit that backend-specific method in this Phaser release.
+type AdjustableMusicSound = Phaser.Sound.BaseSound & { setVolume(volume: number): void };
+
 export class FeedbackService {
-  private static music?: Phaser.Sound.BaseSound;
+  private static music?: AdjustableMusicSound;
   private static musicKey = '';
 
   static ensureMusic(scene: Phaser.Scene): void {
@@ -34,7 +38,7 @@ export class FeedbackService {
     this.music?.destroy();
     if (!scene.cache.audio.exists(MUSIC_KEY)) return;
 
-    const track = scene.sound.add(MUSIC_KEY, { loop: true, volume });
+    const track = scene.sound.add(MUSIC_KEY, { loop: true, volume }) as AdjustableMusicSound;
     this.music = track;
     this.musicKey = MUSIC_KEY;
     const start = (): void => {
