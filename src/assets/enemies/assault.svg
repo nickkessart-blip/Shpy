@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 400">
+<defs><linearGradient id="cloth" x2="1" y2="1"><stop stop-color="#45424b"/><stop offset="1" stop-color="#111922"/></linearGradient><linearGradient id="vest" x2="0" y2="1"><stop stop-color="#533c42"/><stop offset="1" stop-color="#17212a"/></linearGradient><linearGradient id="skin" x2="0" y2="1"><stop stop-color="#d4aa8c"/><stop offset="1" stop-color="#795746"/></linearGradient><filter id="shadow"><feGaussianBlur stdDeviation="7"/></filter></defs>
+<ellipse cx="120" cy="386" rx="79" ry="12" fill="#000" opacity=".6" filter="url(#shadow)"/>
+<!-- legs and boots --><path d="M75 240 112 246 104 346 93 371 54 371 64 339Z" fill="url(#cloth)" stroke="#070d13" stroke-width="7"/><path d="M130 246 166 238 183 338 199 364 157 376 142 349Z" fill="url(#cloth)" stroke="#070d13" stroke-width="7"/><path d="M56 357 102 357 105 382 39 389 32 379Z" fill="#10151b" stroke="#52616e" stroke-width="5"/><path d="M158 358 190 355 218 379 207 390 150 385Z" fill="#10151b" stroke="#52616e" stroke-width="5"/>
+<!-- torso --><path d="M78 133 53 151 38 235 63 257 91 247 151 247 180 258 204 231 184 149 157 132Z" fill="url(#cloth)" stroke="#080e14" stroke-width="8"/>
+<path d="M79 145 119 159 162 143 174 246 65 246Z" fill="url(#vest)" stroke="#df7a70" stroke-width="4"/>
+<path d="M82 164 157 164 168 220 72 220Z" fill="none" stroke="#df7a70" stroke-width="3" opacity=".8"/>
+<path d="M93 174H112V209H93ZM128 174H151V209H128Z" fill="#101820" stroke="#647482" stroke-width="3"/>
+<path d="M112 157V241M120 158V241" stroke="#080f16" stroke-width="5"/>
+<path d="M78 224H162V245H78Z" fill="#0f171f" stroke="#687582" stroke-width="3"/>
+<path d="M108 229H132V248H108Z" fill="#df7a70" stroke="#e4d1a4" stroke-width="2"/>
+<!-- neck and head --><path d="M99 119H141V151H99Z" fill="url(#skin)"/>
+<path d="M83 72Q85 37 119 35Q154 36 158 74L150 119Q137 144 120 144Q98 141 88 116Z" fill="url(#skin)" stroke="#101820" stroke-width="7"/>
+<path d="M90 91Q120 103 151 91L147 116Q134 134 119 135Q98 131 91 114Z" fill="#17212b" opacity=".95"/>
+<path d="M98 87H111M130 87H143" stroke="#0b1117" stroke-width="6" stroke-linecap="round"/>
+<path d="M112 113H130" stroke="#3b2520" stroke-width="4" stroke-linecap="round"/>
+<!-- head protection --><path d="M79 82Q72 23 119 19Q164 23 161 82L148 91Q120 74 91 92Z" fill="#42353c" stroke="#080e14" stroke-width="7"/>
+<path d="M82 63Q120 43 158 64" fill="none" stroke="#df7a70" stroke-width="7"/>
+<path d="M82 80 157 80" stroke="#111a22" stroke-width="8"/>
+<!-- arms --><path d="M61 153 35 165 16 222 38 238 65 199 81 178Z" fill="url(#cloth)" stroke="#080e14" stroke-width="7"/>
+<path d="M178 153 204 161 226 209 207 230 180 195 160 178Z" fill="url(#cloth)" stroke="#080e14" stroke-width="7"/>
+<path d="M20 218 43 222 56 241 37 254 12 239Z" fill="url(#skin)" stroke="#151b21" stroke-width="5"/>
+<path d="M205 208 230 202 239 220 220 241 198 230Z" fill="url(#skin)" stroke="#151b21" stroke-width="5"/>
+<!-- weapon aimed toward viewer --><path d="M194 211 223 194 234 203 226 230 201 241Z" fill="#151d26" stroke="#05090e" stroke-width="5"/>
+<path d="M215 202 232 185 240 189 231 215" fill="#283744" stroke="#070c11" stroke-width="4"/>
+<path d="M220 229 237 224 235 248 220 249Z" fill="#161c23"/>
+<!-- insignia and gear --><path d="M91 177H109V200H91ZM132 177H151V200H132Z" fill="#8e9aa1" opacity=".5"/>
+<path d="M70 250 105 257 100 278 67 274ZM139 257 174 248 180 273 145 280Z" fill="#131d27" stroke="#697783" stroke-width="3"/>
+<text x="120" y="296" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" letter-spacing="2" fill="#df7a70">ASSAULT</text>
+</svg>
