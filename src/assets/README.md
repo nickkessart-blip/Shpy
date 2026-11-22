@@ -1,0 +1,15 @@
+# Автоподхват ассетов
+
+Кладите файлы прямо в соответствующие папки. Vite обнаруживает их через import.meta.glob при dev-запуске и сборке. Если файл для слота отсутствует, игра использует геометрическую заглушку.
+
+| Папка | Имя файла | Слот |
+|---|---|---|
+| backgrounds | casino-main.png, casino-bar.png | Фоны сцен казино |
+| enemies | guard.png, armored.png, assault.png | Враги |
+| weapons | pistol.png | Пистолет |
+| props | cover-crate.png | Укрытия |
+| ui | logo.png, cursor.png | Логотип/прицел |
+| audio | Любые имена ogg/mp3/wav | Звуковые ресурсы |
+
+Поддерживаемые изображения: PNG, JPG/JPEG, WEBP, SVG. Предпочтительно WebP или PNG с прозрачностью.
+Для новых именованных слотов добавьте соответствие в src/game/assets/assetSlots.ts.
