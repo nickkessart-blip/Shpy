@@ -470,7 +470,7 @@ export class MissionScene extends Phaser.Scene {
       .setOrigin(0.5).setDepth(41);
     pause.on('pointerdown', () => this.togglePause());
 
-    this.add.text(GAME_WIDTH - 244, GAME_HEIGHT - 99, 'ПЕРЕЗАРЯДКА', { fontSize: '10px', color: '#e8edf3' })
+    this.add.text(GAME_WIDTH - 244, GAME_HEIGHT - 120, 'ПЕРЕЗАРЯДКА', { fontSize: '10px', color: '#e8edf3' })
       .setOrigin(0.5).setDepth(41);
   }
 
