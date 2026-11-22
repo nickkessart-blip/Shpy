@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH } from '../../app/GameConfig';
-import { AGENT_CANDIDATES, AGENT_MISSIONS, calculateAgentMissionChance, getAgentLevel, getAgentMissionSlots, getAgentXpToNextLevel, type AgentMissionId } from '../data/agents';
+import { AGENT_CANDIDATES, AGENT_MISSIONS, calculateAgentMissionChance, getAgentLevel, getAgentMissionSlots, type AgentMissionId } from '../data/agents';
 import { BALANCE } from '../data/balance';
 import { getAccountLevel } from '../data/progression';
 import { agentService } from '../systems/agents/AgentService';
