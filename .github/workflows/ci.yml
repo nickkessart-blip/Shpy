@@ -5,22 +5,51 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+
+permissions:
+  contents: write
+
 jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
       - uses: actions/setup-node@v4
         with:
           node-version: 26
-      - run: npm install
+
+      - name: Install dependencies and generate lockfile
+        run: npm install
+
+      - name: Commit npm lockfile when it changes
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          if [ -f package-lock.json ] && ! git diff --quiet -- package-lock.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add package-lock.json
+            git commit -m "build: lock npm dependency tree [skip ci]"
+            git push origin HEAD:main
+          fi
+
       - run: npm run typecheck
       - run: npm run test
       - run: npm run lint
       - run: npm run build
-      - uses: actions/upload-artifact@v4
-        with:
-          name: shpy-web-prototype
-          path: dist/
-          if-no-files-found: error
-          retention-days: 14
+
+      - name: Publish downloadable Web build branch
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p /tmp/shpy-prototype-build
+          cp -R dist/. /tmp/shpy-prototype-build/
+          git -C /tmp/shpy-prototype-build init -b prototype-build
+          git -C /tmp/shpy-prototype-build config user.name "github-actions[bot]"
+          git -C /tmp/shpy-prototype-build config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C /tmp/shpy-prototype-build add .
+          git -C /tmp/shpy-prototype-build commit -m "build: publish Shpy Web prototype"
+          git -C /tmp/shpy-prototype-build remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git -C /tmp/shpy-prototype-build push --force origin HEAD:prototype-build
