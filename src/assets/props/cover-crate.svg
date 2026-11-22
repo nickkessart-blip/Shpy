@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 188">
+<defs><linearGradient id="wood" x2="0" y2="1"><stop stop-color="#8b6844"/><stop offset=".5" stop-color="#4f3c2e"/><stop offset="1" stop-color="#231e1c"/></linearGradient><linearGradient id="metal" x2="0" y2="1"><stop stop-color="#8b9ba4"/><stop offset="1" stop-color="#2d3b45"/></linearGradient></defs>
+<ellipse cx="260" cy="170" rx="250" ry="15" fill="#000" opacity=".45"/>
+<path d="M8 38 444 12 512 46 74 78Z" fill="#b08a5c" stroke="#17191b" stroke-width="8"/>
+<path d="M74 78 512 46V153L74 180Z" fill="url(#wood)" stroke="#14191e" stroke-width="9"/>
+<path d="M8 38 74 78V180L8 137Z" fill="#4d3829" stroke="#14191e" stroke-width="9"/>
+<path d="M103 81 103 169M206 74 206 163M310 66 310 157M414 58 414 150" stroke="#bc9565" stroke-opacity=".6" stroke-width="7"/>
+<path d="M75 108 511 80M75 143 511 115" stroke="#1e2020" stroke-width="7" opacity=".65"/>
+<path d="M22 52 59 74V145L22 122Z" fill="#876849" stroke="#bd9a6d" stroke-width="4"/>
+<path d="M10 140 75 180 512 153" fill="none" stroke="#b68e5b" stroke-width="5"/>
+<path d="M20 18 448 0 496 25 66 55Z" fill="#c09a68" opacity=".65"/>
+<g stroke="url(#metal)" stroke-width="7" fill="none"><path d="M28 35 28 143M492 37 492 154M90 72 90 174M438 45 438 156"/></g>
+<g fill="#d3b17c"><circle cx="80" cy="87" r="6"/><circle cx="460" cy="53" r="6"/><circle cx="80" cy="157" r="5"/><circle cx="460" cy="139" r="5"/></g>
+</svg>
