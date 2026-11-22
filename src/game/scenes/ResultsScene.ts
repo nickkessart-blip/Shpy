@@ -8,6 +8,10 @@ export class ResultsScene extends Phaser.Scene {
 
   create(): void {
     const result = runSession.result;
+    if (document.documentElement.dataset.device === 'mobile') {
+      this.createMobileLayout(result);
+      return;
+    }
     const g = this.add.graphics();
     g.fillGradientStyle(0x0e151e, 0x0e151e, 0x202c39, 0x101720, 1);
     g.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
@@ -46,4 +50,42 @@ export class ResultsScene extends Phaser.Scene {
     button.on('pointerdown', () => this.scene.start('HQ'));
     this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 34, 'SHPY • ПРОТОТИП 0.1', { fontSize: '12px', color: '#718091' }).setOrigin(0.5);
   }
+
+  private createMobileLayout(result: typeof runSession.result): void {
+    const g = this.add.graphics();
+    g.fillGradientStyle(0x0e151e, 0x0e151e, 0x202c39, 0x101720, 1);
+    g.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    g.fillStyle(0x1c2835, 0.98); g.fillRoundedRect(72, 50, 1136, 620, 18);
+    g.lineStyle(2, 0x718095, 0.8); g.strokeRoundedRect(72, 50, 1136, 620, 18);
+    const success = result?.success ?? false;
+    this.add.text(GAME_WIDTH / 2, 102, success ? 'ОПЕРАЦИЯ ЗАВЕРШЕНА' : 'ОПЕРАЦИЯ ПРОВАЛЕНА', {
+      fontSize: '34px', color: success ? '#83d7a4' : '#e87575', fontStyle: 'bold',
+    }).setOrigin(0.5);
+    this.add.text(GAME_WIDTH / 2, 150, 'КАЗИНО «РОЯЛЬ»  •  ОТЧЁТ АГЕНТСТВА', {
+      fontSize: '19px', color: '#aebdca', letterSpacing: 2,
+    }).setOrigin(0.5);
+    const accuracy = result && result.shots > 0 ? Math.round((result.hits / result.shots) * 100) : 0;
+    const stats: [string, string][] = [
+      ['ВРЕМЯ ОПЕРАЦИИ', (result?.elapsedSeconds ?? 0) + ' СЕК'],
+      ['УСТРАНЕНО ЦЕЛЕЙ', String(result?.kills ?? 0)],
+      ['ТОЧНОСТЬ', accuracy + '%'],
+      ['ПОЛУЧЕНО УРОНА', (result?.damageTaken ?? 0) + ' HP'],
+      ['РЕПУТАЦИЯ ЗА ОПЕРАЦИЮ', '+' + (result?.reputationEarned ?? 0) + ' XP'],
+      ['ВСЕГО РЕПУТАЦИИ', saveService.load().reputation + ' XP'],
+    ];
+    stats.forEach(([label, value], index) => {
+      const col = index % 2;
+      const row = Math.floor(index / 2);
+      const x = col === 0 ? 130 : 690;
+      const y = 220 + row * 104;
+      this.add.text(x, y, label, { fontSize: '17px', color: '#aebdca', fontStyle: 'bold' });
+      this.add.text(x, y + 36, value, { fontSize: '29px', color: '#ffffff', fontStyle: 'bold' });
+      g.lineStyle(1, 0x465666, 0.65); g.lineBetween(x, y + 82, x + 440, y + 82);
+    });
+    const button = this.add.rectangle(GAME_WIDTH / 2, 590, 430, 70, 0x9d3038).setInteractive({ useHandCursor: true });
+    button.setStrokeStyle(2, 0xffffff, 0.25);
+    this.add.text(GAME_WIDTH / 2, 590, 'ВЕРНУТЬСЯ В ШТАБ', { fontSize: '22px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
+    button.on('pointerdown', () => this.scene.start('HQ'));
+  }
+
 }
