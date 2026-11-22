@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 import { BootScene } from '../game/scenes/BootScene';
 import { HQScene } from '../game/scenes/HQScene';
+import { ComputerScene } from '../game/scenes/ComputerScene';
+import { OperationsScene } from '../game/scenes/OperationsScene';
 import { LoadoutScene } from '../game/scenes/LoadoutScene';
 import { MissionScene } from '../game/scenes/MissionScene';
 import { ResultsScene } from '../game/scenes/ResultsScene';
@@ -40,6 +42,6 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
     height: GAME_HEIGHT,
   },
   input: { activePointers: 3, mouse: { preventDefaultWheel: true }, touch: { capture: true } },
-  scene: [BootScene, StartScene, HQScene, LoadoutScene, MissionScene, ResultsScene],
+  scene: [BootScene, StartScene, HQScene, OperationsScene, ComputerScene, LoadoutScene, MissionScene, ResultsScene],
   render: { powerPreference: 'low-power', roundPixels: true },
 };
