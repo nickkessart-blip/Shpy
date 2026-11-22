@@ -65,6 +65,7 @@ export class MissionScene extends Phaser.Scene {
   private resultSent = false;
   private isMobileControls = false;
   private mobileFireHeld = false;
+  private mobileControlsElement?: HTMLDivElement;
 
   constructor() { super('Mission'); }
 
@@ -101,6 +102,8 @@ export class MissionScene extends Phaser.Scene {
     this.transitionWalkTweens = [];
     this.isMobileControls = hasTouchInput();
     this.mobileFireHeld = false;
+    this.mobileControlsElement?.remove();
+    this.mobileControlsElement = undefined;
     this.impactEffects = [];
     this.weaponRecoil = 0;
     this.playerHitFlash = 0;
@@ -132,6 +135,11 @@ export class MissionScene extends Phaser.Scene {
     });
     this.input.on('pointerup', () => { this.mobileFireHeld = false; });
     if (this.isMobileControls) this.buildMobileControls();
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.mobileFireHeld = false;
+      this.mobileControlsElement?.remove();
+      this.mobileControlsElement = undefined;
+    });
     this.input.keyboard?.on('keydown-R', () => this.reload());
     this.input.keyboard?.on('keydown-ESC', () => this.togglePause());
 
@@ -606,58 +614,99 @@ export class MissionScene extends Phaser.Scene {
   }
 
   private buildMobileControls(): void {
-    // Draw the touch controls as one explicit UI layer. Hit zones are separate,
-    // so touch input remains reliable even if a browser has trouble with Circle objects.
-    const controls = this.add.graphics().setDepth(40).setScrollFactor(0);
-    controls.fillStyle(0x9d3036, 0.96);
-    controls.fillCircle(MOBILE_FIRE.x, MOBILE_FIRE.y, 66);
-    controls.lineStyle(5, 0xffdfb4, 1);
-    controls.strokeCircle(MOBILE_FIRE.x, MOBILE_FIRE.y, 66);
-    controls.fillStyle(0x263747, 0.98);
-    controls.fillCircle(MOBILE_RELOAD.x, MOBILE_RELOAD.y, 44);
-    controls.lineStyle(4, 0xe2b96e, 1);
-    controls.strokeCircle(MOBILE_RELOAD.x, MOBILE_RELOAD.y, 44);
-    controls.fillStyle(0x263747, 0.98);
-    controls.fillCircle(MOBILE_PAUSE.x, MOBILE_PAUSE.y, 31);
-    controls.lineStyle(3, 0xe2b96e, 1);
-    controls.strokeCircle(MOBILE_PAUSE.x, MOBILE_PAUSE.y, 31);
+    // DOM controls sit above the Phaser canvas, so their size and hit areas do not
+    // depend on Phaser's FIT scaling or the Android browser's canvas coordinates.
+    const host = this.game.canvas.parentElement;
+    if (!host) return;
 
-    this.add.text(MOBILE_FIRE.x, MOBILE_FIRE.y, 'ОГОНЬ', {
-      fontSize: '20px', color: '#ffffff', fontStyle: 'bold',
-      stroke: '#551c22', strokeThickness: 4,
-    }).setOrigin(0.5).setDepth(41).setScrollFactor(0);
+    const overlay = document.createElement('div');
+    overlay.dataset.shpyMobileControls = 'true';
+    Object.assign(overlay.style, {
+      position: 'absolute',
+      inset: '0',
+      zIndex: '10000',
+      pointerEvents: 'none',
+      touchAction: 'none',
+      userSelect: 'none',
+      WebkitUserSelect: 'none',
+    });
 
-    this.add.text(MOBILE_RELOAD.x, MOBILE_RELOAD.y, '↻', {
-      fontSize: '30px', color: '#ffffff', fontStyle: 'bold',
-      stroke: '#101820', strokeThickness: 3,
-    }).setOrigin(0.5).setDepth(41).setScrollFactor(0);
+    const makeButton = (label: string, size: number, background: string): HTMLButtonElement => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = label;
+      Object.assign(button.style, {
+        width: size + 'px',
+        height: size + 'px',
+        borderRadius: '50%',
+        border: '3px solid #f0d4a4',
+        background,
+        color: '#fff',
+        font: '800 16px/1 Arial, sans-serif',
+        textShadow: '0 2px 3px #000',
+        boxShadow: '0 4px 14px #0009',
+        touchAction: 'none',
+        pointerEvents: 'auto',
+        padding: '4px',
+        display: 'grid',
+        placeItems: 'center',
+        WebkitTapHighlightColor: 'transparent',
+      });
+      button.addEventListener('contextmenu', (event) => event.preventDefault());
+      return button;
+    };
 
-    this.add.text(MOBILE_PAUSE.x, MOBILE_PAUSE.y, 'Ⅱ', {
-      fontSize: '23px', color: '#ffffff', fontStyle: 'bold',
-      stroke: '#101820', strokeThickness: 3,
-    }).setOrigin(0.5).setDepth(41).setScrollFactor(0);
+    const stack = document.createElement('div');
+    Object.assign(stack.style, {
+      position: 'absolute',
+      right: 'max(14px, env(safe-area-inset-right))',
+      bottom: 'max(14px, env(safe-area-inset-bottom))',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: '12px',
+      pointerEvents: 'none',
+    });
 
-    const fireZone = this.add.zone(MOBILE_FIRE.x, MOBILE_FIRE.y, 142, 142)
-      .setDepth(42).setScrollFactor(0).setInteractive();
-    fireZone.on('pointerdown', () => {
+    const reload = makeButton('↻\nПЕРЕЗАРЯДКА', 76, '#263747ee');
+    reload.style.borderRadius = '18px';
+    reload.style.fontSize = '12px';
+    reload.style.whiteSpace = 'pre-line';
+    const fire = makeButton('ОГОНЬ', 92, '#a52f38f2');
+    const pause = makeButton('Ⅱ', 48, '#263747ee');
+    Object.assign(pause.style, {
+      position: 'absolute',
+      top: 'max(12px, env(safe-area-inset-top))',
+      right: 'max(12px, env(safe-area-inset-right))',
+      fontSize: '22px',
+    });
+
+    const consume = (event: Event): void => {
+      event.preventDefault();
+      event.stopPropagation();
+    };
+    const stopFire = (): void => { this.mobileFireHeld = false; };
+    fire.addEventListener('pointerdown', (event) => {
+      consume(event);
+      if (this.phase !== 'active') return;
       this.mobileFireHeld = true;
       this.shoot();
     });
-    fireZone.on('pointerup', () => { this.mobileFireHeld = false; });
-    fireZone.on('pointerout', () => { this.mobileFireHeld = false; });
+    window.addEventListener('pointerup', stopFire);
+    window.addEventListener('pointercancel', stopFire);
+    reload.addEventListener('pointerdown', (event) => {
+      consume(event);
+      if (this.phase === 'active') this.reload();
+    });
+    pause.addEventListener('pointerdown', (event) => {
+      consume(event);
+      this.togglePause();
+    });
 
-    const reloadZone = this.add.zone(MOBILE_RELOAD.x, MOBILE_RELOAD.y, 100, 100)
-      .setDepth(42).setScrollFactor(0).setInteractive();
-    reloadZone.on('pointerdown', () => this.reload());
-
-    const pauseZone = this.add.zone(MOBILE_PAUSE.x, MOBILE_PAUSE.y, 76, 76)
-      .setDepth(42).setScrollFactor(0).setInteractive();
-    pauseZone.on('pointerdown', () => this.togglePause());
-
-    this.add.text(MOBILE_RELOAD.x, MOBILE_RELOAD.y - 58, 'ПЕРЕЗАРЯДКА', {
-      fontSize: '12px', color: '#e8edf3', fontStyle: 'bold',
-      stroke: '#101820', strokeThickness: 3,
-    }).setOrigin(0.5).setDepth(41).setScrollFactor(0);
+    stack.append(reload, fire);
+    overlay.append(stack, pause);
+    host.append(overlay);
+    this.mobileControlsElement = overlay;
   }
 
   private togglePause(): void {
