@@ -3,26 +3,48 @@ import { getAccountLevel } from '../game/data/progression';
 import {
   DEFAULT_LOADOUT, normalizeLoadout, type LoadoutSelection,
 } from '../game/data/arsenal';
+import {
+  normalizeAgentMissionRuns, normalizeAgentRoster, type AgencyAgent, type AgentMissionRun,
+} from '../game/data/agents';
+import {
+  COSMETICS, DEFAULT_COSMETICS, normalizeCosmetics, type CosmeticId, type CosmeticLoadout,
+} from '../game/data/cosmetics';
 
 const STORAGE_KEY = 'shpy_save_v1';
 const RECOVERY_KEY = 'shpy_save_recovery_backup';
 
 export type UpgradeKind = 'damage' | 'magazine' | 'reload' | 'health' | 'armor' | 'precision';
+export type GearUpgradeKind = 'grenadeCapacity' | 'medkitEfficiency';
 
 export interface SaveData {
-  schemaVersion: 4;
+  schemaVersion: 5;
   accountXp: number;
   dollars: number;
   upgrades: Record<UpgradeKind, number>;
   loadout: LoadoutSelection;
+  agents: AgencyAgent[];
+  agentMissions: AgentMissionRun[];
+  components: number;
+  gearUpgrades: Record<GearUpgradeKind, number>;
+  cosmetics: CosmeticLoadout;
 }
 
+export const GEAR_UPGRADE_COSTS: Record<GearUpgradeKind, readonly number[]> = {
+  grenadeCapacity: [0, 25, 55],
+  medkitEfficiency: [0, 35, 70],
+};
+
 const DEFAULT_SAVE: SaveData = {
-  schemaVersion: 4,
+  schemaVersion: 5,
   accountXp: 0,
   dollars: 0,
   upgrades: { damage: 0, magazine: 0, reload: 0, health: 0, armor: 0, precision: 0 },
   loadout: structuredClone(DEFAULT_LOADOUT),
+  agents: [],
+  agentMissions: [],
+  components: 0,
+  gearUpgrades: { grenadeCapacity: 0, medkitEfficiency: 0 },
+  cosmetics: structuredClone(DEFAULT_COSMETICS),
 };
 
 export class SaveService {
@@ -42,12 +64,14 @@ export class SaveService {
       const data = parsed as {
         schemaVersion?: unknown; reputation?: unknown; accountXp?: unknown; dollars?: unknown;
         upgrades?: Partial<Record<UpgradeKind, unknown>>; loadout?: unknown;
+        agents?: unknown; agentMissions?: unknown; components?: unknown;
+        gearUpgrades?: unknown; cosmetics?: unknown;
       };
       const version = data.schemaVersion;
-      if (![1, 2, 3, 4].includes(version as number) || !data.upgrades || typeof data.upgrades !== 'object') {
+      if (![1, 2, 3, 4, 5].includes(version as number) || !data.upgrades || typeof data.upgrades !== 'object') {
         return this.rejectCorruptSave(raw);
       }
-      const legacy = version !== 4;
+      const legacy = version !== 4 && version !== 5;
       if (legacy && (typeof data.reputation !== 'number' || !Number.isFinite(data.reputation))) {
         return this.rejectCorruptSave(raw);
       }
@@ -56,10 +80,15 @@ export class SaveService {
       if (!legacy && (typeof data.dollars !== 'number' || !Number.isFinite(data.dollars))) {
         return this.rejectCorruptSave(raw);
       }
+
       const accountXp = Math.max(0, Math.floor(accountXpRaw));
       const dollars = legacy ? accountXp : Math.max(0, Math.floor(data.dollars as number));
+      const agents = normalizeAgentRoster(data.agents);
+      const rawGear = data.gearUpgrades && typeof data.gearUpgrades === 'object'
+        ? data.gearUpgrades as Partial<Record<GearUpgradeKind, unknown>>
+        : {};
       const normalized: SaveData = {
-        schemaVersion: 4,
+        schemaVersion: 5,
         accountXp,
         dollars,
         upgrades: {
@@ -71,10 +100,18 @@ export class SaveService {
           precision: clampLevel(data.upgrades.precision, BALANCE.upgradeCosts.precision.length - 1),
         },
         loadout: normalizeLoadout(data.loadout ?? DEFAULT_LOADOUT, getAccountLevel(accountXp)),
+        agents,
+        agentMissions: normalizeAgentMissionRuns(data.agentMissions, agents),
+        components: typeof data.components === 'number' ? safeAmount(data.components) : 0,
+        gearUpgrades: {
+          grenadeCapacity: clampLevel(rawGear.grenadeCapacity, GEAR_UPGRADE_COSTS.grenadeCapacity.length - 1),
+          medkitEfficiency: clampLevel(rawGear.medkitEfficiency, GEAR_UPGRADE_COSTS.medkitEfficiency.length - 1),
+        },
+        cosmetics: normalizeCosmetics(data.cosmetics),
       };
       this.volatileSave = structuredClone(normalized);
       this.volatileSaveExists = true;
-      if (legacy) this.save(normalized);
+      if (version !== 5) this.save(normalized);
       return normalized;
     } catch { return this.rejectCorruptSave(raw); }
   }
@@ -85,9 +122,11 @@ export class SaveService {
       if (!raw) return this.volatileSaveExists;
       const parsed: unknown = JSON.parse(raw);
       if (!parsed || typeof parsed !== 'object') { this.backupCorruptSave(raw); return false; }
-      const data = parsed as { schemaVersion?: unknown; reputation?: unknown; accountXp?: unknown; dollars?: unknown; upgrades?: unknown };
+      const data = parsed as {
+        schemaVersion?: unknown; reputation?: unknown; accountXp?: unknown; dollars?: unknown; upgrades?: unknown;
+      };
       const legacy = data.schemaVersion === 1 || data.schemaVersion === 2 || data.schemaVersion === 3;
-      const validVersion = legacy || data.schemaVersion === 4;
+      const validVersion = legacy || data.schemaVersion === 4 || data.schemaVersion === 5;
       const validXp = legacy ? typeof data.reputation === 'number' && Number.isFinite(data.reputation)
         : typeof data.accountXp === 'number' && Number.isFinite(data.accountXp);
       const validMoney = legacy || (typeof data.dollars === 'number' && Number.isFinite(data.dollars));
@@ -159,6 +198,46 @@ export class SaveService {
     data.upgrades[kind] = next;
     this.save(data);
     return { success: true, reason: null, data };
+  }
+
+  purchaseGearUpgrade(kind: GearUpgradeKind): {
+    success: boolean; reason: 'maxed' | 'components' | null; data: SaveData;
+  } {
+    const data = this.load();
+    const next = data.gearUpgrades[kind] + 1;
+    const costs = GEAR_UPGRADE_COSTS[kind];
+    if (next >= costs.length) return { success: false, reason: 'maxed', data };
+    const cost = costs[next] ?? 0;
+    if (data.components < cost) return { success: false, reason: 'components', data };
+    data.components -= cost;
+    data.gearUpgrades[kind] = next;
+    this.save(data);
+    return { success: true, reason: null, data };
+  }
+
+  purchaseCosmetic(id: CosmeticId): {
+    success: boolean; reason: 'unknown' | 'owned' | 'components' | null; data: SaveData;
+  } {
+    const data = this.load();
+    const cosmetic = COSMETICS.find((item) => item.id === id);
+    if (!cosmetic) return { success: false, reason: 'unknown', data };
+    if (data.cosmetics.unlocked.includes(id)) return { success: false, reason: 'owned', data };
+    if (data.components < cosmetic.componentCost) return { success: false, reason: 'components', data };
+    data.components -= cosmetic.componentCost;
+    data.cosmetics.unlocked.push(id);
+    this.save(data);
+    return { success: true, reason: null, data };
+  }
+
+  equipCosmetic(id: CosmeticId): SaveData {
+    const data = this.load();
+    if (!data.cosmetics.unlocked.includes(id)) return data;
+    const cosmetic = COSMETICS.find((item) => item.id === id);
+    if (!cosmetic) return data;
+    if (cosmetic.category === 'hero') data.cosmetics.heroSkinId = id;
+    else data.cosmetics.weaponSkinId = id;
+    this.save(data);
+    return data;
   }
 }
 
