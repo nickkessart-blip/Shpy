@@ -44,13 +44,13 @@ describe('SaveService economy and migration', () => {
       }),
     });
     const migrated = new SaveService().load();
-    expect(migrated.schemaVersion).toBe(4);
+    expect(migrated.schemaVersion).toBe(5);
     expect(migrated.accountXp).toBe(240);
     expect(migrated.dollars).toBe(240);
     expect(migrated.upgrades).toEqual({
       damage: 2, magazine: 1, reload: 2, health: 0, armor: 0, precision: 0,
     });
-    expect(JSON.parse(values.get('shpy_save_v1') ?? '{}').schemaVersion).toBe(4);
+    expect(JSON.parse(values.get('shpy_save_v1') ?? '{}').schemaVersion).toBe(5);
   });
 
   it('migrates schema v2 and v3 without losing existing progression', () => {
@@ -63,14 +63,14 @@ describe('SaveService economy and migration', () => {
         }),
       });
       const migrated = new SaveService().load();
-      expect(migrated.schemaVersion).toBe(4);
+      expect(migrated.schemaVersion).toBe(5);
       expect(migrated.accountXp).toBe(1800);
       expect(migrated.dollars).toBe(1800);
       expect(migrated.loadout).toEqual({
         weapons: ['pistol', 'smg', 'rifle'], tacticalItem: 'grenade', activeItem: 'medkit',
       });
       expect(migrated.upgrades).toMatchObject({ damage: 3, health: 1, armor: 2, precision: 1 });
-      expect(JSON.parse(values.get('shpy_save_v1') ?? '{}').schemaVersion).toBe(4);
+      expect(JSON.parse(values.get('shpy_save_v1') ?? '{}').schemaVersion).toBe(5);
     }
   });
 
@@ -152,8 +152,53 @@ describe('SaveService economy and migration', () => {
     const service = new SaveService();
     const data = service.load();
     expect(data.accountXp).toBe(0);
-    expect(data.schemaVersion).toBe(4);
+    expect(data.schemaVersion).toBe(5);
     expect(values.get('shpy_save_recovery_backup')).toBeTruthy();
     expect(service.hasSave()).toBe(false);
+  });
+
+  it('migrates schema v4 and adds empty agency systems without losing progress', () => {
+    const values = useMemoryStorage({
+      shpy_save_v1: JSON.stringify({
+        schemaVersion: 4,
+        accountXp: 900,
+        dollars: 410,
+        upgrades: { damage: 1, magazine: 2, reload: 0, health: 1, armor: 0, precision: 0 },
+        loadout: { weapons: ['pistol'], tacticalItem: 'none', activeItem: 'none' },
+      }),
+    });
+    const migrated = new SaveService().load();
+    expect(migrated).toMatchObject({
+      schemaVersion: 5,
+      accountXp: 900,
+      dollars: 410,
+      components: 0,
+      agents: [],
+      agentMissions: [],
+      gearUpgrades: { grenadeCapacity: 0, medkitEfficiency: 0 },
+      cosmetics: { heroSkinId: 'hero-standard', weaponSkinId: 'weapon-standard' },
+    });
+    expect(JSON.parse(values.get('shpy_save_v1') ?? '{}').schemaVersion).toBe(5);
+  });
+
+  it('spends agent components on modifications and cosmetics without touching main progress', () => {
+    useMemoryStorage();
+    const service = new SaveService();
+    const initial = service.load();
+    initial.accountXp = 700;
+    initial.dollars = 900;
+    initial.components = 120;
+    service.save(initial);
+
+    expect(service.purchaseGearUpgrade('grenadeCapacity').success).toBe(true);
+    expect(service.purchaseCosmetic('hero-night').success).toBe(true);
+    service.equipCosmetic('hero-night');
+
+    const updated = service.load();
+    expect(updated.components).toBe(50);
+    expect(updated.gearUpgrades.grenadeCapacity).toBe(1);
+    expect(updated.cosmetics.heroSkinId).toBe('hero-night');
+    expect(updated.dollars).toBe(900);
+    expect(updated.accountXp).toBe(700);
   });
 });
