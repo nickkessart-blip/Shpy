@@ -29,6 +29,7 @@ const SVG_SIZES: Record<string, { width: number; height: number }> = {
   'enemies/guard': { width: 240, height: 400 },
   'enemies/armored': { width: 240, height: 400 },
   'enemies/assault': { width: 240, height: 400 },
+  'enemies/boss': { width: 320, height: 500 },
   'weapons/pistol': { width: 360, height: 620 },
   'props/cover-crate': { width: 520, height: 188 },
   'props/bar-counter': { width: 520, height: 188 },

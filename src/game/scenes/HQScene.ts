@@ -32,7 +32,7 @@ export class HQScene extends Phaser.Scene {
     this.add.text(108, 350, 'Доступная операция', { fontSize: '14px', color: COLORS.muted });
     this.add.text(108, 377, '01 / КАЗИНО «РОЯЛЬ»', { fontSize: '25px', color: '#f0c16d', fontStyle: 'bold' });
     this.add.text(108, 421, 'Главный зал → Бар и VIP-проход', { fontSize: '16px', color: '#c7d0d9' });
-    this.add.text(108, 475, 'Задача: зачистить 5 волн в каждой зоне. Не попасть в отчёт о потерях.', { fontSize: '14px', color: COLORS.muted });
+    this.add.text(108, 475, 'Задача: 5 волн в главном зале, 5 в VIP-зоне и финальная схватка с боссом.', { fontSize: '14px', color: COLORS.muted });
     this.button(108, 510, 260, 46, 'НАЧАТЬ ОПЕРАЦИЮ', COLORS.red, () => {
       runSession.reset();
       this.scene.start('Mission');
@@ -63,7 +63,7 @@ export class HQScene extends Phaser.Scene {
     this.add.text(92, 336, 'ОПЕРАЦИЯ 01', { fontSize: '18px', color: COLORS.muted });
     this.add.text(92, 372, 'КАЗИНО «РОЯЛЬ»', { fontSize: '33px', color: '#f0c16d', fontStyle: 'bold' });
     this.add.text(92, 423, 'Главный зал  →  Бар и VIP-проход', { fontSize: '19px', color: '#c7d0d9' });
-    this.add.text(92, 462, 'Устранить противников. Не попасть под огонь.', { fontSize: '16px', color: COLORS.muted });
+    this.add.text(92, 462, '10 волн охраны и начальник казино в финале операции.', { fontSize: '16px', color: COLORS.muted });
     this.button(92, 526, 465, 78, 'НАЧАТЬ ОПЕРАЦИЮ', COLORS.red, () => {
       runSession.reset();
       this.scene.start('Mission');

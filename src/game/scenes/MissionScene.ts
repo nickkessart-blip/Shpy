@@ -11,7 +11,7 @@ import { runSession } from '../systems/missions/runSession';
 type EnemyState = 'Exposed' | 'Aiming' | 'Attacking' | 'SeekingCover' | 'Hidden' | 'Peeking' | 'Repositioning' | 'Defeated';
 interface RuntimeEnemy {
   uid: number; type: EnemyType; x: number; baseX: number; y: number; originY: number; hp: number; maxHp: number;
-  coverId?: string; state: EnemyState; timer: number; phase: number; hitFlash: number;
+  coverId?: string; state: EnemyState; timer: number; phase: number; bossPhase: 0 | 1 | 2; hitFlash: number;
 }
 
 const MUZZLE: Point = { x: GAME_WIDTH / 2, y: 662 };
@@ -19,7 +19,7 @@ const MOBILE_FIRE = { x: GAME_WIDTH - 116, y: GAME_HEIGHT - 190 };
 const MOBILE_RELOAD = { x: GAME_WIDTH - 116, y: GAME_HEIGHT - 58 };
 const MOBILE_PAUSE = { x: GAME_WIDTH - 58, y: 58 };
 const SPRITES: Record<EnemyType, string> = {
-  guard: 'enemy-guard', armored: 'enemy-armored', assault: 'enemy-assault',
+  guard: 'enemy-guard', armored: 'enemy-armored', assault: 'enemy-assault', boss: 'enemy-boss',
 };
 
 export class MissionScene extends Phaser.Scene {
@@ -45,7 +45,7 @@ export class MissionScene extends Phaser.Scene {
   private phase: 'active' | 'transition' | 'finished' | 'paused' = 'active';
   private hp: number = BALANCE.player.maxHp;
   private magazine: number = BALANCE.weapon.magazine[0];
-  private reserve = 72;
+  private reserve = BALANCE.weapon.reserveAmmo;
   private reloading = 0;
   private shotCooldown = 0;
   private shotFlash = 0;
@@ -82,7 +82,7 @@ export class MissionScene extends Phaser.Scene {
     this.phase = 'active';
     this.hp = BALANCE.player.maxHp;
     this.magazine = BALANCE.weapon.magazine[initialSave.upgrades.magazine];
-    this.reserve = 72;
+    this.reserve = BALANCE.weapon.reserveAmmo;
     this.reloading = 0;
     this.shotCooldown = 0;
     this.shotFlash = 0;
@@ -231,7 +231,7 @@ export class MissionScene extends Phaser.Scene {
     this.backgroundArt?.destroy();
     this.backgroundArt = undefined;
     this.children.getAll().forEach((child) => {
-      if (child.name.startsWith('enemy-image-') || child.name.startsWith('cover-image-')) child.destroy();
+      if (child.name.startsWith('enemy-image-') || child.name.startsWith('boss-name-') || child.name.startsWith('cover-image-')) child.destroy();
     });
     const bgKey = AssetCatalog.imageKeyFor(this.sceneDef.backgroundSlot);
     if (AssetCatalog.hasTexture(this, bgKey)) {
@@ -271,11 +271,12 @@ export class MissionScene extends Phaser.Scene {
       return {
         uid: this.uniqueId++, type, x: spawn.x, baseX: spawn.x, y: spawn.y, originY: spawn.y,
         hp: ENEMIES[type].hp, maxHp: ENEMIES[type].hp, coverId: spawn.coverId,
-        state: 'Exposed', timer: ENEMIES[type].exposeMs * (0.4 + index * 0.22), phase: 0, hitFlash: 0,
+        state: 'Exposed', timer: ENEMIES[type].exposeMs * (0.4 + index * 0.22), phase: 0, bossPhase: 0, hitFlash: 0,
       };
     });
     this.waveAwarded = false;
-    this.showToast('ВОЛНА ' + (this.waveIndex + 1) + '/' + this.sceneDef.waves.length, 1200);
+    this.showToast(wave.enemies.includes('boss') ? 'ТРЕВОГА • НАЧАЛЬНИК ОХРАНЫ ВЫШЕЛ НА СЦЕНУ'
+      : 'ВОЛНА ' + (this.waveIndex + 1) + '/' + this.sceneDef.waves.length, wave.enemies.includes('boss') ? 2200 : 1200);
   }
 
   private updateWaveFlow(dt: number): void {
@@ -302,7 +303,7 @@ export class MissionScene extends Phaser.Scene {
 
   private clearEnemySprites(): void {
     for (const child of this.children.getAll()) {
-      if (child.name.startsWith('enemy-image-')) child.destroy();
+      if (child.name.startsWith('enemy-image-') || child.name.startsWith('boss-name-')) child.destroy();
     }
   }
 
@@ -316,6 +317,8 @@ export class MissionScene extends Phaser.Scene {
     this.phase = 'transition';
     this.mobileFireHeld = false;
     this.reloading = 0;
+    this.hp = Math.min(BALANCE.player.maxHp, this.hp + BALANCE.supplies.intermissionHealing);
+    this.reserve += BALANCE.supplies.intermissionAmmo;
 
     const hallway = this.add.graphics();
     hallway.fillGradientStyle(0x101821, 0x101821, 0x26313b, 0x111820, 1);
@@ -431,7 +434,8 @@ export class MissionScene extends Phaser.Scene {
           onComplete: () => {
             curtain.destroy();
             this.phase = 'active';
-            this.showToast(this.sceneDef.subtitle + ' • ' + this.sceneDef.title, 1700);
+            this.showToast('СНАБЖЕНИЕ: +' + BALANCE.supplies.intermissionHealing + ' HP • +'
+              + BALANCE.supplies.intermissionAmmo + ' ПАТРОНОВ • ' + this.sceneDef.subtitle, 2100);
           },
         });
       },
@@ -446,22 +450,25 @@ export class MissionScene extends Phaser.Scene {
       if (enemy.timer > 0) continue;
       const def = ENEMIES[enemy.type];
       switch (enemy.state) {
-        case 'Exposed': enemy.state = 'Aiming'; enemy.timer = def.aimMs; break;
-        case 'Aiming':
-          enemy.state = 'Attacking'; enemy.timer = 260; this.damagePlayer(def.damage); break;
+        case 'Exposed': {
+          const bossAimScale = enemy.type === 'boss' ? [1, 0.8, 0.62][enemy.bossPhase] : 1;
+          enemy.state = 'Aiming'; enemy.timer = Math.round(def.aimMs * bossAimScale); break;
+        }
+        case 'Aiming': {
+          const bossDamageScale = enemy.type === 'boss' ? [1, 1.25, 1.5][enemy.bossPhase] : 1;
+          enemy.state = 'Attacking'; enemy.timer = 260;
+          this.damagePlayer(Math.round(def.damage * bossDamageScale)); break;
+        }
         case 'Attacking': {
-          enemy.state = 'SeekingCover';
-          enemy.timer = 320;
-          const cover = this.sceneDef.covers.find((item) => item.id === enemy.coverId);
-          if (cover) {
-            this.tweens.add({
-              targets: enemy,
-              x: cover.x + cover.width / 2,
-              y: cover.y + cover.height / 2 + 20,
-              duration: 320,
-              ease: 'Sine.easeIn',
-            });
+          if (enemy.type === 'boss') {
+            enemy.state = 'Repositioning'; enemy.timer = Math.max(220, 440 - enemy.bossPhase * 90);
+            enemy.x = Math.max(110, Math.min(GAME_WIDTH - 110, enemy.baseX + (enemy.phase % 2 === 0 ? -104 : 104)));
+            enemy.phase += 1; break;
           }
+          enemy.state = 'SeekingCover'; enemy.timer = 320;
+          const cover = this.sceneDef.covers.find((item) => item.id === enemy.coverId);
+          if (cover) this.tweens.add({ targets: enemy, x: cover.x + cover.width / 2,
+            y: cover.y + cover.height / 2 + 20, duration: 320, ease: 'Sine.easeIn' });
           break;
         }
         case 'SeekingCover':
@@ -489,7 +496,10 @@ export class MissionScene extends Phaser.Scene {
           }
           break;
         }
-        case 'Repositioning': enemy.state = 'Exposed'; enemy.baseX = enemy.x; enemy.timer = def.exposeMs; break;
+        case 'Repositioning':
+          enemy.state = 'Exposed'; enemy.baseX = enemy.type === 'boss' ? 640 : enemy.x;
+          enemy.timer = enemy.type === 'boss' ? Math.max(360, def.exposeMs - enemy.bossPhase * 150) : def.exposeMs;
+          break;
       }
     }
   }
@@ -511,9 +521,10 @@ export class MissionScene extends Phaser.Scene {
     // crossed foreground rectangles even when the reticle was visibly on an enemy.
     for (const enemy of this.enemies) {
       if (enemy.state === 'Defeated' || enemy.state === 'Hidden') continue;
-      const head = { x: enemy.x, y: enemy.y - 48 };
+      const isBoss = enemy.type === 'boss';
+      const head = { x: enemy.x, y: enemy.y - (isBoss ? 72 : 48) };
       const body = { x: enemy.x, y: enemy.y - 5 };
-      const part = resolveHit(this.aim, head, body, 32, 48);
+      const part = resolveHit(this.aim, head, body, isBoss ? 42 : 32, isBoss ? 66 : 48);
       if (!part) continue;
       const target = part === 'head' ? head : body;
       const distance = Math.hypot(this.aim.x - target.x, this.aim.y - target.y);
@@ -527,8 +538,13 @@ export class MissionScene extends Phaser.Scene {
       this.hits += 1;
       const damage = BALANCE.weapon.damage[save.upgrades.damage]
         * (chosen.part === 'head' ? BALANCE.weapon.headMultiplier : 1);
-      chosen.enemy.hp -= damage;
+      chosen.enemy.hp = Math.max(0, chosen.enemy.hp - damage);
       chosen.enemy.hitFlash = 230;
+      let bossPhaseChanged: 0 | 1 | 2 | null = null;
+      if (chosen.enemy.type === 'boss' && chosen.enemy.hp > 0) {
+        const nextBossPhase: 0 | 1 | 2 = chosen.enemy.hp <= chosen.enemy.maxHp / 3 ? 2 : chosen.enemy.hp <= (chosen.enemy.maxHp * 2) / 3 ? 1 : 0;
+        if (nextBossPhase > chosen.enemy.bossPhase) { chosen.enemy.bossPhase = nextBossPhase; bossPhaseChanged = nextBossPhase; }
+      }
       this.impactEffects.push({ x: chosen.target.x, y: chosen.target.y, life: 520, maxLife: 520, kind: 'hit', damage });
       const damageLabel = this.add.text(
         chosen.target.x + 20, chosen.target.y - 24,
@@ -541,13 +557,17 @@ export class MissionScene extends Phaser.Scene {
         duration: 560, ease: 'Cubic.easeOut',
         onComplete: () => damageLabel.destroy(),
       });
-      this.showToast((chosen.part === 'head' ? 'ПОПАДАНИЕ В ГОЛОВУ' : 'ПОПАДАНИЕ') + ' • −' + damage, 450);
+      this.showToast(bossPhaseChanged === 1 ? 'НАЧАЛЬНИК ОХРАНЫ УСКОРЯЕТСЯ • ФАЗА II'
+        : bossPhaseChanged === 2 ? 'НАЧАЛЬНИК ОХРАНЫ В ЯРОСТИ • ФАЗА III'
+          : (chosen.part === 'head' ? 'ПОПАДАНИЕ В ГОЛОВУ' : 'ПОПАДАНИЕ') + ' • −' + damage,
+      bossPhaseChanged ? 1500 : 450);
       if (chosen.enemy.hp <= 0) {
         this.tweens.killTweensOf(chosen.enemy);
         chosen.enemy.state = 'Defeated';
         this.kills += 1;
-        this.award(BALANCE.rewards.kill);
-        this.showToast(ENEMIES[chosen.enemy.type].name.toUpperCase() + ' УСТРАНЁН • +' + BALANCE.rewards.kill + ' XP', 800);
+        const reward = chosen.enemy.type === 'boss' ? BALANCE.rewards.boss : BALANCE.rewards.kill;
+        this.award(reward);
+        this.showToast(ENEMIES[chosen.enemy.type].name.toUpperCase() + ' УСТРАНЁН • +' + reward + ' XP', 1100);
       }
     } else {
       const cover = this.sceneDef.covers.find((item) => pointInRect(this.aim, item));
@@ -762,9 +782,10 @@ export class MissionScene extends Phaser.Scene {
     for (const enemy of this.enemies) {
       const spriteKey = 'enemy-image-' + enemy.uid;
       const sprite = this.children.getByName(spriteKey) as Phaser.GameObjects.Image | null;
+      const bossLabelKey = 'boss-name-' + enemy.uid;
+      const bossLabel = this.children.getByName(bossLabelKey) as Phaser.GameObjects.Text | null;
       if (enemy.state === 'Defeated' || enemy.state === 'Hidden') {
-        sprite?.setVisible(false);
-        continue;
+        sprite?.setVisible(false); bossLabel?.setVisible(false); continue;
       }
       const def = ENEMIES[enemy.type];
       const hitOffset = enemy.hitFlash > 0 ? Math.sin(this.time.now / 24) * 5 * (enemy.hitFlash / 230) : 0;
@@ -774,7 +795,9 @@ export class MissionScene extends Phaser.Scene {
       if (AssetCatalog.hasTexture(this, SPRITES[enemy.type])) {
         let image = sprite;
         if (!image) image = this.add.image(drawX, drawY, SPRITES[enemy.type]).setName(spriteKey).setDepth(2);
-        image.setPosition(drawX, drawY).setDisplaySize(enemy.type === 'armored' ? 92 : 84, enemy.type === 'armored' ? 154 : 146).setVisible(true);
+        const isBoss = enemy.type === 'boss';
+        image.setPosition(drawX, drawY).setDisplaySize(isBoss ? 150 : enemy.type === 'armored' ? 92 : 84,
+          isBoss ? 224 : enemy.type === 'armored' ? 154 : 146).setVisible(true);
         if (enemy.hitFlash > 0) image.setAlpha(0.72 + Math.sin(this.time.now / 20) * 0.28);
         else image.setAlpha(1);
       } else {
@@ -786,9 +809,18 @@ export class MissionScene extends Phaser.Scene {
         if (enemy.type === 'armored') {
           this.world.lineStyle(4, 0xefd1a2, 0.8); this.world.strokeRoundedRect(enemy.x - 28, enemy.y - 42, 56, 88, 10);
         }
+        if (enemy.type === 'boss') {
+          this.world.fillStyle(0x271b18, 1); this.world.fillRoundedRect(enemy.x - 34, drawY - 64, 68, 22, 6);
+          this.world.fillStyle(0xe0b66f, 1); this.world.fillRect(enemy.x - 24, drawY - 57, 48, 5);
+        }
       }
-      this.fx.fillStyle(0x131a22, 0.9); this.fx.fillRoundedRect(enemy.x - 29, enemy.y - 88, 58, 7, 3);
-      this.fx.fillStyle(def.color, 1); this.fx.fillRoundedRect(enemy.x - 29, enemy.y - 88, 58 * (enemy.hp / enemy.maxHp), 7, 3);
+      if (enemy.type === 'boss') {
+        let label = bossLabel;
+        if (!label) label = this.add.text(enemy.x, enemy.y - 164, 'НАЧАЛЬНИК ОХРАНЫ • ФАЗА I', {
+          fontSize: '15px', color: '#f2d49a', fontStyle: 'bold', stroke: '#10161d', strokeThickness: 5,
+        }).setOrigin(0.5).setName(bossLabelKey).setDepth(23);
+        label.setPosition(enemy.x, enemy.y - 164).setText('НАЧАЛЬНИК ОХРАНЫ • ФАЗА ' + (enemy.bossPhase + 1)).setVisible(true);
+      }
       if (enemy.state === 'Aiming') {
         this.fx.lineStyle(2, 0xe25c54, 0.9); this.fx.strokeCircle(enemy.x, enemy.y - 70, 25 + Math.sin(this.time.now / 90) * 3);
         this.fx.lineStyle(2, 0xe25c54, 0.65); this.fx.lineBetween(enemy.x, enemy.y - 70, MUZZLE.x, MUZZLE.y - 10);
@@ -880,8 +912,10 @@ export class MissionScene extends Phaser.Scene {
     for (const enemy of this.enemies) {
       if (enemy.state === 'Defeated' || enemy.state === 'Hidden') continue;
       const def = ENEMIES[enemy.type];
-      this.fx.fillStyle(0x131a22, 0.9); this.fx.fillRoundedRect(enemy.x - 29, enemy.y - 88, 58, 7, 3);
-      this.fx.fillStyle(def.color, 1); this.fx.fillRoundedRect(enemy.x - 29, enemy.y - 88, 58 * (enemy.hp / enemy.maxHp), 7, 3);
+      const barWidth = enemy.type === 'boss' ? 150 : 58;
+      const barY = enemy.y - (enemy.type === 'boss' ? 140 : 88);
+      this.fx.fillStyle(0x131a22, 0.95); this.fx.fillRoundedRect(enemy.x - barWidth / 2, barY, barWidth, 8, 3);
+      this.fx.fillStyle(def.color, 1); this.fx.fillRoundedRect(enemy.x - barWidth / 2, barY, barWidth * (enemy.hp / enemy.maxHp), 8, 3);
       if (enemy.state === 'Aiming') {
         this.fx.lineStyle(2, 0xe25c54, 0.9); this.fx.strokeCircle(enemy.x, enemy.y - 70, 25 + Math.sin(this.time.now / 90) * 3);
         this.fx.lineStyle(2, 0xe25c54, 0.65); this.fx.lineBetween(enemy.x, enemy.y - 70, MUZZLE.x, MUZZLE.y - 10);

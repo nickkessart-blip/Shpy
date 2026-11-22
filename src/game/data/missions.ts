@@ -40,6 +40,7 @@ export const CASINO_MISSION: MissionSceneDefinition[] = [
       { enemies: ['guard', 'assault', 'guard'], spawnPoints: [{ x: 430, y: 330, coverId: 'bar-counter' }, { x: 720, y: 320, coverId: 'bar-counter' }, { x: 1010, y: 335, coverId: 'bar-counter' }] },
       { enemies: ['armored', 'assault'], spawnPoints: [{ x: 500, y: 330, coverId: 'bar-counter' }, { x: 950, y: 330, coverId: 'bar-counter' }] },
       { enemies: ['armored', 'assault', 'guard'], spawnPoints: [{ x: 420, y: 320, coverId: 'bar-counter' }, { x: 760, y: 320, coverId: 'bar-counter' }, { x: 1040, y: 340, coverId: 'bar-counter' }] },
+      { enemies: ['boss'], spawnPoints: [{ x: 640, y: 315 }] },
     ],
   },
 ];

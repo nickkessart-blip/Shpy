@@ -4,6 +4,7 @@ export const ASSET_SLOTS = {
   'enemies/guard': 'enemy-guard',
   'enemies/armored': 'enemy-armored',
   'enemies/assault': 'enemy-assault',
+  'enemies/boss': 'enemy-boss',
   'weapons/pistol': 'weapon-pistol',
   'props/cover-crate': 'cover-crate',
   'props/bar-counter': 'cover-bar',
