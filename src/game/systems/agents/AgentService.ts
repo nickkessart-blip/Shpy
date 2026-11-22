@@ -14,7 +14,11 @@ export type DispatchResult = { success: true; runId: string; successChance: numb
 };
 
 export class AgentService {
-  constructor(private readonly saves: SaveService = saveService) {}
+  private readonly saves: SaveService;
+
+  constructor(saves: SaveService = saveService) {
+    this.saves = saves;
+  }
 
   recruit(candidateId: string): RecruitResult {
     const candidate = AGENT_CANDIDATES.find((entry) => entry.id === candidateId);
