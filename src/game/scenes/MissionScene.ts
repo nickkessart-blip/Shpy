@@ -7,6 +7,7 @@ import { CASINO_MISSION, type MissionSceneDefinition, type SpawnPoint } from '..
 import { AssetCatalog } from '../assets/AssetCatalog';
 import { findVisiblePeekX, pointInRect, resolveHit, type Point } from '../systems/combat/combatMath';
 import { runSession } from '../systems/missions/runSession';
+import { hasTouchInput } from '../../input/deviceCapabilities';
 
 type EnemyState = 'Exposed' | 'Aiming' | 'Attacking' | 'SeekingCover' | 'Hidden' | 'Peeking' | 'Repositioning' | 'Defeated';
 interface RuntimeEnemy {
@@ -15,9 +16,9 @@ interface RuntimeEnemy {
 }
 
 const MUZZLE: Point = { x: GAME_WIDTH / 2, y: 662 };
-const MOBILE_FIRE = { x: GAME_WIDTH - 116, y: GAME_HEIGHT - 190 };
-const MOBILE_RELOAD = { x: GAME_WIDTH - 116, y: GAME_HEIGHT - 58 };
-const MOBILE_PAUSE = { x: GAME_WIDTH - 58, y: 58 };
+const MOBILE_FIRE = { x: GAME_WIDTH - 128, y: GAME_HEIGHT - 205 };
+const MOBILE_RELOAD = { x: GAME_WIDTH - 128, y: GAME_HEIGHT - 66 };
+const MOBILE_PAUSE = { x: GAME_WIDTH - 62, y: 62 };
 const SPRITES: Record<EnemyType, string> = {
   guard: 'enemy-guard', armored: 'enemy-armored', assault: 'enemy-assault',
 };
@@ -61,9 +62,11 @@ export class MissionScene extends Phaser.Scene {
   private uniqueId = 1;
   private sceneDef!: MissionSceneDefinition;
   private pauseOverlay?: Phaser.GameObjects.Container;
+  private transitionLayer?: Phaser.GameObjects.Container;
   private resultSent = false;
   private isMobileControls = false;
   private mobileFireHeld = false;
+  private mobileFirePointerId = -1;
 
   constructor() { super('Mission'); }
 
@@ -97,8 +100,11 @@ export class MissionScene extends Phaser.Scene {
     this.resultSent = false;
     this.pauseOverlay = undefined;
     this.backgroundArt = undefined;
-    this.isMobileControls = document.documentElement.dataset.device === 'mobile';
+    this.isMobileControls = hasTouchInput() || document.documentElement.dataset.device === 'mobile';
+    if (this.isMobileControls) document.documentElement.dataset.device = 'mobile';
     this.mobileFireHeld = false;
+    this.mobileFirePointerId = -1;
+    this.transitionLayer = undefined;
     this.impactEffects = [];
     this.weaponRecoil = 0;
     this.playerHitFlash = 0;
@@ -128,7 +134,13 @@ export class MissionScene extends Phaser.Scene {
       this.aim = { x: pointer.x, y: pointer.y };
       this.shoot();
     });
-    this.input.on('pointerup', () => { this.mobileFireHeld = false; });
+    const releaseFirePointer = (pointer: Phaser.Input.Pointer): void => {
+      if (pointer.id !== this.mobileFirePointerId) return;
+      this.mobileFireHeld = false;
+      this.mobileFirePointerId = -1;
+    };
+    this.input.on('pointerup', releaseFirePointer);
+    this.input.on('pointerupoutside', releaseFirePointer);
     if (this.isMobileControls) this.buildMobileControls();
     this.input.keyboard?.on('keydown-R', () => this.reload());
     this.input.keyboard?.on('keydown-ESC', () => this.togglePause());
@@ -211,6 +223,11 @@ export class MissionScene extends Phaser.Scene {
 
   private loadMissionScene(index: number): void {
     if (index >= CASINO_MISSION.length) { this.finishMission(true); return; }
+    this.transitionLayer?.destroy(true);
+    this.transitionLayer = undefined;
+    this.weaponRig?.setVisible(true);
+    this.mobileFireHeld = false;
+    this.mobileFirePointerId = -1;
     this.sceneIndex = index;
     this.sceneDef = CASINO_MISSION[index];
     this.backgroundArt?.destroy();
@@ -278,9 +295,7 @@ export class MissionScene extends Phaser.Scene {
       this.enemies = [];
       this.spawnTimer = 900;
     } else if (this.sceneIndex + 1 < CASINO_MISSION.length) {
-      this.phase = 'transition';
-      this.transitionTimer = 1250;
-      this.showToast('СЕКТОР ЗАЧИЩЕН • ПЕРЕХОД', 1150);
+      this.beginLocationTransition();
     } else {
       this.finishMission(true);
     }
@@ -459,64 +474,166 @@ export class MissionScene extends Phaser.Scene {
 
   private isMobileControlPoint(x: number, y: number): boolean {
     if (!this.isMobileControls) return false;
-    return Math.hypot(x - MOBILE_FIRE.x, y - MOBILE_FIRE.y) < 76
-      || Math.hypot(x - MOBILE_RELOAD.x, y - MOBILE_RELOAD.y) < 54
-      || Math.hypot(x - MOBILE_PAUSE.x, y - MOBILE_PAUSE.y) < 38;
+    return Math.hypot(x - MOBILE_FIRE.x, y - MOBILE_FIRE.y) <= 82
+      || (Math.abs(x - MOBILE_RELOAD.x) <= 78 && Math.abs(y - MOBILE_RELOAD.y) <= 58)
+      || Math.hypot(x - MOBILE_PAUSE.x, y - MOBILE_PAUSE.y) <= 46;
   }
 
   private buildMobileControls(): void {
-    // Draw the touch controls as one explicit UI layer. Hit zones are separate,
-    // so touch input remains reliable even if a browser has trouble with Circle objects.
+    // Large, high-contrast controls sit inside the logical 16:9 game frame.
+    // Their interactive zones are deliberately larger than their visible artwork.
     const controls = this.add.graphics().setDepth(40).setScrollFactor(0);
-    controls.fillStyle(0x9d3036, 0.96);
-    controls.fillCircle(MOBILE_FIRE.x, MOBILE_FIRE.y, 66);
+    controls.fillStyle(0x982f36, 0.97);
+    controls.fillCircle(MOBILE_FIRE.x, MOBILE_FIRE.y, 68);
     controls.lineStyle(5, 0xffdfb4, 1);
-    controls.strokeCircle(MOBILE_FIRE.x, MOBILE_FIRE.y, 66);
-    controls.fillStyle(0x263747, 0.98);
-    controls.fillCircle(MOBILE_RELOAD.x, MOBILE_RELOAD.y, 44);
+    controls.strokeCircle(MOBILE_FIRE.x, MOBILE_FIRE.y, 68);
+    controls.fillStyle(0x20384a, 0.99);
+    controls.fillCircle(MOBILE_RELOAD.x, MOBILE_RELOAD.y, 53);
     controls.lineStyle(4, 0xe2b96e, 1);
-    controls.strokeCircle(MOBILE_RELOAD.x, MOBILE_RELOAD.y, 44);
-    controls.fillStyle(0x263747, 0.98);
-    controls.fillCircle(MOBILE_PAUSE.x, MOBILE_PAUSE.y, 31);
+    controls.strokeCircle(MOBILE_RELOAD.x, MOBILE_RELOAD.y, 53);
+    controls.fillStyle(0x263747, 0.99);
+    controls.fillCircle(MOBILE_PAUSE.x, MOBILE_PAUSE.y, 35);
     controls.lineStyle(3, 0xe2b96e, 1);
-    controls.strokeCircle(MOBILE_PAUSE.x, MOBILE_PAUSE.y, 31);
+    controls.strokeCircle(MOBILE_PAUSE.x, MOBILE_PAUSE.y, 35);
 
     this.add.text(MOBILE_FIRE.x, MOBILE_FIRE.y, 'ОГОНЬ', {
       fontSize: '20px', color: '#ffffff', fontStyle: 'bold',
       stroke: '#551c22', strokeThickness: 4,
     }).setOrigin(0.5).setDepth(41).setScrollFactor(0);
-
-    this.add.text(MOBILE_RELOAD.x, MOBILE_RELOAD.y, 'R', {
-      fontSize: '30px', color: '#ffffff', fontStyle: 'bold',
+    this.add.text(MOBILE_RELOAD.x, MOBILE_RELOAD.y - 9, '↻', {
+      fontSize: '34px', color: '#ffffff', fontStyle: 'bold',
       stroke: '#101820', strokeThickness: 3,
     }).setOrigin(0.5).setDepth(41).setScrollFactor(0);
-
+    this.add.text(MOBILE_RELOAD.x, MOBILE_RELOAD.y + 24, 'ПЕРЕЗАРЯДКА', {
+      fontSize: '10px', color: '#ffffff', fontStyle: 'bold',
+      stroke: '#101820', strokeThickness: 3,
+    }).setOrigin(0.5).setDepth(41).setScrollFactor(0);
     this.add.text(MOBILE_PAUSE.x, MOBILE_PAUSE.y, 'Ⅱ', {
       fontSize: '23px', color: '#ffffff', fontStyle: 'bold',
       stroke: '#101820', strokeThickness: 3,
     }).setOrigin(0.5).setDepth(41).setScrollFactor(0);
 
-    const fireZone = this.add.zone(MOBILE_FIRE.x, MOBILE_FIRE.y, 142, 142)
+    const fireZone = this.add.zone(MOBILE_FIRE.x, MOBILE_FIRE.y, 164, 164)
       .setDepth(42).setScrollFactor(0).setInteractive();
-    fireZone.on('pointerdown', () => {
+    fireZone.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      if (this.phase !== 'active') return;
       this.mobileFireHeld = true;
+      this.mobileFirePointerId = pointer.id;
       this.shoot();
     });
-    fireZone.on('pointerup', () => { this.mobileFireHeld = false; });
-    fireZone.on('pointerout', () => { this.mobileFireHeld = false; });
+    const releaseFire = (pointer: Phaser.Input.Pointer): void => {
+      if (pointer.id !== this.mobileFirePointerId) return;
+      this.mobileFireHeld = false;
+      this.mobileFirePointerId = -1;
+    };
+    fireZone.on('pointerup', releaseFire);
+    fireZone.on('pointerupoutside', releaseFire);
+    fireZone.on('pointerout', releaseFire);
 
-    const reloadZone = this.add.zone(MOBILE_RELOAD.x, MOBILE_RELOAD.y, 100, 100)
+    const reloadZone = this.add.zone(MOBILE_RELOAD.x, MOBILE_RELOAD.y, 156, 116)
       .setDepth(42).setScrollFactor(0).setInteractive();
     reloadZone.on('pointerdown', () => this.reload());
 
-    const pauseZone = this.add.zone(MOBILE_PAUSE.x, MOBILE_PAUSE.y, 76, 76)
+    const pauseZone = this.add.zone(MOBILE_PAUSE.x, MOBILE_PAUSE.y, 88, 88)
       .setDepth(42).setScrollFactor(0).setInteractive();
     pauseZone.on('pointerdown', () => this.togglePause());
+  }
 
-    this.add.text(MOBILE_RELOAD.x, MOBILE_RELOAD.y - 58, 'ПЕРЕЗАРЯДКА', {
-      fontSize: '12px', color: '#e8edf3', fontStyle: 'bold',
-      stroke: '#101820', strokeThickness: 3,
-    }).setOrigin(0.5).setDepth(41).setScrollFactor(0);
+  private beginLocationTransition(): void {
+    const nextLocation = CASINO_MISSION[this.sceneIndex + 1];
+    if (!nextLocation) {
+      this.finishMission(true);
+      return;
+    }
+
+    this.phase = 'transition';
+    this.transitionTimer = 3200;
+    this.mobileFireHeld = false;
+    this.mobileFirePointerId = -1;
+    this.weaponRig?.setVisible(false);
+
+    const layer = this.add.container(0, 0).setDepth(80);
+    this.transitionLayer = layer;
+
+    const corridor = this.add.graphics();
+    corridor.fillStyle(0x080d13, 1);
+    corridor.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    corridor.fillStyle(0x172431, 1);
+    corridor.fillRoundedRect(310, 54, 660, 590, 18);
+    corridor.fillStyle(0x0c141d, 1);
+    corridor.fillRect(390, 92, 500, 510);
+    corridor.fillStyle(0x263747, 1);
+    corridor.fillRect(500, 116, 280, 370);
+    corridor.fillStyle(0x101923, 1);
+    corridor.fillRect(520, 136, 240, 350);
+    corridor.fillStyle(0xd5a35f, 0.18);
+    corridor.fillRect(625, 150, 30, 336);
+    corridor.lineStyle(5, 0x667789, 0.65);
+    corridor.lineBetween(0, 0, 500, 116);
+    corridor.lineBetween(GAME_WIDTH, 0, 780, 116);
+    corridor.lineBetween(0, GAME_HEIGHT, 520, 486);
+    corridor.lineBetween(GAME_WIDTH, GAME_HEIGHT, 760, 486);
+    corridor.lineStyle(2, 0x8e704c, 0.65);
+    for (let i = 0; i < 5; i += 1) {
+      const y = 500 + i * 42;
+      corridor.lineBetween(0, y, 640, 486 + i * 24);
+      corridor.lineBetween(GAME_WIDTH, y, 640, 486 + i * 24);
+    }
+    corridor.fillStyle(0xc48d4b, 0.22);
+    corridor.fillRoundedRect(590, 95, 100, 18, 6);
+    layer.add(corridor);
+
+    const heading = this.add.text(GAME_WIDTH / 2, 62, 'СЕКТОР ЗАЧИЩЕН', {
+      fontSize: '30px', color: '#f0c16d', fontStyle: 'bold', letterSpacing: 3,
+      stroke: '#080d13', strokeThickness: 5,
+    }).setOrigin(0.5);
+    const destination = this.add.text(GAME_WIDTH / 2, 111, nextLocation.title.toUpperCase(), {
+      fontSize: '22px', color: '#f1f4f7', fontStyle: 'bold', letterSpacing: 2,
+      stroke: '#080d13', strokeThickness: 4,
+    }).setOrigin(0.5);
+    const caption = this.add.text(GAME_WIDTH / 2, 151, 'АГЕНТ ПЕРЕХОДИТ В СЛЕДУЮЩУЮ ЗОНУ', {
+      fontSize: '14px', color: '#b6c2cd', letterSpacing: 2,
+    }).setOrigin(0.5);
+    layer.add([heading, destination, caption]);
+
+    const agent = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT + 70);
+    const leftLeg = this.add.container(-13, -76);
+    leftLeg.add(this.add.rectangle(0, 24, 18, 54, 0x26313c).setOrigin(0.5, 0));
+    leftLeg.add(this.add.rectangle(-1, 78, 26, 12, 0x090e14));
+    const rightLeg = this.add.container(13, -76);
+    rightLeg.add(this.add.rectangle(0, 24, 18, 54, 0x1b2630).setOrigin(0.5, 0));
+    rightLeg.add(this.add.rectangle(1, 78, 26, 12, 0x090e14));
+    agent.add([leftLeg, rightLeg]);
+    agent.add(this.add.rectangle(0, -119, 56, 82, 0x344653));
+    agent.add(this.add.rectangle(0, -119, 34, 76, 0x202d38));
+    agent.add(this.add.rectangle(-21, -119, 8, 60, 0x9a7148));
+    agent.add(this.add.rectangle(21, -119, 8, 60, 0x9a7148));
+    agent.add(this.add.circle(0, -174, 21, 0x9b806e));
+    agent.add(this.add.circle(0, -185, 20, 0x18212a));
+    const leftArm = this.add.container(-31, -143);
+    leftArm.add(this.add.rectangle(0, 24, 15, 48, 0x344653).setOrigin(0.5, 0));
+    const rightArm = this.add.container(31, -143);
+    rightArm.add(this.add.rectangle(0, 24, 15, 48, 0x344653).setOrigin(0.5, 0));
+    rightArm.add(this.add.rectangle(0, 58, 9, 28, 0x111820));
+    agent.add([leftArm, rightArm]);
+    layer.add(agent);
+
+    this.tweens.add({ targets: leftLeg, rotation: 0.42, duration: 190, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    this.tweens.add({ targets: rightLeg, rotation: -0.42, duration: 190, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    this.tweens.add({ targets: leftArm, rotation: -0.24, duration: 190, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    this.tweens.add({ targets: rightArm, rotation: 0.24, duration: 190, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    this.tweens.add({
+      targets: agent, y: 410, scaleX: 0.48, scaleY: 0.48,
+      duration: 2700, ease: 'Sine.easeInOut',
+    });
+
+    layer.setAlpha(0);
+    this.tweens.add({ targets: layer, alpha: 1, duration: 220, ease: 'Linear' });
+    this.time.delayedCall(2700, () => {
+      if (this.transitionLayer === layer && layer.active) {
+        this.tweens.add({ targets: layer, alpha: 0, duration: 450, ease: 'Linear' });
+      }
+    });
   }
 
   private togglePause(): void {
