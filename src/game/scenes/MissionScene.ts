@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME_HEIGHT, GAME_WIDTH } from '../../app/GameConfig';
+import { GAME_HEIGHT, GAME_WIDTH, hasTouchInput } from '../../app/GameConfig';
 import { saveService } from '../../persistence/SaveService';
 import { BALANCE } from '../data/balance';
 import { ENEMIES, type EnemyType } from '../data/enemies';
@@ -35,16 +35,18 @@ export class MissionScene extends Phaser.Scene {
   private message!: Phaser.GameObjects.Text;
   private reloadHint!: Phaser.GameObjects.Text;
   private backgroundArt?: Phaser.GameObjects.Image;
+  private transitionOverlay?: Phaser.GameObjects.Container;
+  private transitionCurtain?: Phaser.GameObjects.Rectangle;
+  private transitionWalkTweens: Phaser.Tweens.Tween[] = [];
   private aim: Point = { x: GAME_WIDTH / 2, y: GAME_HEIGHT / 2 };
   private enemies: RuntimeEnemy[] = [];
   private sceneIndex = 0;
   private waveIndex = 0;
   private spawnTimer = 300;
   private phase: 'active' | 'transition' | 'finished' | 'paused' = 'active';
-  private transitionTimer = 0;
   private hp: number = BALANCE.player.maxHp;
   private magazine: number = BALANCE.weapon.magazine[0];
-  private reserve = 48;
+  private reserve = 72;
   private reloading = 0;
   private shotCooldown = 0;
   private shotFlash = 0;
@@ -77,10 +79,9 @@ export class MissionScene extends Phaser.Scene {
     this.waveIndex = 0;
     this.spawnTimer = 300;
     this.phase = 'active';
-    this.transitionTimer = 0;
     this.hp = BALANCE.player.maxHp;
     this.magazine = BALANCE.weapon.magazine[initialSave.upgrades.magazine];
-    this.reserve = 48;
+    this.reserve = 72;
     this.reloading = 0;
     this.shotCooldown = 0;
     this.shotFlash = 0;
@@ -97,7 +98,10 @@ export class MissionScene extends Phaser.Scene {
     this.resultSent = false;
     this.pauseOverlay = undefined;
     this.backgroundArt = undefined;
-    this.isMobileControls = document.documentElement.dataset.device === 'mobile';
+    this.transitionOverlay = undefined;
+    this.transitionCurtain = undefined;
+    this.transitionWalkTweens = [];
+    this.isMobileControls = hasTouchInput();
     this.mobileFireHeld = false;
     this.impactEffects = [];
     this.weaponRecoil = 0;
@@ -193,8 +197,6 @@ export class MissionScene extends Phaser.Scene {
     this.toastTimer = Math.max(0, this.toastTimer - dt);
 
     if (this.phase === 'transition') {
-      this.transitionTimer -= dt;
-      if (this.transitionTimer <= 0) this.loadMissionScene(this.sceneIndex + 1);
       this.drawFrame();
       return;
     }
@@ -273,17 +275,156 @@ export class MissionScene extends Phaser.Scene {
     if (living.length !== 0 || this.waveAwarded) return;
     this.waveAwarded = true;
     this.award(BALANCE.rewards.wave);
+    this.clearEnemySprites();
     this.waveIndex += 1;
     if (this.waveIndex < this.sceneDef.waves.length) {
       this.enemies = [];
       this.spawnTimer = 900;
     } else if (this.sceneIndex + 1 < CASINO_MISSION.length) {
-      this.phase = 'transition';
-      this.transitionTimer = 1250;
-      this.showToast('СЕКТОР ЗАЧИЩЕН • ПЕРЕХОД', 1150);
+      this.beginLocationTransition();
     } else {
       this.finishMission(true);
     }
+  }
+
+  private clearEnemySprites(): void {
+    for (const child of this.children.getAll()) {
+      if (child.name.startsWith('enemy-image-')) child.destroy();
+    }
+  }
+
+  private beginLocationTransition(): void {
+    const nextScene = CASINO_MISSION[this.sceneIndex + 1];
+    if (!nextScene) {
+      this.finishMission(true);
+      return;
+    }
+
+    this.phase = 'transition';
+    this.mobileFireHeld = false;
+    this.reloading = 0;
+
+    const hallway = this.add.graphics();
+    hallway.fillGradientStyle(0x101821, 0x101821, 0x26313b, 0x111820, 1);
+    hallway.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    hallway.fillStyle(0x0b1118, 1);
+    hallway.fillRect(0, 0, GAME_WIDTH, 82);
+    hallway.fillStyle(0x1c2732, 1);
+    hallway.fillRect(0, 82, GAME_WIDTH, 350);
+    hallway.fillStyle(0x252e37, 1);
+    hallway.fillRect(0, 432, GAME_WIDTH, 288);
+    hallway.lineStyle(3, 0x526171, 0.45);
+    hallway.lineBetween(0, 82, GAME_WIDTH, 82);
+    hallway.lineBetween(0, 432, GAME_WIDTH, 432);
+    hallway.lineStyle(2, 0x687888, 0.24);
+    hallway.lineBetween(0, 432, 510, 720);
+    hallway.lineBetween(GAME_WIDTH, 432, 770, 720);
+    hallway.lineBetween(210, 432, 555, 720);
+    hallway.lineBetween(1070, 432, 725, 720);
+    for (let i = 0; i < 5; i += 1) {
+      const x = 150 + i * 220;
+      hallway.fillStyle(0xc28e50, 0.12);
+      hallway.fillRoundedRect(x, 112, 94, 10, 4);
+      hallway.lineStyle(2, 0x738393, 0.22);
+      hallway.lineBetween(x + 46, 150, x + 46, 410);
+    }
+
+    const exit = this.add.graphics();
+    exit.fillStyle(0x080d13, 1);
+    exit.fillRect(1055, 165, 150, 300);
+    exit.lineStyle(8, 0x8f704d, 0.95);
+    exit.strokeRect(1055, 165, 150, 300);
+    exit.lineStyle(2, 0xe5bd7b, 0.75);
+    exit.lineBetween(1080, 190, 1180, 190);
+    exit.fillStyle(0xe6b66e, 0.9);
+    exit.fillRect(1092, 207, 76, 5);
+
+    const actor = this.createWalkingActor();
+    const title = this.add.text(GAME_WIDTH / 2, 88, 'СЕКТОР ЗАЧИЩЕН', {
+      fontSize: '34px', color: '#f2d2a1', fontStyle: 'bold',
+      stroke: '#10161d', strokeThickness: 6, letterSpacing: 3,
+    }).setOrigin(0.5);
+    const subtitle = this.add.text(GAME_WIDTH / 2, 132, 'ПЕРЕХОД: ' + nextScene.title.toUpperCase(), {
+      fontSize: '18px', color: '#d5dee7', fontStyle: 'bold',
+      stroke: '#10161d', strokeThickness: 4, letterSpacing: 2,
+    }).setOrigin(0.5);
+    this.transitionOverlay = this.add.container(0, 0, [hallway, exit, actor, title, subtitle]).setDepth(80);
+
+    this.transitionWalkTweens.push(this.tweens.add({
+      targets: actor,
+      x: GAME_WIDTH + 100,
+      duration: 3200,
+      ease: 'Linear',
+      onComplete: () => this.finishLocationTransition(),
+    }));
+  }
+
+  private createWalkingActor(): Phaser.GameObjects.Container {
+    const actor = this.add.container(-90, 620);
+    actor.add(this.add.ellipse(0, 0, 72, 16, 0x05080c, 0.55));
+
+    const leftLeg = this.add.container(-12, -68);
+    leftLeg.add(this.add.rectangle(0, 18, 15, 39, 0x17212b).setOrigin(0.5, 0));
+    leftLeg.add(this.add.rectangle(0, 54, 13, 33, 0x111922).setOrigin(0.5, 0));
+    leftLeg.add(this.add.rectangle(-2, 84, 23, 9, 0x070b10).setOrigin(0.35, 0.5));
+
+    const rightLeg = this.add.container(12, -68);
+    rightLeg.add(this.add.rectangle(0, 18, 15, 39, 0x263340).setOrigin(0.5, 0));
+    rightLeg.add(this.add.rectangle(0, 54, 13, 33, 0x17212b).setOrigin(0.5, 0));
+    rightLeg.add(this.add.rectangle(2, 84, 23, 9, 0x070b10).setOrigin(0.35, 0.5));
+
+    const torso = this.add.rectangle(0, -111, 52, 78, 0x263441).setStrokeStyle(2, 0x526171, 0.55);
+    const belt = this.add.rectangle(0, -79, 49, 8, 0x101820);
+    const leftArm = this.add.rectangle(-34, -119, 17, 66, 0x1b2631).setRotation(-0.12);
+    const rightArm = this.add.rectangle(34, -118, 17, 66, 0x1b2631).setRotation(0.15);
+    const pistol = this.add.rectangle(43, -88, 27, 8, 0x0a0f15).setRotation(-0.08);
+    const head = this.add.circle(0, -164, 18, 0x94745e);
+    const hair = this.add.ellipse(0, -174, 37, 21, 0x111820);
+
+    actor.add([leftLeg, rightLeg, torso, belt, leftArm, rightArm, pistol, head, hair]);
+    this.transitionWalkTweens.push(this.tweens.add({
+      targets: leftLeg, angle: 24, duration: 190, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+    }));
+    this.transitionWalkTweens.push(this.tweens.add({
+      targets: rightLeg, angle: -24, duration: 190, delay: 95, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+    }));
+    this.transitionWalkTweens.push(this.tweens.add({
+      targets: actor, y: 614, duration: 230, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+    }));
+    return actor;
+  }
+
+  private finishLocationTransition(): void {
+    for (const tween of this.transitionWalkTweens) tween.stop();
+    this.transitionWalkTweens = [];
+
+    const curtain = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x05080c, 1)
+      .setAlpha(0).setDepth(120);
+    this.transitionCurtain = curtain;
+    this.tweens.add({
+      targets: curtain,
+      alpha: 1,
+      duration: 380,
+      ease: 'Quad.easeIn',
+      onComplete: () => {
+        this.transitionOverlay?.destroy(true);
+        this.transitionOverlay = undefined;
+        this.loadMissionScene(this.sceneIndex + 1);
+        this.phase = 'transition';
+        this.tweens.add({
+          targets: curtain,
+          alpha: 0,
+          duration: 620,
+          ease: 'Quad.easeOut',
+          onComplete: () => {
+            curtain.destroy();
+            this.transitionCurtain = undefined;
+            this.phase = 'active';
+            this.showToast(this.sceneDef.subtitle + ' • ' + this.sceneDef.title, 1700);
+          },
+        });
+      },
+    });
   }
 
   private updateEnemies(dt: number): void {
@@ -459,9 +600,13 @@ export class MissionScene extends Phaser.Scene {
 
   private isMobileControlPoint(x: number, y: number): boolean {
     if (!this.isMobileControls) return false;
-    return Math.hypot(x - MOBILE_FIRE.x, y - MOBILE_FIRE.y) < 76
-      || Math.hypot(x - MOBILE_RELOAD.x, y - MOBILE_RELOAD.y) < 54
-      || Math.hypot(x - MOBILE_PAUSE.x, y - MOBILE_PAUSE.y) < 38;
+    const zones = [
+      { x: MOBILE_FIRE.x - 76, y: MOBILE_FIRE.y - 76, width: 152, height: 152 },
+      { x: MOBILE_RELOAD.x - 54, y: MOBILE_RELOAD.y - 54, width: 108, height: 108 },
+      { x: MOBILE_PAUSE.x - 42, y: MOBILE_PAUSE.y - 42, width: 84, height: 84 },
+    ];
+    return zones.some((zone) => x >= zone.x && x <= zone.x + zone.width
+      && y >= zone.y && y <= zone.y + zone.height);
   }
 
   private buildMobileControls(): void {
@@ -540,6 +685,10 @@ export class MissionScene extends Phaser.Scene {
     this.pauseOverlay = this.add.container(0, 0, [shade, label, hint, resume, resumeLabel]).setDepth(100);
   }
 
+  private getDisplayedWaveNumber(): number {
+    return Math.min(this.waveIndex + 1, this.sceneDef.waves.length);
+  }
+
   private drawFrame(): void {
     this.world.clear();
     this.drawEnemies();
@@ -547,10 +696,10 @@ export class MissionScene extends Phaser.Scene {
     this.drawEffects();
     const ammoText = this.reloading > 0 ? 'ПЕРЕЗАРЯДКА ' + (this.reloading / 1000).toFixed(1) + 'с' : 'ПАТРОНЫ ' + this.magazine + '/' + this.reserve;
     this.hud.setText(this.isMobileControls
-      ? 'КАЗИНО ' + (this.sceneIndex + 1) + '/' + CASINO_MISSION.length + ' • ВОЛНА ' + (this.waveIndex + 1) + '/' + this.sceneDef.waves.length
+      ? 'КАЗИНО ' + (this.sceneIndex + 1) + '/' + CASINO_MISSION.length + ' • ВОЛНА ' + this.getDisplayedWaveNumber() + '/' + this.sceneDef.waves.length
         + '\nHP ' + this.hp + '/' + BALANCE.player.maxHp + ' • ' + ammoText + ' • XP ' + this.totalReputation
       : 'ОПЕРАЦИЯ: КАЗИНО     СЦЕНА ' + (this.sceneIndex + 1) + '/' + CASINO_MISSION.length +
-        '     ВОЛНА ' + (this.waveIndex + 1) + '/' + this.sceneDef.waves.length +
+        '     ВОЛНА ' + this.getDisplayedWaveNumber() + '/' + this.sceneDef.waves.length +
         '\nЗДОРОВЬЕ ' + this.hp + '/' + BALANCE.player.maxHp + '     ' + ammoText + '     XP ' + this.totalReputation);
     this.message.setText(this.toastText).setVisible(this.toastTimer > 0);
     this.reloadHint.setText(this.reloading > 0 ? 'ПЕРЕЗАРЯДКА…' : 'R  ПЕРЕЗАРЯДКА');

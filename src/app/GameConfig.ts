@@ -7,8 +7,16 @@ import { ResultsScene } from '../game/scenes/ResultsScene';
 export const GAME_WIDTH = 1280;
 export const GAME_HEIGHT = 720;
 
-const isTouchDevice = typeof window !== 'undefined'
-  && (('ontouchstart' in window) || navigator.maxTouchPoints > 0);
+export function hasTouchInput(): boolean {
+  if (typeof window === 'undefined') return false;
+  const coarsePointer = window.matchMedia('(pointer: coarse)').matches
+    || window.matchMedia('(any-pointer: coarse)').matches;
+  return 'ontouchstart' in window
+    || (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0)
+    || coarsePointer;
+}
+
+const isTouchDevice = hasTouchInput();
 
 if (typeof document !== 'undefined') {
   document.documentElement.dataset.device = isTouchDevice ? 'mobile' : 'desktop';

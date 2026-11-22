@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME_HEIGHT, GAME_WIDTH } from '../../app/GameConfig';
+import { GAME_HEIGHT, GAME_WIDTH, hasTouchInput } from '../../app/GameConfig';
 import { runSession } from '../systems/missions/runSession';
 import { saveService } from '../../persistence/SaveService';
 
@@ -8,7 +8,7 @@ export class ResultsScene extends Phaser.Scene {
 
   create(): void {
     const result = runSession.result;
-    if (document.documentElement.dataset.device === 'mobile') {
+    if (hasTouchInput()) {
       this.createMobileLayout(result);
       return;
     }

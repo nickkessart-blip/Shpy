@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME_HEIGHT, GAME_WIDTH } from '../../app/GameConfig';
+import { GAME_HEIGHT, GAME_WIDTH, hasTouchInput } from '../../app/GameConfig';
 import { BALANCE } from '../data/balance';
 import { saveService } from '../../persistence/SaveService';
 import { runSession } from '../systems/missions/runSession';
@@ -12,7 +12,7 @@ export class HQScene extends Phaser.Scene {
   constructor() { super('HQ'); }
 
   create(): void {
-    if (document.documentElement.dataset.device === 'mobile') {
+    if (hasTouchInput()) {
       this.createMobileLayout();
       return;
     }
@@ -32,7 +32,7 @@ export class HQScene extends Phaser.Scene {
     this.add.text(108, 350, 'Доступная операция', { fontSize: '14px', color: COLORS.muted });
     this.add.text(108, 377, '01 / КАЗИНО «РОЯЛЬ»', { fontSize: '25px', color: '#f0c16d', fontStyle: 'bold' });
     this.add.text(108, 421, 'Главный зал → Бар и VIP-проход', { fontSize: '16px', color: '#c7d0d9' });
-    this.add.text(108, 475, 'Задача: зачистить 4 волны. Не попасть в отчёт о потерях.', { fontSize: '14px', color: COLORS.muted });
+    this.add.text(108, 475, 'Задача: зачистить 5 волн в каждой зоне. Не попасть в отчёт о потерях.', { fontSize: '14px', color: COLORS.muted });
     this.button(108, 510, 260, 46, 'НАЧАТЬ ОПЕРАЦИЮ', COLORS.red, () => {
       runSession.reset();
       this.scene.start('Mission');

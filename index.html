@@ -31,18 +31,6 @@
         box-shadow: 0 12px 40px #0009;
       }
       #boot-status[hidden] { display: none; }
-      @media (max-aspect-ratio: 1 / 1) {
-        #boot-status { display: block; }
-        #game { visibility: hidden; pointer-events: none; }
-        body::after {
-          content: "↻\A ПОВЕРНИТЕ ТЕЛЕФОН ГОРИЗОНТАЛЬНО";
-          white-space: pre-line; position: fixed; z-index: 1000; inset: 0;
-          display: grid; place-content: center; padding: 28px;
-          color: #edf3fa;
-          background: radial-gradient(ellipse at 50% 42%, #1a2a39, #0a1119 72%);
-          text-align: center; font: 800 18px/1.8 Arial, sans-serif;
-        }
-      }
     </style>
   </head>
   <body>
