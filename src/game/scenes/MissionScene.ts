@@ -15,8 +15,8 @@ interface RuntimeEnemy {
 }
 
 const MUZZLE: Point = { x: GAME_WIDTH / 2, y: 662 };
-const MOBILE_FIRE = { x: GAME_WIDTH - 116, y: GAME_HEIGHT - 172 };
-const MOBILE_RELOAD = { x: GAME_WIDTH - 116, y: GAME_HEIGHT - 66 };
+const MOBILE_FIRE = { x: GAME_WIDTH - 116, y: GAME_HEIGHT - 190 };
+const MOBILE_RELOAD = { x: GAME_WIDTH - 116, y: GAME_HEIGHT - 58 };
 const MOBILE_PAUSE = { x: GAME_WIDTH - 58, y: 58 };
 const SPRITES: Record<EnemyType, string> = {
   guard: 'enemy-guard', armored: 'enemy-armored', assault: 'enemy-assault',
