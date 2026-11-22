@@ -10,7 +10,7 @@ import { runSession } from '../systems/missions/runSession';
 
 type EnemyState = 'Exposed' | 'Aiming' | 'Attacking' | 'SeekingCover' | 'Hidden' | 'Peeking' | 'Repositioning' | 'Defeated';
 interface RuntimeEnemy {
-  uid: number; type: EnemyType; x: number; baseX: number; y: number; hp: number; maxHp: number;
+  uid: number; type: EnemyType; x: number; baseX: number; y: number; originY: number; hp: number; maxHp: number;
   coverId?: string; state: EnemyState; timer: number; phase: number;
 }
 
@@ -188,7 +188,7 @@ export class MissionScene extends Phaser.Scene {
     this.enemies = wave.enemies.map((type, index) => {
       const spawn: SpawnPoint = wave.spawnPoints[index] ?? { x: 300 + index * 190, y: 350 };
       return {
-        uid: this.uniqueId++, type, x: spawn.x, baseX: spawn.x, y: spawn.y,
+        uid: this.uniqueId++, type, x: spawn.x, baseX: spawn.x, y: spawn.y, originY: spawn.y,
         hp: ENEMIES[type].hp, maxHp: ENEMIES[type].hp, coverId: spawn.coverId,
         state: 'Exposed', timer: ENEMIES[type].exposeMs * (0.4 + index * 0.22), phase: 0,
       };
@@ -230,9 +230,34 @@ export class MissionScene extends Phaser.Scene {
         case 'Exposed': enemy.state = 'Aiming'; enemy.timer = def.aimMs; break;
         case 'Aiming':
           enemy.state = 'Attacking'; enemy.timer = 260; this.damagePlayer(def.damage); break;
-        case 'Attacking': enemy.state = 'SeekingCover'; enemy.timer = 320; break;
-        case 'SeekingCover': enemy.state = 'Hidden'; enemy.timer = def.hiddenMs; break;
-        case 'Hidden': enemy.state = 'Peeking'; enemy.timer = def.peekMs; enemy.phase += 1; break;
+        case 'Attacking': {
+          enemy.state = 'SeekingCover';
+          enemy.timer = 320;
+          const cover = this.sceneDef.covers.find((item) => item.id === enemy.coverId);
+          if (cover) {
+            this.tweens.add({
+              targets: enemy,
+              x: cover.x + cover.width / 2,
+              y: cover.y + cover.height / 2 + 20,
+              duration: 320,
+              ease: 'Sine.easeIn',
+            });
+          }
+          break;
+        }
+        case 'SeekingCover':
+          enemy.state = 'Hidden';
+          enemy.timer = def.hiddenMs;
+          break;
+        case 'Hidden': {
+          enemy.state = 'Peeking';
+          enemy.timer = def.peekMs;
+          enemy.phase += 1;
+          const cover = this.sceneDef.covers.find((item) => item.id === enemy.coverId);
+          if (cover) enemy.x = findVisiblePeekX(MUZZLE, cover);
+          enemy.y = enemy.originY;
+          break;
+        }
         case 'Peeking': {
           enemy.state = 'Repositioning';
           enemy.timer = enemy.type === 'assault' ? 260 : 390;
@@ -279,6 +304,7 @@ export class MissionScene extends Phaser.Scene {
       const damage = BALANCE.weapon.damage[save.upgrades.damage]
         * (chosen.part === 'head' ? BALANCE.weapon.headMultiplier : 1);
       chosen.enemy.hp -= damage;
+      if (chosen.enemy.hp <= 0) this.tweens.killTweensOf(chosen.enemy);
       this.showToast((chosen.part === 'head' ? 'ПОПАДАНИЕ В ГОЛОВУ' : 'ПОПАДАНИЕ') + ' • −' + damage, 450);
       if (chosen.enemy.hp <= 0) {
         chosen.enemy.state = 'Defeated';
