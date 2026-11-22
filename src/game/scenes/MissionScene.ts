@@ -238,7 +238,7 @@ export class MissionScene extends Phaser.Scene {
     let chosenDistance = Number.POSITIVE_INFINITY;
     const blockers: Rect[] = this.sceneDef.covers.map((c) => ({ x: c.x, y: c.y, width: c.width, height: c.height }));
     for (const enemy of this.enemies) {
-      if (['Defeated', 'Hidden', 'SeekingCover'].includes(enemy.state)) continue;
+      if (enemy.state === 'Defeated' || enemy.state === 'Hidden') continue;
       const head = { x: enemy.x, y: enemy.y - 48 };
       const body = { x: enemy.x, y: enemy.y - 5 };
       const part = resolveHit(this.aim, head, body, 18, 31);
@@ -348,7 +348,7 @@ export class MissionScene extends Phaser.Scene {
     for (const enemy of this.enemies) {
       const spriteKey = 'enemy-image-' + enemy.uid;
       const sprite = this.children.getByName(spriteKey) as Phaser.GameObjects.Image | null;
-      if (['Defeated', 'Hidden', 'SeekingCover'].includes(enemy.state)) {
+      if (enemy.state === 'Defeated' || enemy.state === 'Hidden') {
         sprite?.setVisible(false);
         continue;
       }
@@ -423,7 +423,7 @@ export class MissionScene extends Phaser.Scene {
 
   private drawEnemyOverlays(): void {
     for (const enemy of this.enemies) {
-      if (['Defeated', 'Hidden', 'SeekingCover'].includes(enemy.state)) continue;
+      if (enemy.state === 'Defeated' || enemy.state === 'Hidden') continue;
       const def = ENEMIES[enemy.type];
       this.fx.fillStyle(0x131a22, 0.9); this.fx.fillRoundedRect(enemy.x - 29, enemy.y - 88, 58, 7, 3);
       this.fx.fillStyle(def.color, 1); this.fx.fillRoundedRect(enemy.x - 29, enemy.y - 88, 58 * (enemy.hp / enemy.maxHp), 7, 3);
