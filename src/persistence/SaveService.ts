@@ -17,8 +17,9 @@ const DEFAULT_SAVE: SaveData = {
 
 export class SaveService {
   load(): SaveData {
+    let raw: string | null = null;
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return structuredClone(DEFAULT_SAVE);
       const parsed: unknown = JSON.parse(raw);
       if (!parsed || typeof parsed !== 'object') return structuredClone(DEFAULT_SAVE);
@@ -37,6 +38,7 @@ export class SaveService {
         },
       };
     } catch {
+      if (raw) this.backupCorruptSave(raw);
       return structuredClone(DEFAULT_SAVE);
     }
   }
