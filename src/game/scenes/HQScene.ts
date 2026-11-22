@@ -40,6 +40,8 @@ export class HQScene extends Phaser.Scene {
     this.add.text(56, 70, 'ШТАБ ОПЕРАЦИЙ', { fontSize: '13px', color: '#b5c1cb', letterSpacing: 3 });
     this.add.text(54, 126, getAccountRank(save.accountXp).title.toUpperCase() + '  •  УР. ' + getAccountLevel(save.accountXp), { fontSize: '16px', color: '#f0c16d', fontStyle: 'bold' });
     this.add.text(54, 153, '$' + save.dollars.toLocaleString('ru-RU') + '  •  ' + save.accountXp.toLocaleString('ru-RU') + ' XP', { fontSize: '14px', color: '#9ed2b0' });
+    this.button(842, 34, 180, 44, 'НАСТРОЙКИ', 0x70573b,
+      () => this.scene.start('Settings', { returnTo: 'HQ' }));
     this.button(1040, 34, 180, 44, 'ГЛАВНОЕ МЕНЮ', 0x39495a, () => this.scene.start('Start'));
 
     // Operations map.
@@ -51,7 +53,7 @@ export class HQScene extends Phaser.Scene {
     g.fillStyle(0xc94c48, 1); g.fillCircle(162, 300, 7); g.fillCircle(245, 345, 7); g.fillCircle(285, 275, 7);
     this.add.text(92, 264, 'КАРТА ОПЕРАЦИЙ', { fontSize: '13px', color: '#f1d5a8', fontStyle: 'bold' });
     this.add.text(102, 382, '01  КАЗИНО «РОЯЛЬ»', { fontSize: '12px', color: '#f4e5cf' });
-    this.roomHotspot(66, 230, 260, 198, 'КАРТА ОПЕРАЦИЙ', 'Выбрать операцию и подготовить комплект', () => this.scene.start('Operations'));
+    this.roomHotspot(66, 230, 260, 198, 'КАРТА ОПЕРАЦИЙ', 'Выбрать и запустить сюжетную операцию', () => this.scene.start('Operations'));
 
     // Computer workstation.
     g.fillStyle(0x101820, 1); g.fillRoundedRect(918, 250, 276, 18, 5);

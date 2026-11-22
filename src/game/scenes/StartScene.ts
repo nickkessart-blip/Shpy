@@ -3,11 +3,13 @@ import { GAME_HEIGHT, GAME_WIDTH } from '../../app/GameConfig';
 import { saveService } from '../../persistence/SaveService';
 import { runSession } from '../systems/missions/runSession';
 import { getAccountLevel, getAccountRank } from '../data/progression';
+import { FeedbackService } from '../systems/feedback/FeedbackService';
 
 export class StartScene extends Phaser.Scene {
   constructor() { super('Start'); }
 
   create(): void {
+    FeedbackService.ensureMusic(this);
     const g = this.add.graphics();
     g.fillGradientStyle(0x0b1119, 0x131d28, 0x202c39, 0x0b1017, 1);
     g.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
@@ -43,6 +45,8 @@ export class StartScene extends Phaser.Scene {
     this.menuButton(430, 390, 420, 68, 'ПРОДОЛЖИТЬ', hasSave ? 0x315e4d : 0x34404b,
       hasSave, () => this.continueGame());
     this.menuButton(430, 480, 420, 68, 'НОВАЯ ИГРА', 0x9d3038, true, () => this.requestNewGame());
+    this.menuButton(430, 562, 420, 42, 'НАСТРОЙКИ', 0x39495a, true,
+      () => this.scene.start('Settings', { returnTo: 'Start' }));
     this.add.text(GAME_WIDTH / 2, 650, 'ЛОКАЛЬНОЕ СОХРАНЕНИЕ • WEB / ANDROID', {
       fontSize: '12px', color: '#718091', letterSpacing: 2,
     }).setOrigin(0.5);
