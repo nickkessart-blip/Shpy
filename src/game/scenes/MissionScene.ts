@@ -107,7 +107,7 @@ export class MissionScene extends Phaser.Scene {
     }).setOrigin(0.5).setDepth(30);
 
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-      this.aim = { x: pointer.x, y: pointer.y };
+      if (!this.isMobileControlPoint(pointer.x, pointer.y)) this.aim = { x: pointer.x, y: pointer.y };
     });
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       if (this.phase !== 'active' || this.isMobileControlPoint(pointer.x, pointer.y)) return;
