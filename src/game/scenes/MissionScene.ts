@@ -6,6 +6,7 @@ import { getWeapon, getWeaponStats, LOADOUT_UNLOCKS, type WeaponId } from '../da
 import { ENEMIES, type EnemyType } from '../data/enemies';
 import { CASINO_MISSION, type MissionSceneDefinition, type SpawnPoint } from '../data/missions';
 import { AssetCatalog } from '../assets/AssetCatalog';
+import { getCosmetic } from '../data/cosmetics';
 import { findVisiblePeekX, pointInRect, resolveHit, type Point } from '../systems/combat/combatMath';
 import { runSession } from '../systems/missions/runSession';
 
@@ -107,7 +108,8 @@ export class MissionScene extends Phaser.Scene {
     const startingAmmo = this.weaponAmmo.get(this.currentWeaponId);
     this.magazine = startingAmmo?.magazine ?? BALANCE.weapon.magazine[initialSave.upgrades.magazine];
     this.reserve = startingAmmo?.reserve ?? BALANCE.weapon.reserveAmmo;
-    this.grenadeCount = initialSave.loadout.tacticalItem === 'grenade' ? LOADOUT_UNLOCKS.grenadesPerMission : 0;
+    this.grenadeCount = initialSave.loadout.tacticalItem === 'grenade'
+      ? LOADOUT_UNLOCKS.grenadesPerMission + initialSave.gearUpgrades.grenadeCapacity : 0;
     this.medkitCount = initialSave.loadout.activeItem === 'medkit' ? LOADOUT_UNLOCKS.medkitsPerMission : 0;
     this.reloading = 0;
     this.reloadPose = 0;
@@ -200,9 +202,15 @@ export class MissionScene extends Phaser.Scene {
 
   private buildWeaponRig(): void {
     const rig = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT + 95).setDepth(18);
+    const appearance = saveService.load().cosmetics;
+    const weaponTint = getCosmetic(appearance.weaponSkinId).tint;
+    const heroTint = getCosmetic(appearance.heroSkinId).tint;
     const textureKey = 'weapon-' + this.currentWeaponId;
     if (AssetCatalog.hasTexture(this, textureKey)) {
-      rig.add(this.add.image(0, -190, textureKey).setDisplaySize(180, 380));
+      rig.add(this.add.image(0, -190, textureKey).setDisplaySize(180, 380).setTint(weaponTint));
+      const cuff = this.add.graphics();
+      cuff.fillStyle(heroTint, 0.95); cuff.fillRoundedRect(-36, -54, 72, 22, 8);
+      rig.add(cuff);
       this.weaponRig = rig;
       this.updateWeaponRig();
       return;
@@ -210,11 +218,11 @@ export class MissionScene extends Phaser.Scene {
     const art = this.add.graphics();
     // Arm, hand and service pistol rotate as one rig and track the reticle.
     art.fillStyle(0x111923, 1); art.fillRoundedRect(-58, -218, 116, 190, 28);
-    art.fillStyle(0x293747, 1); art.fillRoundedRect(-51, -211, 102, 176, 24);
+    art.fillStyle(heroTint, 1); art.fillRoundedRect(-51, -211, 102, 176, 24);
     art.fillStyle(0x485564, 1); art.fillRoundedRect(-48, -208, 96, 14, 7);
     art.fillStyle(0xb78365, 1); art.fillRoundedRect(-28, -202, 56, 76, 15);
     art.fillStyle(0x9b6b52, 1); art.fillRoundedRect(-23, -180, 46, 46, 12);
-    art.fillStyle(0x11161d, 1); art.fillRoundedRect(-22, -354, 44, 188, 7);
+    art.fillStyle(weaponTint, 1); art.fillRoundedRect(-22, -354, 44, 188, 7);
     art.fillStyle(0x394550, 1); art.fillRoundedRect(-18, -350, 36, 143, 5);
     art.fillStyle(0x1b242d, 1); art.fillRoundedRect(-16, -218, 32, 70, 5);
     art.fillStyle(0x0c1117, 1); art.fillRoundedRect(-13, -166, 26, 67, 5);
@@ -447,7 +455,8 @@ export class MissionScene extends Phaser.Scene {
     rightLeg.add(this.add.rectangle(0, 54, 13, 33, 0x17212b).setOrigin(0.5, 0));
     rightLeg.add(this.add.rectangle(2, 84, 23, 9, 0x070b10).setOrigin(0.35, 0.5));
 
-    const torso = this.add.rectangle(0, -111, 52, 78, 0x263441).setStrokeStyle(2, 0x526171, 0.55);
+    const heroTint = getCosmetic(saveService.load().cosmetics.heroSkinId).tint;
+    const torso = this.add.rectangle(0, -111, 52, 78, heroTint).setStrokeStyle(2, 0x526171, 0.55);
     const belt = this.add.rectangle(0, -79, 49, 8, 0x101820);
     const leftArm = this.add.rectangle(-34, -119, 17, 66, 0x1b2631).setRotation(-0.12);
     const rightArm = this.add.rectangle(34, -118, 17, 66, 0x1b2631).setRotation(0.15);
@@ -730,7 +739,8 @@ export class MissionScene extends Phaser.Scene {
     if (this.phase !== 'active' || this.medkitCount <= 0) return;
     if (this.hp >= this.maxHp) { this.showToast('ЗДОРОВЬЕ УЖЕ ПОЛНОЕ', 700); return; }
     this.medkitCount -= 1;
-    const healed = Math.min(this.maxHp - this.hp, Math.round(this.maxHp * LOADOUT_UNLOCKS.medkitHealRatio));
+    const medkitRatio = Math.min(0.8, LOADOUT_UNLOCKS.medkitHealRatio + saveService.load().gearUpgrades.medkitEfficiency * 0.1);
+    const healed = Math.min(this.maxHp - this.hp, Math.round(this.maxHp * medkitRatio));
     this.hp += healed;
     this.refreshMobileControls();
     this.showToast('АПТЕЧКА • +' + healed + ' HP • ОСТАЛОСЬ: ' + this.medkitCount, 1100);
