@@ -79,6 +79,8 @@ export class MissionScene extends Phaser.Scene {
   private mobileGrenadeButton?: HTMLButtonElement;
   private mobileMedkitButton?: HTMLButtonElement;
   private mobileReleaseHandler?: () => void;
+  private aimStickVector: Point = { x: 0, y: 0 };
+  private aimStickActive = false;
 
   constructor() { super('Mission'); }
 
@@ -129,6 +131,8 @@ export class MissionScene extends Phaser.Scene {
     this.isMobileControls = hasTouchInput()
       || (typeof window !== 'undefined' && Math.min(window.innerWidth, window.innerHeight) <= 800);
     this.mobileFireHeld = false;
+    this.aimStickVector = { x: 0, y: 0 };
+    this.aimStickActive = false;
     this.mobileControlsElement?.remove();
     this.mobileControlsElement = undefined;
     this.impactEffects = [];
@@ -164,6 +168,8 @@ export class MissionScene extends Phaser.Scene {
     if (this.isMobileControls) this.buildMobileControls();
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.mobileFireHeld = false;
+      this.aimStickActive = false;
+      this.aimStickVector = { x: 0, y: 0 };
       if (this.mobileReleaseHandler) {
         window.removeEventListener('pointerup', this.mobileReleaseHandler);
         window.removeEventListener('pointercancel', this.mobileReleaseHandler);
@@ -238,6 +244,10 @@ export class MissionScene extends Phaser.Scene {
     if (this.phase === 'paused' || this.phase === 'finished') return;
     const dt = Math.min(delta, 50);
     this.shotCooldown = Math.max(0, this.shotCooldown - dt);
+    if (this.aimStickActive && this.phase === 'active') {
+      this.aim.x = Phaser.Math.Clamp(this.aim.x + this.aimStickVector.x * dt * 0.38, 18, GAME_WIDTH - 18);
+      this.aim.y = Phaser.Math.Clamp(this.aim.y + this.aimStickVector.y * dt * 0.38, 90, GAME_HEIGHT - 130);
+    }
     if (this.mobileFireHeld && this.phase === 'active') this.shoot();
     this.shotFlash = Math.max(0, this.shotFlash - dt);
     this.weaponRecoil = Math.max(0, this.weaponRecoil - dt * 0.16);
@@ -886,6 +896,60 @@ export class MissionScene extends Phaser.Scene {
     });
 
     stack.append(switchButton, reload, fire);
+
+    const stick = document.createElement('div');
+    Object.assign(stick.style, {
+      position: 'absolute', left: 'max(18px, env(safe-area-inset-left))',
+      bottom: 'max(126px, calc(env(safe-area-inset-bottom) + 112px))',
+      width: '142px', height: '142px', borderRadius: '50%',
+      border: '2px solid #d8c39a99', background: '#111a24a8',
+      boxShadow: 'inset 0 0 24px #0008, 0 4px 14px #0008',
+      pointerEvents: 'auto', touchAction: 'none',
+    });
+    const stickLabel = document.createElement('div');
+    stickLabel.textContent = 'ПРИЦЕЛ';
+    Object.assign(stickLabel.style, {
+      position: 'absolute', left: '0', right: '0', bottom: '12px',
+      textAlign: 'center', color: '#e5d2ad99', font: '700 10px Arial, sans-serif',
+      letterSpacing: '2px', pointerEvents: 'none',
+    });
+    const knob = document.createElement('div');
+    Object.assign(knob.style, {
+      position: 'absolute', width: '58px', height: '58px', left: '40px', top: '40px',
+      borderRadius: '50%', border: '2px solid #f0d4a4',
+      background: '#536474e8', boxShadow: '0 3px 10px #000a',
+      pointerEvents: 'none', transform: 'translate(0, 0)',
+    });
+    stick.append(knob, stickLabel);
+    const stickCenter = 71;
+    const stickRadius = 43;
+    const resetStick = (): void => {
+      this.aimStickActive = false;
+      this.aimStickVector = { x: 0, y: 0 };
+      knob.style.transform = 'translate(0px, 0px)';
+    };
+    const updateStick = (event: PointerEvent): void => {
+      const rect = stick.getBoundingClientRect();
+      const dx = (event.clientX - rect.left) * (142 / rect.width) - stickCenter;
+      const dy = (event.clientY - rect.top) * (142 / rect.height) - stickCenter;
+      const length = Math.hypot(dx, dy);
+      const factor = length > stickRadius ? stickRadius / length : 1;
+      this.aimStickVector = { x: dx * factor / stickRadius, y: dy * factor / stickRadius };
+      this.aimStickActive = true;
+      knob.style.transform = 'translate(' + (dx * factor) + 'px, ' + (dy * factor) + 'px)';
+    };
+    stick.addEventListener('pointerdown', (event) => {
+      consume(event);
+      stick.setPointerCapture(event.pointerId);
+      updateStick(event);
+    });
+    stick.addEventListener('pointermove', (event) => {
+      if (this.aimStickActive && stick.hasPointerCapture(event.pointerId)) updateStick(event);
+    });
+    stick.addEventListener('pointerup', (event) => { consume(event); resetStick(); });
+    stick.addEventListener('pointercancel', resetStick);
+    stick.addEventListener('lostpointercapture', resetStick);
+
     const utilityRow = document.createElement('div');
     Object.assign(utilityRow.style, {
       position: 'absolute', left: 'max(10px, env(safe-area-inset-left))',
@@ -903,7 +967,7 @@ export class MissionScene extends Phaser.Scene {
     grenade.addEventListener('pointerdown', (event) => { consume(event); this.useGrenade(); });
     medkit.addEventListener('pointerdown', (event) => { consume(event); this.useMedkit(); });
     utilityRow.append(grenade, medkit);
-    overlay.append(stack, pause, utilityRow);
+    overlay.append(stack, pause, utilityRow, stick);
     host.append(overlay);
     this.mobileControlsElement = overlay;
     this.refreshMobileControls();
