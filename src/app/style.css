@@ -71,7 +71,8 @@ html[data-device="mobile"] #game {
   }
 
   html[data-device="mobile"] #game {
-    display: none;
+    visibility: hidden;
+    pointer-events: none;
   }
 
   html[data-device="mobile"]::before {
