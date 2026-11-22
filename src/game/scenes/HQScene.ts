@@ -12,6 +12,10 @@ export class HQScene extends Phaser.Scene {
   constructor() { super('HQ'); }
 
   create(): void {
+    if (document.documentElement.dataset.device === 'mobile') {
+      this.createMobileLayout();
+      return;
+    }
     this.drawBackground();
     if (AssetCatalog.hasTexture(this, 'ui-logo')) {
       this.add.image(1160, 92, 'ui-logo').setDisplaySize(90, 90);
@@ -44,6 +48,59 @@ export class HQScene extends Phaser.Scene {
     this.message = this.add.text(840, 590, '', { fontSize: '13px', color: '#f0c16d', wordWrap: { width: 360 } });
   }
 
+  private createMobileLayout(): void {
+    this.drawBackground();
+    const save = saveService.load();
+    const g = this.add.graphics();
+    g.fillStyle(0x192633, 0.98); g.fillRoundedRect(46, 112, 1188, 550, 18);
+    g.lineStyle(2, 0x7b6548, 0.9); g.strokeRoundedRect(46, 112, 1188, 550, 18);
+    g.lineStyle(2, 0x46596a, 0.8); g.lineBetween(640, 150, 640, 620);
+    this.add.text(72, 36, 'S H P Y', { fontSize: '34px', color: '#dc6c64', fontStyle: 'bold', letterSpacing: 8 });
+    this.add.text(72, 78, 'АГЕНТСТВО ОПЕРАЦИЙ  /  ПОЛЕВОЙ ШТАБ', { fontSize: '18px', color: '#aebdca', letterSpacing: 2 });
+    this.add.text(88, 150, 'ОПЕРАТИВНЫЙ СТОЛ', { fontSize: '22px', color: '#b9c8d5', fontStyle: 'bold', letterSpacing: 2 });
+    this.add.text(92, 214, 'РЕПУТАЦИЯ', { fontSize: '18px', color: COLORS.muted, fontStyle: 'bold' });
+    this.add.text(92, 247, save.reputation.toLocaleString('ru-RU') + ' XP', { fontSize: '48px', color: '#ffffff', fontStyle: 'bold' });
+    this.add.text(92, 336, 'ОПЕРАЦИЯ 01', { fontSize: '18px', color: COLORS.muted });
+    this.add.text(92, 372, 'КАЗИНО «РОЯЛЬ»', { fontSize: '33px', color: '#f0c16d', fontStyle: 'bold' });
+    this.add.text(92, 423, 'Главный зал  →  Бар и VIP-проход', { fontSize: '19px', color: '#c7d0d9' });
+    this.add.text(92, 462, 'Устранить противников. Не попасть под огонь.', { fontSize: '16px', color: COLORS.muted });
+    this.button(92, 526, 465, 78, 'НАЧАТЬ ОПЕРАЦИЮ', COLORS.red, () => {
+      runSession.reset();
+      this.scene.start('Mission');
+    });
+    this.add.text(684, 150, 'СНАРЯЖЕНИЕ', { fontSize: '22px', color: '#b9c8d5', fontStyle: 'bold', letterSpacing: 2 });
+    this.message = this.add.text(690, 612, '', { fontSize: '17px', color: '#f0c16d', wordWrap: { width: 490 } });
+    this.drawMobileUpgrade(690, 226, 'УРОН', save.upgrades.damage, BALANCE.upgradeUnlocks.damage, save.reputation, 'damage');
+    this.drawMobileUpgrade(690, 356, 'ОБОЙМА', save.upgrades.magazine, BALANCE.upgradeUnlocks.magazine, save.reputation, 'magazine');
+    this.drawMobileUpgrade(690, 486, 'ПЕРЕЗАРЯДКА', save.upgrades.reload, BALANCE.upgradeUnlocks.reload, save.reputation, 'reload');
+    this.add.text(72, 684, 'СЕНСОРНОЕ УПРАВЛЕНИЕ  •  ПРИЦЕЛ / ОГОНЬ / ПЕРЕЗАРЯДКА', { fontSize: '15px', color: '#718091' });
+  }
+
+  private drawMobileUpgrade(
+    x: number, y: number, label: string, level: number, thresholds: readonly number[],
+    reputation: number, kind: 'damage' | 'magazine' | 'reload',
+  ): void {
+    const next = level + 1;
+    const unlocked = next < thresholds.length && reputation >= thresholds[next];
+    const maxed = level >= 2;
+    this.add.text(x, y, label, { fontSize: '22px', color: '#f2f4f7', fontStyle: 'bold' });
+    const status = maxed ? 'МАКСИМУМ' : unlocked ? 'УЛУЧШЕНИЕ ДОСТУПНО' : 'НУЖНО ' + thresholds[next] + ' XP';
+    this.add.text(x, y + 38, 'УРОВЕНЬ ' + level + '/2  •  ' + status, { fontSize: '16px', color: maxed ? '#75c995' : unlocked ? '#f0c16d' : '#9aa8b6' });
+    if (!maxed) {
+      const button = this.add.rectangle(x + 455, y + 37, 54, 54, unlocked ? COLORS.green : 0x394552)
+        .setStrokeStyle(2, 0xdde6ee, 0.5).setInteractive({ useHandCursor: unlocked });
+      this.add.text(x + 455, y + 37, '+', { fontSize: '32px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
+      button.on('pointerdown', () => {
+        if (!unlocked) {
+          this.message.setText('Для улучшения «' + label + '» нужно ещё ' + Math.max(0, thresholds[next] - reputation) + ' XP.');
+          return;
+        }
+        saveService.unlockUpgrade(kind);
+        this.scene.restart();
+      });
+    }
+  }
+
   private drawBackground(): void {
     const g = this.add.graphics();
     g.fillGradientStyle(0x101720, 0x101720, 0x1c2632, 0x111821, 1);
@@ -65,7 +122,7 @@ export class HQScene extends Phaser.Scene {
   private button(x: number, y: number, width: number, height: number, label: string, color: number, onClick: () => void): void {
     const bg = this.add.rectangle(x + width / 2, y + height / 2, width, height, color, 1).setInteractive({ useHandCursor: true });
     bg.setStrokeStyle(1, 0xffffff, 0.25);
-    this.add.text(x + width / 2, y + height / 2, label, { fontSize: '14px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
+    this.add.text(x + width / 2, y + height / 2, label, { fontSize: document.documentElement.dataset.device === 'mobile' ? '24px' : '14px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
     bg.on('pointerover', () => bg.setAlpha(0.82));
     bg.on('pointerout', () => bg.setAlpha(1));
     bg.on('pointerdown', onClick);
