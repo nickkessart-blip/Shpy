@@ -36,7 +36,6 @@ export class MissionScene extends Phaser.Scene {
   private reloadHint!: Phaser.GameObjects.Text;
   private backgroundArt?: Phaser.GameObjects.Image;
   private transitionOverlay?: Phaser.GameObjects.Container;
-  private transitionCurtain?: Phaser.GameObjects.Rectangle;
   private transitionWalkTweens: Phaser.Tweens.Tween[] = [];
   private aim: Point = { x: GAME_WIDTH / 2, y: GAME_HEIGHT / 2 };
   private enemies: RuntimeEnemy[] = [];
@@ -99,7 +98,6 @@ export class MissionScene extends Phaser.Scene {
     this.pauseOverlay = undefined;
     this.backgroundArt = undefined;
     this.transitionOverlay = undefined;
-    this.transitionCurtain = undefined;
     this.transitionWalkTweens = [];
     this.isMobileControls = hasTouchInput();
     this.mobileFireHeld = false;
@@ -400,7 +398,6 @@ export class MissionScene extends Phaser.Scene {
 
     const curtain = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x05080c, 1)
       .setAlpha(0).setDepth(120);
-    this.transitionCurtain = curtain;
     this.tweens.add({
       targets: curtain,
       alpha: 1,
@@ -418,7 +415,6 @@ export class MissionScene extends Phaser.Scene {
           ease: 'Quad.easeOut',
           onComplete: () => {
             curtain.destroy();
-            this.transitionCurtain = undefined;
             this.phase = 'active';
             this.showToast(this.sceneDef.subtitle + ' • ' + this.sceneDef.title, 1700);
           },
