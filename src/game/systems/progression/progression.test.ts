@@ -4,8 +4,14 @@ import { ENEMIES } from '../../data/enemies';
 
 describe('progression balance', () => {
   it('provides five upgrade tiers for every permanent perk', () => {
-    for (const thresholds of Object.values(BALANCE.upgradeUnlocks)) expect(thresholds).toHaveLength(5);
-    expect(BALANCE.upgradeUnlocks.damage[4]).toBeGreaterThan(BALANCE.upgradeUnlocks.damage[3]);
+    for (const thresholds of Object.values(BALANCE.upgradeCosts)) expect(thresholds).toHaveLength(5);
+    expect(BALANCE.upgradeCosts.damage[4]).toBeGreaterThan(BALANCE.upgradeCosts.damage[3]);
+  });
+
+  it('gates advanced perk tiers behind account levels', () => {
+    expect(BALANCE.upgradeTierUnlockLevels.damage).toEqual([0, 1, 3, 5, 8]);
+    expect(BALANCE.upgradeTierUnlockLevels.health).toEqual([0, 3, 5, 7, 10]);
+    expect(BALANCE.upgradeTierUnlockLevels.precision[4]).toBe(12);
   });
 
   it('makes every upgrade level meaningfully stronger', () => {
@@ -26,6 +32,7 @@ describe('progression balance', () => {
 
   it('keeps the casino boss stronger than regular enemies', () => {
     expect(ENEMIES.boss.hp).toBeGreaterThan(ENEMIES.armored.hp);
-    expect(BALANCE.rewards.boss).toBeGreaterThan(BALANCE.rewards.wave);
+    expect(BALANCE.rewards.xp.boss).toBeGreaterThan(BALANCE.rewards.xp.wave);
+    expect(BALANCE.rewards.dollars.boss).toBeGreaterThan(BALANCE.rewards.dollars.wave);
   });
 });

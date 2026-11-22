@@ -4,27 +4,30 @@ import {
 } from './arsenal';
 
 describe('arsenal progression', () => {
-  it('unlocks one, two and three weapon slots at reputation milestones', () => {
-    expect(getWeaponSlotLimit(0)).toBe(1);
-    expect(getWeaponSlotLimit(349)).toBe(1);
-    expect(getWeaponSlotLimit(350)).toBe(2);
-    expect(getWeaponSlotLimit(1199)).toBe(2);
-    expect(getWeaponSlotLimit(1200)).toBe(3);
-    expect(getNextWeaponSlotUnlock(0)).toEqual({ slots: 2, reputation: 350 });
-    expect(getNextWeaponSlotUnlock(1200)).toBeNull();
+  it('unlocks one, two and three weapon slots by account level', () => {
+    expect(getWeaponSlotLimit(1)).toBe(1);
+    expect(getWeaponSlotLimit(2)).toBe(2);
+    expect(getWeaponSlotLimit(4)).toBe(2);
+    expect(getWeaponSlotLimit(5)).toBe(3);
+    expect(getNextWeaponSlotUnlock(1)).toEqual({ slots: 2, accountLevel: 2 });
+    expect(getNextWeaponSlotUnlock(5)).toBeNull();
   });
 
   it('keeps a fresh agent on the pistol and filters locked or duplicate weapons', () => {
-    expect(normalizeLoadout({ weapons: ['rifle', 'pistol', 'pistol'] }, 0).weapons).toEqual(['pistol']);
-    expect(normalizeLoadout({ weapons: ['smg', 'pistol'] }, 350).weapons).toEqual(['smg', 'pistol']);
-    expect(normalizeLoadout({ weapons: [] }, 0).weapons).toEqual(['pistol']);
+    expect(normalizeLoadout({ weapons: ['rifle', 'pistol', 'pistol'] }, 1).weapons).toEqual(['pistol']);
+    expect(normalizeLoadout({ weapons: ['smg', 'pistol'] }, 2).weapons).toEqual(['smg', 'pistol']);
+    expect(normalizeLoadout({ weapons: [] }, 1).weapons).toEqual(['pistol']);
   });
 
-  it('does not keep utilities before their unlock milestones', () => {
-    expect(normalizeLoadout({ weapons: ['pistol'], tacticalItem: 'grenade', activeItem: 'medkit' }, 0))
+  it('unlocks utilities at account ranks, not by spending account XP', () => {
+    expect(normalizeLoadout({ weapons: ['pistol'], tacticalItem: 'grenade', activeItem: 'medkit' }, 2))
       .toEqual({ weapons: ['pistol'], tacticalItem: 'none', activeItem: 'none' });
-    expect(normalizeLoadout({ weapons: ['pistol'], tacticalItem: 'grenade', activeItem: 'medkit' }, 1800))
+    expect(normalizeLoadout({ weapons: ['pistol'], tacticalItem: 'grenade', activeItem: 'medkit' }, 7))
       .toEqual({ weapons: ['pistol'], tacticalItem: 'grenade', activeItem: 'medkit' });
+  });
+
+  it('uses account rank unlocks for the four weapons', () => {
+    expect(WEAPONS.map((weapon) => weapon.unlockLevel)).toEqual([1, 2, 4, 6]);
   });
 
   it('keeps all weapons below a normal guard one-shot body threshold at max damage upgrade', () => {

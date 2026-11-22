@@ -5,7 +5,8 @@ export interface MissionResult {
   shots: number;
   hits: number;
   damageTaken: number;
-  reputationEarned: number;
+  accountXpEarned: number;
+  dollarsEarned: number;
 }
 
 export const runSession = {

@@ -1,4 +1,5 @@
 import { BALANCE } from './balance';
+import { ACCOUNT_UNLOCKS } from './progression';
 
 export type WeaponId = 'pistol' | 'smg' | 'shotgun' | 'rifle';
 export type TacticalItemId = 'none' | 'grenade';
@@ -15,7 +16,7 @@ export interface WeaponDefinition {
   name: string;
   role: string;
   description: string;
-  unlockAt: number;
+  unlockLevel: number;
   damageMultiplier: number;
   fireCooldownMs: number;
   baseMagazine: number;
@@ -28,37 +29,37 @@ export const WEAPONS: readonly WeaponDefinition[] = [
   {
     id: 'pistol', name: 'СЛУЖЕБНЫЙ ПИСТОЛЕТ', role: 'Сбалансированное оружие',
     description: 'Надёжный вариант для первой операции. Хорошая точность и умеренный темп.',
-    unlockAt: 0, damageMultiplier: 1, fireCooldownMs: 210, baseMagazine: 6,
+    unlockLevel: 1, damageMultiplier: 1, fireCooldownMs: 210, baseMagazine: 6,
     reserveAmmo: 120, baseReloadSeconds: 2, intermissionAmmo: 48,
   },
   {
     id: 'smg', name: 'КОМПАКТНЫЙ ПП', role: 'Высокая скорострельность',
     description: 'Быстро выпускает очередь. Урон одного попадания ниже, зато промахи прощаются чаще.',
-    unlockAt: 350, damageMultiplier: 0.58, fireCooldownMs: 105, baseMagazine: 24,
+    unlockLevel: ACCOUNT_UNLOCKS.smg, damageMultiplier: 0.58, fireCooldownMs: 105, baseMagazine: 24,
     reserveAmmo: 180, baseReloadSeconds: 1.9, intermissionAmmo: 48,
   },
   {
     id: 'shotgun', name: 'ТАКТИЧЕСКИЙ ДРОБОВИК', role: 'Мощный одиночный выстрел',
     description: 'Медленный темп и небольшой магазин. Подходит для опасных целей.',
-    unlockAt: 850, damageMultiplier: 2, fireCooldownMs: 680, baseMagazine: 5,
+    unlockLevel: ACCOUNT_UNLOCKS.shotgun, damageMultiplier: 2, fireCooldownMs: 680, baseMagazine: 5,
     reserveAmmo: 45, baseReloadSeconds: 2.8, intermissionAmmo: 15,
   },
   {
     id: 'rifle', name: 'ШТУРМОВАЯ ВИНТОВКА', role: 'Универсальное оружие',
     description: 'Больше магазин и стабильный урон. Хороший выбор для длинных волн.',
-    unlockAt: 1400, damageMultiplier: 1.22, fireCooldownMs: 165, baseMagazine: 24,
+    unlockLevel: ACCOUNT_UNLOCKS.rifle, damageMultiplier: 1.22, fireCooldownMs: 165, baseMagazine: 24,
     reserveAmmo: 144, baseReloadSeconds: 2.2, intermissionAmmo: 36,
   },
 ] as const;
 
 export const LOADOUT_UNLOCKS = {
   weaponSlots: [
-    { slots: 1, reputation: 0 },
-    { slots: 2, reputation: 350 },
-    { slots: 3, reputation: 1200 },
+    { slots: 1, accountLevel: 1 },
+    { slots: 2, accountLevel: ACCOUNT_UNLOCKS['weapon-slot-2'] },
+    { slots: 3, accountLevel: ACCOUNT_UNLOCKS['weapon-slot-3'] },
   ],
-  grenade: 700,
-  medkit: 1800,
+  grenadeLevel: ACCOUNT_UNLOCKS.grenade,
+  medkitLevel: ACCOUNT_UNLOCKS.medkit,
   grenadesPerMission: 2,
   medkitsPerMission: 1,
   grenadeDamage: 5.5,
@@ -91,23 +92,23 @@ export function getWeapon(id: WeaponId): WeaponDefinition {
   return WEAPONS.find((weapon) => weapon.id === id) ?? WEAPONS[0];
 }
 
-export function getWeaponSlotLimit(reputation: number): number {
+export function getWeaponSlotLimit(accountLevel: number): number {
   let slots = 1;
   for (const unlock of LOADOUT_UNLOCKS.weaponSlots) {
-    if (reputation >= unlock.reputation) slots = unlock.slots;
+    if (accountLevel >= unlock.accountLevel) slots = unlock.slots;
   }
   return slots;
 }
 
-export function getNextWeaponSlotUnlock(reputation: number): { slots: number; reputation: number } | null {
-  return LOADOUT_UNLOCKS.weaponSlots.find((unlock) => unlock.reputation > reputation) ?? null;
+export function getNextWeaponSlotUnlock(accountLevel: number): { slots: number; accountLevel: number } | null {
+  return LOADOUT_UNLOCKS.weaponSlots.find((unlock) => unlock.accountLevel > accountLevel) ?? null;
 }
 
-export function isWeaponUnlocked(id: WeaponId, reputation: number): boolean {
-  return getWeapon(id).unlockAt <= reputation;
+export function isWeaponUnlocked(id: WeaponId, accountLevel: number): boolean {
+  return getWeapon(id).unlockLevel <= accountLevel;
 }
 
-export function normalizeLoadout(value: unknown, reputation: number): LoadoutSelection {
+export function normalizeLoadout(value: unknown, accountLevel: number): LoadoutSelection {
   const raw = value && typeof value === 'object'
     ? value as { weapons?: unknown; tacticalItem?: unknown; activeItem?: unknown }
     : {};
@@ -116,17 +117,17 @@ export function normalizeLoadout(value: unknown, reputation: number): LoadoutSel
     for (const item of raw.weapons) {
       if (typeof item !== 'string' || !WEAPONS.some((weapon) => weapon.id === item)) continue;
       const id = item as WeaponId;
-      if (!isWeaponUnlocked(id, reputation) || selected.includes(id)) continue;
+      if (!isWeaponUnlocked(id, accountLevel) || selected.includes(id)) continue;
       selected.push(id);
     }
   }
-  const weapons = selected.slice(0, getWeaponSlotLimit(reputation));
+  const weapons = selected.slice(0, getWeaponSlotLimit(accountLevel));
   if (weapons.length === 0) weapons.push('pistol');
 
   return {
     weapons,
-    tacticalItem: raw.tacticalItem === 'grenade' && reputation >= LOADOUT_UNLOCKS.grenade ? 'grenade' : 'none',
-    activeItem: raw.activeItem === 'medkit' && reputation >= LOADOUT_UNLOCKS.medkit ? 'medkit' : 'none',
+    tacticalItem: raw.tacticalItem === 'grenade' && accountLevel >= LOADOUT_UNLOCKS.grenadeLevel ? 'grenade' : 'none',
+    activeItem: raw.activeItem === 'medkit' && accountLevel >= LOADOUT_UNLOCKS.medkitLevel ? 'medkit' : 'none',
   };
 }
 

@@ -20,7 +20,7 @@ function useMemoryStorage(initial: Record<string, string> = {}): Map<string, str
   return values;
 }
 
-describe('SaveService storage and migration', () => {
+describe('SaveService economy and migration', () => {
   it('keeps progress in memory when browser storage is unavailable', () => {
     Object.defineProperty(globalThis, 'localStorage', {
       configurable: true,
@@ -30,68 +30,113 @@ describe('SaveService storage and migration', () => {
       },
     });
     const service = new SaveService();
-    service.addReputation(25);
-    service.addReputation(10);
-    expect(service.load().reputation).toBe(35);
+    service.addProgress(25, 40);
+    service.addProgress(10, 15);
+    expect(service.load()).toMatchObject({ accountXp: 35, dollars: 55 });
     expect(service.hasSave()).toBe(true);
   });
 
-  it('migrates schema v1 without losing reputation or existing upgrades', () => {
+  it('migrates schema v1 without losing XP or owned perks', () => {
     const values = useMemoryStorage({
       shpy_save_v1: JSON.stringify({
         schemaVersion: 1, reputation: 240,
         upgrades: { damage: 2, magazine: 1, reload: 2 },
       }),
     });
-    const service = new SaveService();
-    const migrated = service.load();
-    expect(migrated.schemaVersion).toBe(3);
-    expect(migrated.reputation).toBe(240);
+    const migrated = new SaveService().load();
+    expect(migrated.schemaVersion).toBe(4);
+    expect(migrated.accountXp).toBe(240);
+    expect(migrated.dollars).toBe(240);
     expect(migrated.upgrades).toEqual({
       damage: 2, magazine: 1, reload: 2, health: 0, armor: 0, precision: 0,
     });
-    expect(migrated.loadout.weapons).toEqual(['pistol']);
-    expect(JSON.parse(values.get('shpy_save_v1') ?? '{}').schemaVersion).toBe(3);
+    expect(JSON.parse(values.get('shpy_save_v1') ?? '{}').schemaVersion).toBe(4);
   });
 
-  it('migrates schema v2 while retaining all existing progression', () => {
-    const values = useMemoryStorage({
-      shpy_save_v1: JSON.stringify({
-        schemaVersion: 2, reputation: 900,
-        upgrades: { damage: 3, magazine: 2, reload: 2, health: 1, armor: 2, precision: 1 },
-      }),
-    });
-    const migrated = new SaveService().load();
-    expect(migrated.schemaVersion).toBe(3);
-    expect(migrated.reputation).toBe(900);
-    expect(migrated.upgrades).toMatchObject({ damage: 3, health: 1, armor: 2, precision: 1 });
-    expect(migrated.loadout.weapons).toEqual(['pistol']);
-    expect(JSON.parse(values.get('shpy_save_v1') ?? '{}').schemaVersion).toBe(3);
+  it('migrates schema v2 and v3 without losing existing progression', () => {
+    for (const schemaVersion of [2, 3]) {
+      const values = useMemoryStorage({
+        shpy_save_v1: JSON.stringify({
+          schemaVersion, reputation: 1800,
+          upgrades: { damage: 3, magazine: 2, reload: 2, health: 1, armor: 2, precision: 1 },
+          loadout: { weapons: ['pistol', 'smg', 'rifle'], tacticalItem: 'grenade', activeItem: 'medkit' },
+        }),
+      });
+      const migrated = new SaveService().load();
+      expect(migrated.schemaVersion).toBe(4);
+      expect(migrated.accountXp).toBe(1800);
+      expect(migrated.dollars).toBe(1800);
+      expect(migrated.loadout).toEqual({
+        weapons: ['pistol', 'smg', 'rifle'], tacticalItem: 'grenade', activeItem: 'medkit',
+      });
+      expect(migrated.upgrades).toMatchObject({ damage: 3, health: 1, armor: 2, precision: 1 });
+      expect(JSON.parse(values.get('shpy_save_v1') ?? '{}').schemaVersion).toBe(4);
+    }
   });
 
-  it('saves and reloads the selected weapons and utility items', () => {
+  it('earns dollars and account XP independently', () => {
     useMemoryStorage();
     const service = new SaveService();
-    service.addReputation(1800);
+    service.addProgress(700, 525);
+    expect(service.load()).toMatchObject({ accountXp: 700, dollars: 525 });
+    service.addProgress(60, 35);
+    expect(service.load()).toMatchObject({ accountXp: 760, dollars: 560 });
+  });
+
+  it('spends dollars when buying an upgrade and leaves account XP untouched', () => {
+    useMemoryStorage();
+    const service = new SaveService();
+    service.addProgress(1200, 1000);
+    const result = service.purchaseUpgrade('damage');
+    expect(result.success).toBe(true);
+    expect(result.data.accountXp).toBe(1200);
+    expect(result.data.dollars).toBe(820);
+    expect(result.data.upgrades.damage).toBe(1);
+  });
+
+  it('gates perk branches by account level and purchases by cash', () => {
+    useMemoryStorage();
+    const service = new SaveService();
+    service.addProgress(0, 5000);
+    expect(service.purchaseUpgrade('health').reason).toBe('level');
+    service.addProgress(850, 100);
+    expect(service.purchaseUpgrade('damage').reason).toBe('funds');
+    expect(service.load().upgrades.damage).toBe(0);
+  });
+
+  it('gates advanced levels of an already unlocked perk by account rank', () => {
+    useMemoryStorage();
+    const service = new SaveService();
+    service.addProgress(0, 5000);
+    expect(service.purchaseUpgrade('damage').success).toBe(true);
+    expect(service.purchaseUpgrade('damage').reason).toBe('level');
+    service.addProgress(700, 0);
+    expect(service.purchaseUpgrade('damage').success).toBe(true);
+  });
+
+  it('saves and reloads the selected loadout using account rank unlocks', () => {
+    useMemoryStorage();
+    const service = new SaveService();
+    service.addProgress(1800, 0);
     service.setLoadout({
       weapons: ['pistol', 'smg', 'rifle'], tacticalItem: 'grenade', activeItem: 'medkit',
     });
-    const restored = service.load();
-    expect(restored.loadout).toEqual({
+    expect(service.load().loadout).toEqual({
       weapons: ['pistol', 'smg', 'rifle'], tacticalItem: 'grenade', activeItem: 'medkit',
     });
   });
 
-  it('starts a clean new game and clears every perk and item selection', () => {
+  it('starts a clean new game and clears all currencies, perks and item selection', () => {
     useMemoryStorage();
     const service = new SaveService();
-    service.addReputation(1800);
+    service.addProgress(1800, 3000);
     service.setLoadout({
       weapons: ['pistol', 'smg', 'rifle'], tacticalItem: 'grenade', activeItem: 'medkit',
     });
     const fresh = service.reset();
     expect(service.hasSave()).toBe(true);
-    expect(fresh.reputation).toBe(0);
+    expect(fresh.accountXp).toBe(0);
+    expect(fresh.dollars).toBe(0);
     expect(Object.values(fresh.upgrades).every((level) => level === 0)).toBe(true);
     expect(fresh.loadout).toEqual({ weapons: ['pistol'], tacticalItem: 'none', activeItem: 'none' });
   });
@@ -105,8 +150,8 @@ describe('SaveService storage and migration', () => {
     });
     const service = new SaveService();
     const data = service.load();
-    expect(data.reputation).toBe(0);
-    expect(data.schemaVersion).toBe(3);
+    expect(data.accountXp).toBe(0);
+    expect(data.schemaVersion).toBe(4);
     expect(values.get('shpy_save_recovery_backup')).toBeTruthy();
     expect(service.hasSave()).toBe(false);
   });

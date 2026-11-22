@@ -64,8 +64,9 @@ export class MissionScene extends Phaser.Scene {
   private shots = 0;
   private hits = 0;
   private damageTaken = 0;
-  private reputationEarned = 0;
-  private totalReputation = 0;
+  private accountXpEarned = 0;
+  private dollarsEarned = 0;
+  private totalAccountXp = 0;
   private waveAwarded = false;
   private uniqueId = 1;
   private sceneDef!: MissionSceneDefinition;
@@ -115,8 +116,9 @@ export class MissionScene extends Phaser.Scene {
     this.shots = 0;
     this.hits = 0;
     this.damageTaken = 0;
-    this.reputationEarned = 0;
-    this.totalReputation = initialSave.reputation;
+    this.accountXpEarned = 0;
+    this.dollarsEarned = 0;
+    this.totalAccountXp = initialSave.accountXp;
     this.waveAwarded = false;
     this.uniqueId = 1;
     this.resultSent = false;
@@ -324,7 +326,7 @@ export class MissionScene extends Phaser.Scene {
     const living = this.enemies.filter((enemy) => enemy.state !== 'Defeated');
     if (living.length !== 0 || this.waveAwarded) return;
     this.waveAwarded = true;
-    this.award(BALANCE.rewards.wave);
+    this.award(BALANCE.rewards.xp.wave, BALANCE.rewards.dollars.wave);
     this.clearEnemySprites();
     this.waveIndex += 1;
     if (this.waveIndex < this.sceneDef.waves.length) {
@@ -610,9 +612,10 @@ export class MissionScene extends Phaser.Scene {
         this.tweens.killTweensOf(chosen.enemy);
         chosen.enemy.state = 'Defeated';
         this.kills += 1;
-        const reward = chosen.enemy.type === 'boss' ? BALANCE.rewards.boss : BALANCE.rewards.kill;
-        this.award(reward);
-        this.showToast(ENEMIES[chosen.enemy.type].name.toUpperCase() + ' УСТРАНЁН • +' + reward + ' XP', 1100);
+        const xp = chosen.enemy.type === 'boss' ? BALANCE.rewards.xp.boss : BALANCE.rewards.xp.kill;
+        const dollars = chosen.enemy.type === 'boss' ? BALANCE.rewards.dollars.boss : BALANCE.rewards.dollars.kill;
+        this.award(xp, dollars);
+        this.showToast(ENEMIES[chosen.enemy.type].name.toUpperCase() + ' УСТРАНЁН • +' + xp + ' XP • +$' + dollars, 1100);
       }
     } else {
       const cover = this.sceneDef.covers.find((item) => pointInRect(this.aim, item));
@@ -697,7 +700,10 @@ export class MissionScene extends Phaser.Scene {
         enemy.state = 'Defeated';
         this.tweens.killTweensOf(enemy);
         this.kills += 1;
-        this.award(enemy.type === 'boss' ? BALANCE.rewards.boss : BALANCE.rewards.kill);
+        this.award(
+          enemy.type === 'boss' ? BALANCE.rewards.xp.boss : BALANCE.rewards.xp.kill,
+          enemy.type === 'boss' ? BALANCE.rewards.dollars.boss : BALANCE.rewards.dollars.kill,
+        );
         defeated += 1;
       }
     }
@@ -745,22 +751,24 @@ export class MissionScene extends Phaser.Scene {
     this.showToast('ВРАГ ПОПАЛ • −' + appliedDamage + ' HP', 750);
   }
 
-  private award(amount: number): void {
-    this.reputationEarned += amount;
-    this.totalReputation += amount;
-    saveService.addReputation(amount);
+  private award(accountXp: number, dollars: number): void {
+    this.accountXpEarned += accountXp;
+    this.dollarsEarned += dollars;
+    this.totalAccountXp += accountXp;
+    saveService.addProgress(accountXp, dollars);
   }
 
   private finishMission(success: boolean): void {
     if (this.resultSent) return;
     this.resultSent = true;
     this.phase = 'finished';
-    if (success) this.award(BALANCE.rewards.mission);
+    if (success) this.award(BALANCE.rewards.xp.mission, BALANCE.rewards.dollars.mission);
     runSession.result = {
       success,
       elapsedSeconds: Math.max(1, Math.round((Date.now() - this.startedAt) / 1000)),
       kills: this.kills, shots: this.shots, hits: this.hits,
-      damageTaken: this.damageTaken, reputationEarned: this.reputationEarned,
+      damageTaken: this.damageTaken, accountXpEarned: this.accountXpEarned,
+      dollarsEarned: this.dollarsEarned,
     };
     this.scene.start('Results');
   }
@@ -941,7 +949,7 @@ export class MissionScene extends Phaser.Scene {
       : 'ОПЕРАЦИЯ: КАЗИНО     СЦЕНА ' + (this.sceneIndex + 1) + '/' + CASINO_MISSION.length +
         '     ВОЛНА ' + this.getDisplayedWaveNumber() + '/' + this.sceneDef.waves.length +
         '\n' + weaponLabel + '     ЗДОРОВЬЕ ' + this.hp + '/' + this.maxHp + '     ' + ammoText
-        + '     ГРАНАТЫ ' + this.grenadeCount + '     АПТЕЧКИ ' + this.medkitCount + '     XP ' + this.totalReputation);
+        + '     ГРАНАТЫ ' + this.grenadeCount + '     АПТЕЧКИ ' + this.medkitCount + '     XP ' + this.totalAccountXp);
     this.message.setText(this.toastText).setVisible(this.toastTimer > 0);
     this.reloadHint.setText(this.reloading > 0 ? 'ПЕРЕЗАРЯДКА…' : 'R  ПЕРЕЗАРЯДКА');
   }

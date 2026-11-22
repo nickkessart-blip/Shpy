@@ -13,13 +13,24 @@ export const BALANCE = {
     shotCooldownMs: 210,
   },
   supplies: { intermissionAmmo: 48, intermissionHealing: 30 },
-  rewards: { kill: 12, boss: 180, wave: 60, mission: 250 },
-  upgradeUnlocks: {
-    damage: [0, 120, 350, 750, 1250],
-    magazine: [0, 90, 260, 600, 1050],
-    reload: [0, 100, 300, 650, 1100],
-    health: [0, 60, 180, 420, 800],
-    armor: [0, 180, 480, 950, 1550],
-    precision: [0, 150, 400, 800, 1300],
+  rewards: {
+    xp: { kill: 12, boss: 180, wave: 60, mission: 250 },
+    dollars: { kill: 35, boss: 450, wave: 150, mission: 700 },
+  },
+  upgradeCosts: {
+    damage: [0, 180, 400, 750, 1200],
+    magazine: [0, 130, 300, 600, 1000],
+    reload: [0, 160, 350, 700, 1100],
+    health: [0, 130, 300, 650, 1050],
+    armor: [0, 250, 500, 900, 1400],
+    precision: [0, 200, 450, 850, 1300],
+  },
+  upgradeTierUnlockLevels: {
+    damage: [0, 1, 3, 5, 8],
+    magazine: [0, 1, 3, 5, 8],
+    reload: [0, 1, 3, 5, 8],
+    health: [0, 3, 5, 7, 10],
+    armor: [0, 4, 6, 8, 11],
+    precision: [0, 5, 7, 9, 12],
   },
 } as const;

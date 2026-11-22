@@ -7,6 +7,7 @@ import {
 import { saveService } from '../../persistence/SaveService';
 import { AssetCatalog } from '../assets/AssetCatalog';
 import { runSession } from '../systems/missions/runSession';
+import { getAccountLevel } from '../data/progression';
 
 const COLORS = { panel: 0x1b2733, edge: 0x536273, red: 0xa9363b, green: 0x3d8a69 };
 
@@ -39,7 +40,7 @@ export class LoadoutScene extends Phaser.Scene {
     this.add.text(815, 128, 'ВАШ КОМПЛЕКТ', { fontSize: '16px', color: '#aebdca', fontStyle: 'bold', letterSpacing: 2 });
 
     WEAPONS.forEach((weapon, index) => this.drawWeaponCard(72, 154 + index * 112, weapon));
-    this.drawLoadoutPanel(save.reputation);
+    this.drawLoadoutPanel(getAccountLevel(save.accountXp));
     this.message = this.add.text(72, 626, '', {
       fontSize: this.isMobile ? '16px' : '13px', color: '#f0c16d', wordWrap: { width: 690 },
     });
@@ -61,10 +62,10 @@ export class LoadoutScene extends Phaser.Scene {
 
   private drawWeaponCard(x: number, y: number, weapon: typeof WEAPONS[number]): void {
     const save = saveService.load();
-    const unlocked = isWeaponUnlocked(weapon.id, save.reputation);
+    const unlocked = isWeaponUnlocked(weapon.id, getAccountLevel(save.accountXp));
     const selectedIndex = this.selectedWeapons.indexOf(weapon.id);
     const selected = selectedIndex >= 0;
-    const slotLimit = getWeaponSlotLimit(save.reputation);
+    const slotLimit = getWeaponSlotLimit(getAccountLevel(save.accountXp));
     const canAdd = selected || this.selectedWeapons.length < slotLimit;
     const g = this.add.graphics();
     g.fillStyle(selected ? 0x294044 : unlocked ? 0x1b2733 : 0x151d26, 0.98);
@@ -90,7 +91,7 @@ export class LoadoutScene extends Phaser.Scene {
     });
     this.add.text(x + 112, y + 66, unlocked
       ? weapon.description
-      : 'ЗАКРЫТО • НЕОБХОДИМО ' + weapon.unlockAt.toLocaleString('ru-RU') + ' XP',
+      : 'ЗАКРЫТО • НЕОБХОДИМО ' + weapon.unlockLevel.toLocaleString('ru-RU') + ' УР.',
       { fontSize: '11px', color: unlocked ? '#8f9eac' : '#b47c78', wordWrap: { width: 420 } });
 
     const state = selected ? 'В КОМПЛЕКТЕ · СЛОТ ' + (selectedIndex + 1)
@@ -104,13 +105,13 @@ export class LoadoutScene extends Phaser.Scene {
     hit.on('pointerdown', () => this.toggleWeapon(weapon.id));
   }
 
-  private drawLoadoutPanel(reputation: number): void {
+  private drawLoadoutPanel(accountLevel: number): void {
     const g = this.add.graphics();
     g.fillStyle(COLORS.panel, 0.97); g.fillRoundedRect(800, 154, 410, 500, 12);
     g.lineStyle(2, 0x7b6548, 0.75); g.strokeRoundedRect(800, 154, 410, 500, 12);
     g.lineStyle(1, COLORS.edge, 0.65); g.lineBetween(822, 198, 1188, 198);
 
-    const slotLimit = getWeaponSlotLimit(reputation);
+    const slotLimit = getWeaponSlotLimit(accountLevel);
     this.add.text(824, 174, 'ОРУЖЕЙНЫЕ СЛОТЫ  ' + this.selectedWeapons.length + '/' + slotLimit, {
       fontSize: '14px', color: '#dce4eb', fontStyle: 'bold',
     });
@@ -126,9 +127,9 @@ export class LoadoutScene extends Phaser.Scene {
       });
     }
 
-    const nextSlot = getNextWeaponSlotUnlock(reputation);
+    const nextSlot = getNextWeaponSlotUnlock(accountLevel);
     this.add.text(826, 350, nextSlot
-      ? 'Следующий слот: ' + nextSlot.slots + ' • ещё ' + (nextSlot.reputation - reputation) + ' XP'
+      ? 'Следующий слот: ' + nextSlot.slots + ' • ещё ' + (nextSlot.accountLevel - accountLevel) + ' УР.'
       : 'Все оружейные слоты открыты',
       { fontSize: '12px', color: nextSlot ? '#aebdca' : '#80c99b' });
 
@@ -137,7 +138,7 @@ export class LoadoutScene extends Phaser.Scene {
     });
     this.utilityButton(820, 408, 370, 52,
       this.tacticalItem === 'grenade' ? '✓  ОСКОЛОЧНАЯ ГРАНАТА ×2' : 'ОСКОЛОЧНАЯ ГРАНАТА',
-      reputation >= LOADOUT_UNLOCKS.grenade, reputation, LOADOUT_UNLOCKS.grenade,
+      accountLevel >= LOADOUT_UNLOCKS.grenadeLevel, accountLevel, LOADOUT_UNLOCKS.grenadeLevel,
       this.tacticalItem === 'grenade', () => this.toggleTactical());
 
     this.add.text(826, 475, 'АКТИВНЫЙ ПРЕДМЕТ', {
@@ -145,7 +146,7 @@ export class LoadoutScene extends Phaser.Scene {
     });
     this.utilityButton(820, 500, 370, 52,
       this.activeItem === 'medkit' ? '✓  АПТЕЧКА · 1 ИСПОЛЬЗОВАНИЕ' : 'АПТЕЧКА',
-      reputation >= LOADOUT_UNLOCKS.medkit, reputation, LOADOUT_UNLOCKS.medkit,
+      accountLevel >= LOADOUT_UNLOCKS.medkitLevel, accountLevel, LOADOUT_UNLOCKS.medkitLevel,
       this.activeItem === 'medkit', () => this.toggleActive());
 
     this.add.text(826, 562, 'Состав комплекта фиксируется перед выездом.', {
@@ -156,12 +157,12 @@ export class LoadoutScene extends Phaser.Scene {
 
   private utilityButton(
     x: number, y: number, width: number, height: number, label: string, unlocked: boolean,
-    reputation: number, threshold: number, selected: boolean, action: () => void,
+    accountLevel: number, threshold: number, selected: boolean, action: () => void,
   ): void {
     const color = !unlocked ? 0x202a34 : selected ? 0x315b49 : 0x354554;
     const btn = this.add.rectangle(x + width / 2, y + height / 2, width, height, color)
       .setStrokeStyle(1, selected ? 0x7ac99a : 0x718291, 0.85);
-    const text = !unlocked ? label + ' · ' + Math.max(0, threshold - reputation) + ' XP'
+    const text = !unlocked ? label + ' · ' + Math.max(0, threshold - accountLevel) + ' УР.'
       : label;
     this.add.text(x + width / 2, y + height / 2, text, {
       fontSize: this.isMobile ? '15px' : '13px', color: unlocked ? '#edf2f7' : '#778592',
@@ -175,7 +176,7 @@ export class LoadoutScene extends Phaser.Scene {
 
   private toggleWeapon(id: WeaponId): void {
     const save = saveService.load();
-    if (!isWeaponUnlocked(id, save.reputation)) return;
+    if (!isWeaponUnlocked(id, getAccountLevel(save.accountXp))) return;
     const index = this.selectedWeapons.indexOf(id);
     if (index >= 0) {
       if (this.selectedWeapons.length === 1) {
@@ -184,8 +185,8 @@ export class LoadoutScene extends Phaser.Scene {
       }
       this.selectedWeapons.splice(index, 1);
     } else {
-      if (this.selectedWeapons.length >= getWeaponSlotLimit(save.reputation)) {
-        this.message.setText('Недостаточно слотов. Следующий откроется с ростом репутации.');
+      if (this.selectedWeapons.length >= getWeaponSlotLimit(getAccountLevel(save.accountXp))) {
+        this.message.setText('Недостаточно слотов. Следующий откроется с ростом уровня аккаунта.');
         return;
       }
       this.selectedWeapons.push(id);
