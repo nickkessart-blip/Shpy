@@ -521,16 +521,20 @@ export class MissionScene extends Phaser.Scene {
         continue;
       }
       const def = ENEMIES[enemy.type];
+      const hitOffset = enemy.hitFlash > 0 ? Math.sin(this.time.now / 24) * 5 * (enemy.hitFlash / 230) : 0;
+      const drawX = enemy.x + hitOffset;
       if (AssetCatalog.hasTexture(this, SPRITES[enemy.type])) {
         let image = sprite;
-        if (!image) image = this.add.image(enemy.x, enemy.y - 20, SPRITES[enemy.type]).setName(spriteKey).setDepth(2);
-        image.setPosition(enemy.x, enemy.y - 20).setDisplaySize(enemy.type === 'armored' ? 92 : 84, enemy.type === 'armored' ? 154 : 146).setVisible(true);
+        if (!image) image = this.add.image(drawX, enemy.y - 20, SPRITES[enemy.type]).setName(spriteKey).setDepth(2);
+        image.setPosition(drawX, enemy.y - 20).setDisplaySize(enemy.type === 'armored' ? 92 : 84, enemy.type === 'armored' ? 154 : 146).setVisible(true);
+        if (enemy.hitFlash > 0) image.setAlpha(0.72 + Math.sin(this.time.now / 20) * 0.28);
+        else image.setAlpha(1);
       } else {
-        this.world.fillStyle(0x05080c, 0.45); this.world.fillEllipse(enemy.x, enemy.y + 3, 65, 15);
-        this.world.fillStyle(def.color, 1); this.world.fillRoundedRect(enemy.x - 24, enemy.y - 38, 48, 76, 8);
-        this.world.fillStyle(0x17202a, 1); this.world.fillCircle(enemy.x, enemy.y - 52, enemy.type === 'armored' ? 18 : 14);
-        this.world.fillStyle(0x0a1018, 1); this.world.fillRect(enemy.x - 33, enemy.y - 13, 66, 10);
-        this.world.fillStyle(0x263342, 1); this.world.fillRect(enemy.x + 15, enemy.y - 8, 40, 7);
+        this.world.fillStyle(0x05080c, 0.45); this.world.fillEllipse(drawX, enemy.y + 3, 65, 15);
+        this.world.fillStyle(def.color, 1); this.world.fillRoundedRect(drawX - 24, enemy.y - 38, 48, 76, 8);
+        this.world.fillStyle(0x17202a, 1); this.world.fillCircle(drawX, enemy.y - 52, enemy.type === 'armored' ? 18 : 14);
+        this.world.fillStyle(0x0a1018, 1); this.world.fillRect(drawX - 33, enemy.y - 13, 66, 10);
+        this.world.fillStyle(0x263342, 1); this.world.fillRect(drawX + 15, enemy.y - 8, 40, 7);
         if (enemy.type === 'armored') {
           this.world.lineStyle(4, 0xefd1a2, 0.8); this.world.strokeRoundedRect(enemy.x - 28, enemy.y - 42, 56, 88, 10);
         }
