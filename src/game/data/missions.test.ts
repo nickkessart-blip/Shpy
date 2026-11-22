@@ -26,7 +26,7 @@ describe('casino mission data', () => {
     expect(new Set(CASINO_MISSION.map((scene) => scene.id)).size).toBe(CASINO_MISSION.length);
   });
   it('never lets a standard enemy die to one headshot, even with max damage upgrades', () => {
-    const maxHeadDamage = BALANCE.weapon.damage[2] * BALANCE.weapon.headMultiplier;
+    const maxHeadDamage = BALANCE.weapon.damage[4] * BALANCE.weapon.headMultiplier[4];
     for (const type of ['guard', 'assault', 'armored'] as const) expect(maxHeadDamage).toBeLessThan(ENEMIES[type].hp);
   });
 });
