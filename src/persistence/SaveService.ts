@@ -48,8 +48,10 @@ export class SaveService {
         return this.rejectCorruptSave(raw);
       }
       const legacy = version !== 4;
-      const legacyXp = typeof data.reputation === 'number' ? data.reputation : 0;
-      const accountXpRaw = legacy ? legacyXp : data.accountXp;
+      if (legacy && (typeof data.reputation !== 'number' || !Number.isFinite(data.reputation))) {
+        return this.rejectCorruptSave(raw);
+      }
+      const accountXpRaw = legacy ? data.reputation : data.accountXp;
       if (typeof accountXpRaw !== 'number' || !Number.isFinite(accountXpRaw)) return this.rejectCorruptSave(raw);
       if (!legacy && (typeof data.dollars !== 'number' || !Number.isFinite(data.dollars))) {
         return this.rejectCorruptSave(raw);

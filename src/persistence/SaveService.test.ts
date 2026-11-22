@@ -99,6 +99,7 @@ describe('SaveService economy and migration', () => {
     const service = new SaveService();
     service.addProgress(0, 5000);
     expect(service.purchaseUpgrade('health').reason).toBe('level');
+    service.reset();
     service.addProgress(850, 100);
     expect(service.purchaseUpgrade('damage').reason).toBe('funds');
     expect(service.load().upgrades.damage).toBe(0);
