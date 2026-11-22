@@ -413,12 +413,18 @@ export class MissionScene extends Phaser.Scene {
       this.fx.fillStyle(0xffd58a, this.shotFlash / 90); this.fx.fillCircle(MUZZLE.x, 570, 17 + (90 - this.shotFlash) / 3);
       this.fx.lineStyle(3, 0xffd58a, this.shotFlash / 90); this.fx.lineBetween(MUZZLE.x, 590, this.aim.x, this.aim.y);
     }
-    this.fx.lineStyle(2, 0xf5f7fa, 0.92);
-    this.fx.strokeCircle(this.aim.x, this.aim.y, 12);
-    this.fx.lineBetween(this.aim.x - 22, this.aim.y, this.aim.x - 6, this.aim.y);
-    this.fx.lineBetween(this.aim.x + 6, this.aim.y, this.aim.x + 22, this.aim.y);
-    this.fx.lineBetween(this.aim.x, this.aim.y - 22, this.aim.x, this.aim.y - 6);
-    this.fx.lineBetween(this.aim.x, this.aim.y + 6, this.aim.x, this.aim.y + 22);
+    if (AssetCatalog.hasTexture(this, 'ui-cursor')) {
+      let cursor = this.children.getByName('cursor-image') as Phaser.GameObjects.Image | null;
+      if (!cursor) cursor = this.add.image(this.aim.x, this.aim.y, 'ui-cursor').setName('cursor-image').setDepth(25);
+      cursor.setPosition(this.aim.x, this.aim.y).setDisplaySize(48, 48).setVisible(true);
+    } else {
+      this.fx.lineStyle(2, 0xf5f7fa, 0.92);
+      this.fx.strokeCircle(this.aim.x, this.aim.y, 12);
+      this.fx.lineBetween(this.aim.x - 22, this.aim.y, this.aim.x - 6, this.aim.y);
+      this.fx.lineBetween(this.aim.x + 6, this.aim.y, this.aim.x + 22, this.aim.y);
+      this.fx.lineBetween(this.aim.x, this.aim.y - 22, this.aim.x, this.aim.y - 6);
+      this.fx.lineBetween(this.aim.x, this.aim.y + 6, this.aim.x, this.aim.y + 22);
+    }
   }
 
   private drawEnemyOverlays(): void {
