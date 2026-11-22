@@ -12,7 +12,7 @@
 - [DECISIONS](docs/DECISIONS.md) — журнал решений.
 
 ## Запуск
-Требуется Node.js 22+ и npm:
+Требуется Node.js 26 LTS и npm:
 ```bash
 npm install
 npm run dev
