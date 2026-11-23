@@ -26,6 +26,7 @@ for (const [path, url] of Object.entries(importedAssets)) {
 const SVG_SIZES: Record<string, { width: number; height: number }> = {
   'backgrounds/casino-main': { width: 1280, height: 720 },
   'backgrounds/casino-bar': { width: 1280, height: 720 },
+  'backgrounds/train-carriage': { width: 1280, height: 720 },
   'enemies/guard': { width: 240, height: 400 },
   'enemies/armored': { width: 240, height: 400 },
   'enemies/assault': { width: 240, height: 400 },

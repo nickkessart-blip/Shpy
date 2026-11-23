@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+<defs><linearGradient id="wall" x2="0" y2="1"><stop stop-color="#34434d"/><stop offset=".6" stop-color="#1b2933"/><stop offset="1" stop-color="#101820"/></linearGradient><linearGradient id="window" x2="0" y2="1"><stop stop-color="#182b3b"/><stop offset="1" stop-color="#60717a"/></linearGradient><linearGradient id="floor" x2="0" y2="1"><stop stop-color="#34404a"/><stop offset="1" stop-color="#111820"/></linearGradient></defs>
+<rect width="1280" height="720" fill="#0b1118"/><path d="M0 0H1280V480H0Z" fill="url(#wall)"/><path d="M0 480H1280V720H0Z" fill="url(#floor)"/>
+<path d="M0 60L1280 60M0 86L1280 86" stroke="#b98a53" stroke-opacity=".45" stroke-width="4"/>
+<path d="M50 95H1230V365H50Z" fill="#111b24" stroke="#8a765d" stroke-width="8"/>
+<g fill="url(#window)" stroke="#9c8c73" stroke-width="10"><rect x="75" y="115" width="250" height="210" rx="12"/><rect x="365" y="115" width="250" height="210" rx="12"/><rect x="665" y="115" width="250" height="210" rx="12"/><rect x="955" y="115" width="250" height="210" rx="12"/></g>
+<g stroke="#c4d0d2" stroke-opacity=".18" stroke-width="3"><path d="M75 265L325 180M365 270L615 175M665 260L915 180M955 265L1205 180"/></g>
+<g fill="#d7b57a" opacity=".55"><rect x="125" y="35" width="130" height="12" rx="6"/><rect x="425" y="35" width="130" height="12" rx="6"/><rect x="725" y="35" width="130" height="12" rx="6"/><rect x="1025" y="35" width="130" height="12" rx="6"/></g>
+<g fill="#273946" stroke="#9c805b" stroke-width="5"><path d="M75 390H480L525 475H50Z"/><path d="M800 390H1205L1230 475H755Z"/></g>
+<g fill="#425663"><path d="M80 400H470L485 435H70Z"/><path d="M810 400H1200L1215 435H800Z"/></g>
+<g fill="#151f28"><rect x="80" y="465" width="420" height="25" rx="8"/><rect x="780" y="465" width="420" height="25" rx="8"/></g>
+<path d="M0 535L1280 535" stroke="#b38b5c" stroke-opacity=".5" stroke-width="4"/><path d="M0 600L1280 600" stroke="#71818b" stroke-opacity=".25" stroke-width="3"/>
+<g fill="#111a22" stroke="#566875" stroke-width="4"><rect x="20" y="350" width="38" height="125" rx="8"/><rect x="1222" y="350" width="38" height="125" rx="8"/></g>
+<g fill="#d6b47c" opacity=".35"><circle cx="640" cy="72" r="3"/><circle cx="640" cy="72" r="26" fill="none" stroke="#d6b47c" stroke-width="2"/></g>
+<text x="640" y="695" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" letter-spacing="8" fill="#b9c3c9" opacity=".3">ВОСТОЧНЫЙ ЭКСПРЕСС • ВАГОН 07</text>
+</svg>

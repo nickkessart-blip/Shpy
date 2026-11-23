@@ -4,7 +4,7 @@ import { saveService } from '../../persistence/SaveService';
 import { BALANCE } from '../data/balance';
 import { getWeapon, getWeaponStats, LOADOUT_UNLOCKS, type WeaponId } from '../data/arsenal';
 import { ENEMIES, type EnemyType } from '../data/enemies';
-import { CASINO_MISSION, type MissionSceneDefinition, type SpawnPoint } from '../data/missions';
+import { CASINO_MISSION, getMissionDefinition, type MissionSceneDefinition, type SpawnPoint } from '../data/missions';
 import { AssetCatalog } from '../assets/AssetCatalog';
 import { getCosmetic } from '../data/cosmetics';
 import { findVisiblePeekX, pointInRect, resolveHit, type Point } from '../systems/combat/combatMath';
@@ -81,6 +81,7 @@ export class MissionScene extends Phaser.Scene {
   private waveAwarded = false;
   private uniqueId = 1;
   private sceneDef!: MissionSceneDefinition;
+  private missionScenes: MissionSceneDefinition[] = CASINO_MISSION;
   private pauseOverlay?: Phaser.GameObjects.Container;
   private resultSent = false;
   private isMobileControls = false;
@@ -113,6 +114,7 @@ export class MissionScene extends Phaser.Scene {
     this.appliedMobileControlMode = this.currentSettings.mobileControlMode;
     FeedbackService.ensureMusic(this);
     this.startedAt = Date.now();
+    this.missionScenes = getMissionDefinition(runSession.missionId).scenes;
     this.aim = { x: GAME_WIDTH / 2, y: GAME_HEIGHT / 2 };
     this.cameras.main.setScroll(0, 0);
     this.cameras.main.setBounds(-210, -100, GAME_WIDTH + 420, GAME_HEIGHT + 200);
@@ -369,9 +371,9 @@ export class MissionScene extends Phaser.Scene {
   }
 
   private loadMissionScene(index: number): void {
-    if (index >= CASINO_MISSION.length) { this.finishMission(true); return; }
+    if (index >= this.missionScenes.length) { this.finishMission(true); return; }
     this.sceneIndex = index;
-    this.sceneDef = CASINO_MISSION[index];
+    this.sceneDef = this.missionScenes[index];
     this.backgroundArt?.destroy();
     this.backgroundArt = undefined;
     this.children.getAll().forEach((child) => {
@@ -388,7 +390,7 @@ export class MissionScene extends Phaser.Scene {
     this.waveAwarded = false;
     this.phase = 'active';
     this.drawBackground();
-    this.showToast(this.sceneDef.subtitle + ' • СЦЕНА ' + (index + 1) + '/' + CASINO_MISSION.length, 1500);
+    this.showToast(this.sceneDef.subtitle + ' • СЦЕНА ' + (index + 1) + '/' + this.missionScenes.length, 1500);
   }
 
   private drawBackground(): void {
@@ -488,7 +490,7 @@ export class MissionScene extends Phaser.Scene {
     if (this.waveIndex < this.sceneDef.waves.length) {
       this.enemies = [];
       this.spawnTimer = 900;
-    } else if (this.sceneIndex + 1 < CASINO_MISSION.length) {
+    } else if (this.sceneIndex + 1 < this.missionScenes.length) {
       this.beginLocationTransition();
     } else {
       this.finishMission(true);
@@ -502,7 +504,7 @@ export class MissionScene extends Phaser.Scene {
   }
 
   private beginLocationTransition(): void {
-    const nextScene = CASINO_MISSION[this.sceneIndex + 1];
+    const nextScene = this.missionScenes[this.sceneIndex + 1];
     if (!nextScene) {
       this.finishMission(true);
       return;
@@ -1329,7 +1331,7 @@ export class MissionScene extends Phaser.Scene {
     this.hudIcons.fillTriangle(30, 51, 61, 51, 45, 68);
 
     this.hud.setText(weaponLabel);
-    this.hudMissionText.setText('КАЗИНО  •  СЕКТОР ' + (this.sceneIndex + 1) + '/' + CASINO_MISSION.length
+    this.hudMissionText.setText('КАЗИНО  •  СЕКТОР ' + (this.sceneIndex + 1) + '/' + this.missionScenes.length
       + '  •  ВОЛНА ' + this.getDisplayedWaveNumber() + '/' + this.sceneDef.waves.length);
 
     this.hudBars.fillStyle(0x293744, 0.95);
