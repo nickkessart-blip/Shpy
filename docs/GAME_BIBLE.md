@@ -1,4 +1,9 @@
 # SHPY — GAME BIBLE
+
+## Android aiming experiment — 2026-11-23
+
+The mobile default is a fixed-centre reticle with swipe-to-pan world view and a separate fire control. The screen weapon is anchored to the viewport. A classic virtual aim stick remains as an alternate setting. This is provisional until real-device playtesting.
+
 Версия 1.0.0 | 2026-11-22 | Базовый канон предпроизводства
 
 ## Краткое описание

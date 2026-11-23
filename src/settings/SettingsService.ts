@@ -1,5 +1,5 @@
 export type GraphicsQuality = 'low' | 'balanced' | 'high';
-export type MobileControlMode = 'tap' | 'stick';
+export type MobileControlMode = 'swipe' | 'stick';
 
 export interface GameSettings {
   graphicsQuality: GraphicsQuality;
@@ -18,7 +18,7 @@ export const DEFAULT_SETTINGS: GameSettings = {
   graphicsQuality: 'balanced',
   musicVolume: 0.24,
   sfxVolume: 0.7,
-  mobileControlMode: 'stick',
+  mobileControlMode: 'swipe',
   aimSensitivity: 1.8,
   vibrationEnabled: true,
   parallaxEnabled: true,
@@ -34,7 +34,7 @@ export function normalizeSettings(value: unknown): GameSettings {
   const raw = value && typeof value === 'object' ? value as Partial<GameSettings> : {};
   const graphicsQuality: GraphicsQuality = raw.graphicsQuality === 'low' || raw.graphicsQuality === 'high'
     ? raw.graphicsQuality : 'balanced';
-  const mobileControlMode: MobileControlMode = raw.mobileControlMode === 'tap' ? 'tap' : 'stick';
+  const mobileControlMode: MobileControlMode = raw.mobileControlMode === 'stick' ? 'stick' : 'swipe';
   return {
     graphicsQuality,
     musicVolume: clamp(raw.musicVolume, 0, 1, DEFAULT_SETTINGS.musicVolume),
