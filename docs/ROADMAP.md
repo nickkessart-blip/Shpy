@@ -1,4 +1,14 @@
 # SHPY — ROADMAP
+
+## SHPY 0.5.1 — Android camera pass (2026-11-23)
+
+- [x] Add fixed-centre mobile reticle and swipe-to-pan camera mode.
+- [x] Keep fire/reload/weapon controls separate from look input.
+- [x] Keep mobile weapon rig and HUD screen-anchored.
+- [ ] Verify portrait/landscape, touch capture and camera bounds on physical Android.
+- [ ] Integrate first-person weapon atlas and weapon-specific animation states.
+- [ ] Add and validate the next campaign operation.
+
 Версия 1.0.0 | План без календарных обещаний
 
 ## Фаза 0 — Документация

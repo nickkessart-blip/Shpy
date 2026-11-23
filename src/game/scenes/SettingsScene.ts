@@ -80,22 +80,16 @@ export class SettingsScene extends Phaser.Scene {
 
     this.addText('СХЕМА НА ANDROID', 828, 207, 13, '#b6c3ce', true);
     this.settingButton(828, 235, 370, 52,
-      this.settings.mobileControlMode === 'tap' ? 'КАСАНИЕ ЭКРАНА' : 'ВИРТУАЛЬНЫЙ ДЖОЙСТИК',
+      this.settings.mobileControlMode === 'swipe' ? 'СВОБОДНЫЙ ОБЗОР' : 'ВИРТУАЛЬНЫЙ ДЖОЙСТИК',
       0x394d5d, () => this.cycleControlMode());
-    if (this.settings.mobileControlMode === 'stick') {
-      this.addText('СКОРОСТЬ ПРИЦЕЛА', 828, 328, 13, '#b6c3ce', true);
-      this.slider(828, 362, 370, this.settings.aimSensitivity, 0.5, 4,
-        (value) => this.saveSettings({ aimSensitivity: value }, false),
-        (value) => value.toFixed(1) + '×');
-    } else {
-      this.addText('В ЭТОМ РЕЖИМЕ ПРИЦЕЛ НАВОДИТСЯ ТАПОМ', 828, 344, 12, '#e2c28b', true);
-      this.addText('ПО ИГРОВОМУ ПОЛЮ. ОТДЕЛЬНАЯ КНОПКА ОГНЯ', 828, 371, 11, '#91a1ae');
-      this.addText('И ВИРТУАЛЬНЫЙ СТИК НЕ ПОКАЗЫВАЮТСЯ.', 828, 394, 11, '#91a1ae');
-    }
-    this.addText('КАСАНИЕ: тап по цели = выстрел.', 828, 460, 13, '#d3dce5');
-    this.addText('ДЖОЙСТИК: левый стик = прицел, правая', 828, 490, 13, '#d3dce5');
-    this.addText('кнопка = удержание огня. Перезарядка и', 828, 514, 13, '#d3dce5');
-    this.addText('активные предметы доступны в обоих режимах.', 828, 538, 13, '#d3dce5');
+    this.addText('ЧУВСТВИТЕЛЬНОСТЬ ОБЗОРА', 828, 328, 13, '#b6c3ce', true);
+    this.slider(828, 362, 370, this.settings.aimSensitivity, 0.5, 4,
+      (value) => this.saveSettings({ aimSensitivity: value }, false),
+      (value) => value.toFixed(1) + '×');
+    this.addText('СВАЙП: двигайте сцену, прицел остаётся в центре.', 828, 460, 12, '#d3dce5');
+    this.addText('СТИК: левый стик управляет прицелом.', 828, 490, 12, '#d3dce5');
+    this.addText('Правая кнопка удерживает огонь в обоих режимах.', 828, 520, 12, '#d3dce5');
+    this.addText('Перезарядка и предметы доступны отдельно.', 828, 550, 12, '#d3dce5');
     this.addText('ИЗМЕНЕНИЯ ПРИМЕНЯЮТСЯ СРАЗУ И СОХРАНЯЮТСЯ.', 828, 595, 10, '#718091');
 
     this.addText('ESC / КНОПКА ПАУЗЫ — ПАУЗА В МИССИИ', 56, 682, 11, '#718091');
@@ -187,7 +181,7 @@ export class SettingsScene extends Phaser.Scene {
   }
 
   private cycleControlMode(): void {
-    const next: MobileControlMode = this.settings.mobileControlMode === 'tap' ? 'stick' : 'tap';
+    const next: MobileControlMode = this.settings.mobileControlMode === 'swipe' ? 'stick' : 'swipe';
     this.saveSettings({ mobileControlMode: next }, true);
   }
 

@@ -1,4 +1,13 @@
 # SHPY — COMBAT SPECIFICATION
+
+## Android camera redesign — implementation experiment (2026-11-23)
+
+- Default touch scheme: fixed-centre reticle; drag the playfield to pan the scene; use the separate fire button to shoot.
+- Alternative aim-stick remains available.
+- First-person weapon rig is screen-anchored on touch devices; recoil and reload pose remain visual feedback.
+- Camera pan is clamped to ±210 px horizontally and ±100 px vertically; the background is overscanned to avoid empty edges.
+- This is provisional pending physical Android testing. Desktop mouse aiming is unchanged.
+
 Версия 1.0.0 | Первый боевой прототип
 
 ## Цель
