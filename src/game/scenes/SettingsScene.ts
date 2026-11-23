@@ -80,15 +80,15 @@ export class SettingsScene extends Phaser.Scene {
 
     this.addText('СХЕМА НА ANDROID', 828, 207, 13, '#b6c3ce', true);
     this.settingButton(828, 235, 370, 52,
-      this.settings.mobileControlMode === 'swipe' ? 'СВОБОДНЫЙ ОБЗОР' : 'ВИРТУАЛЬНЫЙ ДЖОЙСТИК',
+      this.controlModeLabel(this.settings.mobileControlMode),
       0x394d5d, () => this.cycleControlMode());
-    this.addText('ЧУВСТВИТЕЛЬНОСТЬ ОБЗОРА', 828, 328, 13, '#b6c3ce', true);
+    this.addText('ЧУВСТВИТЕЛЬНОСТЬ УПРАВЛЕНИЯ', 828, 328, 13, '#b6c3ce', true);
     this.slider(828, 362, 370, this.settings.aimSensitivity, 0.5, 4,
       (value) => this.saveSettings({ aimSensitivity: value }, false),
       (value) => value.toFixed(1) + '×');
-    this.addText('СВАЙП: двигайте сцену, прицел остаётся в центре.', 828, 460, 12, '#d3dce5');
-    this.addText('СТИК: левый стик управляет прицелом.', 828, 490, 12, '#d3dce5');
-    this.addText('Правая кнопка удерживает огонь в обоих режимах.', 828, 520, 12, '#d3dce5');
+    this.addText('ТАП: касание по цели сразу производит выстрел.', 828, 460, 12, '#d3dce5');
+    this.addText('СВАЙП: перемещение сцены под центральным прицелом.', 828, 490, 12, '#d3dce5');
+    this.addText('СТИК: левый джойстик двигает прицел; огонь отдельно.', 828, 520, 12, '#d3dce5');
     this.addText('Перезарядка и предметы доступны отдельно.', 828, 550, 12, '#d3dce5');
     this.addText('ИЗМЕНЕНИЯ ПРИМЕНЯЮТСЯ СРАЗУ И СОХРАНЯЮТСЯ.', 828, 595, 10, '#718091');
 
@@ -181,12 +181,18 @@ export class SettingsScene extends Phaser.Scene {
   }
 
   private cycleControlMode(): void {
-    const next: MobileControlMode = this.settings.mobileControlMode === 'swipe' ? 'stick' : 'swipe';
+    const next: MobileControlMode = this.settings.mobileControlMode === 'tap' ? 'swipe'
+      : this.settings.mobileControlMode === 'swipe' ? 'stick' : 'tap';
     this.saveSettings({ mobileControlMode: next }, true);
   }
 
   private toggleSetting(key: 'parallaxEnabled' | 'screenShakeEnabled' | 'vibrationEnabled'): void {
     this.saveSettings({ [key]: !this.settings[key] }, true);
+  }
+
+  private controlModeLabel(value: MobileControlMode): string {
+    return value === 'tap' ? 'ТАП ПО ЦЕЛИ • ВЫСТРЕЛ'
+      : value === 'swipe' ? 'СВОБОДНЫЙ ОБЗОР • СВАЙП' : 'ВИРТУАЛЬНЫЙ ДЖОЙСТИК';
   }
 
   private qualityLabel(value: GraphicsQuality): string {
