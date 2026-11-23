@@ -83,8 +83,8 @@ export class SettingsScene extends Phaser.Scene {
       this.settings.mobileControlMode === 'tap' ? 'КАСАНИЕ ЭКРАНА' : 'ВИРТУАЛЬНЫЙ ДЖОЙСТИК',
       0x394d5d, () => this.cycleControlMode());
     if (this.settings.mobileControlMode === 'stick') {
-      this.addText('ЧУВСТВИТЕЛЬНОСТЬ ПРИЦЕЛА', 828, 328, 13, '#b6c3ce', true);
-      this.slider(828, 362, 370, this.settings.aimSensitivity, 0.5, 2.5,
+      this.addText('СКОРОСТЬ ПРИЦЕЛА', 828, 328, 13, '#b6c3ce', true);
+      this.slider(828, 362, 370, this.settings.aimSensitivity, 0.5, 4,
         (value) => this.saveSettings({ aimSensitivity: value }, false),
         (value) => value.toFixed(1) + '×');
     } else {

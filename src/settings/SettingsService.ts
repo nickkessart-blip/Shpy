@@ -19,7 +19,7 @@ export const DEFAULT_SETTINGS: GameSettings = {
   musicVolume: 0.24,
   sfxVolume: 0.7,
   mobileControlMode: 'stick',
-  aimSensitivity: 1.4,
+  aimSensitivity: 1.8,
   vibrationEnabled: true,
   parallaxEnabled: true,
   screenShakeEnabled: true,
@@ -40,7 +40,7 @@ export function normalizeSettings(value: unknown): GameSettings {
     musicVolume: clamp(raw.musicVolume, 0, 1, DEFAULT_SETTINGS.musicVolume),
     sfxVolume: clamp(raw.sfxVolume, 0, 1, DEFAULT_SETTINGS.sfxVolume),
     mobileControlMode,
-    aimSensitivity: clamp(raw.aimSensitivity, 0.5, 2.5, DEFAULT_SETTINGS.aimSensitivity),
+    aimSensitivity: clamp(raw.aimSensitivity, 0.5, 4, DEFAULT_SETTINGS.aimSensitivity),
     vibrationEnabled: typeof raw.vibrationEnabled === 'boolean'
       ? raw.vibrationEnabled : DEFAULT_SETTINGS.vibrationEnabled,
     parallaxEnabled: typeof raw.parallaxEnabled === 'boolean'

@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH, hasTouchInput } from '../../app/GameConfig';
 import {
-  getNextWeaponSlotUnlock, getWeaponSlotLimit, isWeaponUnlocked, LOADOUT_UNLOCKS, WEAPONS,
+  getNextWeaponSlotUnlock, getWeaponSlotLimit, getWeaponStats, isWeaponUnlocked, LOADOUT_UNLOCKS, WEAPONS,
   type ActiveItemId, type TacticalItemId, type WeaponId,
 } from '../data/arsenal';
 import { COSMETICS, type CosmeticDefinition, type CosmeticId } from '../data/cosmetics';
@@ -141,6 +141,7 @@ export class LoadoutScene extends Phaser.Scene {
     const selected = selectedIndex >= 0;
     const slotLimit = getWeaponSlotLimit(accountLevel);
     const canAdd = selected || this.selectedWeapons.length < slotLimit;
+    const stats = getWeaponStats(weapon.id, save.upgrades);
     const g = this.add.graphics();
     g.fillStyle(selected ? 0x294044 : unlocked ? 0x1b2733 : 0x151d26, 0.98);
     g.fillRoundedRect(x, y, 704, 100, 10);
@@ -150,27 +151,45 @@ export class LoadoutScene extends Phaser.Scene {
 
     const textureKey = 'weapon-' + weapon.id;
     if (AssetCatalog.hasTexture(this, textureKey)) {
-      const image = this.add.image(x + 54, y + 51, textureKey).setDisplaySize(58, 94).setAlpha(unlocked ? 1 : 0.3);
+      const image = this.add.image(x + 62, y + 51, textureKey)
+        .setDisplaySize(98, 102).setAlpha(unlocked ? 1 : 0.28);
       this.content!.add(image);
-    } else {
-      const icon = this.add.graphics();
-      icon.fillStyle(0x7f909e, unlocked ? 1 : 0.35);
-      icon.fillRoundedRect(x + 28, y + 40, 64, 15, 5);
-      icon.fillRoundedRect(x + 54, y + 30, 28, 34, 5);
-      this.content!.add(icon);
     }
 
-    this.addText(this.content!, x + 112, y + 14, weapon.name, this.isMobile ? 17 : 15,
+    this.addText(this.content!, x + 122, y + 10, weapon.name, this.isMobile ? 17 : 15,
       unlocked ? '#f1f4f7' : '#83909d', true);
-    this.addText(this.content!, x + 112, y + 42, weapon.role, 12, '#d1dae2');
-    this.addText(this.content!, x + 112, y + 66, unlocked
-      ? weapon.description
-      : 'ЗАКРЫТО • НЕОБХОДИМО ' + weapon.unlockLevel + ' УР.',
-      10, unlocked ? '#8f9eac' : '#b47c78');
-    const state = selected ? 'В КОМПЛЕКТЕ · СЛОТ ' + (selectedIndex + 1)
-      : !unlocked ? 'ЗАКРЫТО' : canAdd ? 'ДОБАВИТЬ' : 'НЕТ СВОБОДНОГО СЛОТА';
-    this.addText(this.content!, x + 565, y + 38, state, 10,
+    const modeLabel = weapon.fireMode === 'semi' ? 'ОДИНОЧНЫЙ ВЫСТРЕЛ'
+      : weapon.fireMode === 'pump' ? 'ПОМПОВЫЙ • ДРОБЬ' : 'АВТОМАТИЧЕСКИЙ';
+    this.addText(this.content!, x + 122, y + 36, weapon.role + '  /  ' + modeLabel, 10, '#d1dae2');
+    this.addText(this.content!, x + 122, y + 61, unlocked
+      ? weapon.description : 'ЗАКРЫТО • НЕОБХОДИМО ' + weapon.unlockLevel + ' УР.',
+      9, unlocked ? '#8f9eac' : '#b47c78');
+
+    const bars = [
+      { label: 'УРОН', value: Math.min(1, stats.damage / 5) },
+      { label: 'ТЕМП', value: Math.min(1, 700 / weapon.fireCooldownMs) },
+      { label: 'МАГАЗИН', value: Math.min(1, stats.magazine / 30) },
+      { label: 'ТОЧНОСТЬ', value: Math.max(0.08, 1 - weapon.spreadRadius / 50) },
+    ];
+    bars.forEach((bar, index) => {
+      const col = index % 2;
+      const row = Math.floor(index / 2);
+      const bx = x + 394 + col * 82;
+      const by = y + 16 + row * 38;
+      this.addText(this.content!, bx, by, bar.label, 8, '#8799a8', true);
+      const meter = this.add.graphics();
+      meter.fillStyle(0x09131c, 0.95);
+      meter.fillRoundedRect(bx, by + 13, 70, 6, 3);
+      meter.fillStyle(bar.value > 0.7 ? 0x82c8a2 : 0xc49b64, 0.98);
+      meter.fillRoundedRect(bx, by + 13, 70 * bar.value, 6, 3);
+      this.content!.add(meter);
+    });
+
+    const state = selected ? 'В КОМПЛЕКТЕ\nСЛОТ ' + (selectedIndex + 1)
+      : !unlocked ? 'ЗАКРЫТО' : canAdd ? 'ДОБАВИТЬ' : 'НЕТ СЛОТА';
+    this.addText(this.content!, x + 566, y + 39, state, 10,
       selected ? '#88d4a6' : unlocked && canAdd ? '#f0c16d' : '#7a8794', true);
+
     const hit = this.add.rectangle(x + 352, y + 50, 704, 100, 0xffffff, 0.001)
       .setInteractive({ useHandCursor: unlocked });
     this.content!.add(hit);
@@ -202,6 +221,70 @@ export class LoadoutScene extends Phaser.Scene {
       const state = level >= BALANCE.upgradeCosts[kind].length - 1 ? 'МАКСИМУМ'
         : locked ? 'СЛЕДУЮЩИЙ ТИР ОТКРОЕТСЯ НА УР. ' + requiredLevel : 'СЛЕДУЮЩИЙ ТИР ДОСТУПЕН В КОМПЬЮТЕРЕ';
       this.addText(this.content!, x + 18, y + 96, state, 10, '#8ac49f');
+
+      // Five clear level pips replace the old text-only progress indicator.
+      const meter = this.add.graphics();
+      const maxLevels = BALANCE.upgradeCosts[kind].length;
+      for (let pip = 0; pip < maxLevels; pip += 1) {
+        meter.fillStyle(pip < level ? 0x83cba3 : 0x344654, 1);
+        meter.fillRoundedRect(x + 342 + pip * 27, y + 100, 20, 8, 4);
+      }
+      this.content!.add(meter);
+
+      // A distinct silhouette makes each perk category recognizable at a glance.
+      const badge = this.add.graphics();
+      badge.fillStyle(0x263b4a, 0.98);
+      badge.fillCircle(x + 492, y + 66, 31);
+      badge.lineStyle(2, 0xd2b27d, 0.85);
+      switch (kind) {
+        case 'damage':
+          badge.fillStyle(0xe0b66d, 1);
+          badge.fillTriangle(x + 494, y + 42, x + 478, y + 70, x + 492, y + 68);
+          badge.fillTriangle(x + 492, y + 68, x + 505, y + 61, x + 489, y + 89);
+          break;
+        case 'magazine':
+          badge.fillStyle(0xb9c5cd, 1);
+          badge.fillRoundedRect(x + 478, y + 47, 10, 36, 3);
+          badge.fillRoundedRect(x + 492, y + 43, 10, 40, 3);
+          badge.fillRoundedRect(x + 506, y + 51, 8, 32, 3);
+          break;
+        case 'reload':
+          badge.fillStyle(0xd2b27d, 1);
+          badge.fillCircle(x + 492, y + 66, 18);
+          badge.fillStyle(0x263b4a, 1);
+          badge.fillCircle(x + 492, y + 66, 13);
+          badge.lineStyle(3, 0xd2b27d, 1);
+          badge.lineBetween(x + 492, y + 48, x + 492, y + 66);
+          badge.lineBetween(x + 492, y + 66, x + 507, y + 73);
+          badge.fillTriangle(x + 500, y + 45, x + 512, y + 48, x + 503, y + 55);
+          break;
+        case 'health':
+          badge.fillStyle(0xd96c72, 1);
+          badge.fillCircle(x + 484, y + 60, 10);
+          badge.fillCircle(x + 500, y + 60, 10);
+          badge.fillTriangle(x + 473, y + 63, x + 511, y + 63, x + 492, y + 85);
+          break;
+        case 'armor':
+          badge.fillStyle(0x91a6b4, 1);
+          badge.fillTriangle(x + 474, y + 50, x + 510, y + 50, x + 492, y + 89);
+          badge.lineStyle(3, 0xd2b27d, 0.95);
+          badge.lineBetween(x + 474, y + 50, x + 492, y + 43);
+          badge.lineBetween(x + 492, y + 43, x + 510, y + 50);
+          break;
+        case 'precision':
+          badge.fillStyle(0xd2b27d, 1);
+          badge.fillCircle(x + 492, y + 66, 18);
+          badge.fillStyle(0x263b4a, 1);
+          badge.fillCircle(x + 492, y + 66, 13);
+          badge.fillStyle(0xd2b27d, 1);
+          badge.fillCircle(x + 492, y + 66, 5);
+          badge.lineBetween(x + 492, y + 41, x + 492, y + 55);
+          badge.lineBetween(x + 492, y + 77, x + 492, y + 91);
+          badge.lineBetween(x + 467, y + 66, x + 481, y + 66);
+          badge.lineBetween(x + 503, y + 66, x + 517, y + 66);
+          break;
+      }
+      this.content!.add(badge);
     });
   }
 
@@ -240,6 +323,25 @@ export class LoadoutScene extends Phaser.Scene {
     this.addText(this.content!, x + 24, y + 76, description, 14, '#b9c6d2');
     this.addText(this.content!, x + 24, y + 160, 'ТЕКУЩИЙ УРОВЕНЬ: ' + level + '/2', 13, '#aebdca', true);
     this.addText(this.content!, x + 24, y + 192, currentValue, 17, '#86d2a2', true);
+    const icon = this.add.graphics();
+    icon.fillStyle(0x263b4a, 0.98);
+    icon.fillCircle(x + 452, y + 124, 52);
+    icon.lineStyle(3, 0xd4bd93, 0.9);
+    if (kind === 'grenadeCapacity') {
+      icon.fillStyle(0x647966, 1);
+      icon.fillRoundedRect(x + 435, y + 92, 34, 55, 15);
+      icon.fillStyle(0xc8b58d, 1);
+      icon.fillRoundedRect(x + 444, y + 84, 17, 14, 4);
+      icon.lineBetween(x + 452, y + 84, x + 466, y + 72);
+      icon.strokeCircle(x + 452, y + 119, 8);
+    } else {
+      icon.fillStyle(0xd8e4e8, 1);
+      icon.fillRoundedRect(x + 425, y + 98, 54, 46, 7);
+      icon.fillStyle(0xc75a61, 1);
+      icon.fillRect(x + 446, y + 105, 12, 32);
+      icon.fillRect(x + 436, y + 115, 32, 12);
+    }
+    this.content!.add(icon);
     this.addText(this.content!, x + 24, y + 236, maxed ? 'МАКСИМАЛЬНЫЙ УРОВЕНЬ' : 'СЛЕДУЮЩИЙ УРОВЕНЬ: ' + cost + ' ДЕТАЛЕЙ',
       12, maxed ? '#80c99b' : '#d9c09a', true);
     if (!maxed) {

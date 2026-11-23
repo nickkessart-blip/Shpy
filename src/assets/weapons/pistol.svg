@@ -1,38 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 620">
-<defs>
- <linearGradient id="sleeve" x2="1" y2="0"><stop stop-color="#101923"/><stop offset=".5" stop-color="#34475a"/><stop offset="1" stop-color="#0d151e"/></linearGradient>
- <linearGradient id="metal" x2="1" y2="1"><stop stop-color="#6d7b83"/><stop offset=".35" stop-color="#252f38"/><stop offset=".65" stop-color="#111820"/><stop offset="1" stop-color="#53616a"/></linearGradient>
- <linearGradient id="skin" x2="0" y2="1"><stop stop-color="#d9b092"/><stop offset="1" stop-color="#91684f"/></linearGradient>
- <filter id="shadow"><feGaussianBlur stdDeviation="10"/></filter>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 620"><defs>
+<linearGradient id="s" x2="1" y2="0"><stop stop-color="#101923"/><stop offset=".5" stop-color="#405267"/><stop offset="1" stop-color="#101820"/></linearGradient>
+<linearGradient id="m" x2="1" y2="1"><stop stop-color="#8d9ba1"/><stop offset=".4" stop-color="#384650"/><stop offset="1" stop-color="#111a22"/></linearGradient>
+<linearGradient id="g" x2="0" y2="1"><stop stop-color="#d7b092"/><stop offset="1" stop-color="#8c624c"/></linearGradient>
 </defs>
-<ellipse cx="182" cy="583" rx="135" ry="30" fill="#000" opacity=".5" filter="url(#shadow)"/>
-<!-- forearm -->
-<path d="M86 620Q70 560 91 480L124 367 224 358 264 482Q295 558 282 620Z" fill="url(#sleeve)" stroke="#080d13" stroke-width="12"/>
-<path d="M117 620Q110 550 140 476L160 403 205 400 240 492Q258 556 250 620Z" fill="#253546" opacity=".75"/>
-<path d="M96 505 260 505M105 535 257 535" stroke="#708092" stroke-opacity=".35" stroke-width="5"/>
-<!-- hand -->
-<path d="M103 375Q95 337 115 305L136 254 180 247 221 270 242 311 231 384 201 420 141 421Z" fill="url(#skin)" stroke="#291d18" stroke-width="8"/>
-<path d="M121 321Q154 338 193 327L216 365Q199 398 171 399L132 377Z" fill="#b98c70" stroke="#785844" stroke-width="5"/>
-<!-- pistol slide and barrel -->
-<path d="M113 65Q118 45 146 43H236Q261 45 264 68L259 278H111Z" fill="url(#metal)" stroke="#080d13" stroke-width="12"/>
-<path d="M132 79H246V192H132Z" fill="#374550" stroke="#111820" stroke-width="7"/>
-<path d="M141 94H238V112H141Z" fill="#839099" opacity=".5"/>
-<path d="M153 57H223V43H153Z" fill="#111920" stroke="#6b7a84" stroke-width="4"/>
-<path d="M145 206H242" stroke="#9aa5aa" stroke-width="4" opacity=".6"/>
-<!-- rear sights -->
-<path d="M128 50V29H151V50M226 50V29H249V50" fill="#141b22" stroke="#89959d" stroke-width="4"/>
-<path d="M168 31H209V42H168Z" fill="#0b1117"/>
-<!-- grip -->
-<path d="M129 260H245L231 382Q227 403 205 408H163Q143 402 139 382Z" fill="#202a33" stroke="#080e14" stroke-width="10"/>
-<path d="M151 282H224L216 372H157Z" fill="#3b4a54" stroke="#73818a" stroke-width="4"/>
-<path d="M158 298 219 310M155 325 216 338M153 351 213 365" stroke="#111820" stroke-width="8"/>
-<path d="M178 256Q180 276 198 283L194 311" fill="none" stroke="#a9b2b5" stroke-width="7"/>
-<!-- trigger guard -->
-<path d="M169 264Q168 303 193 303Q221 301 217 268" fill="none" stroke="#0a1016" stroke-width="9"/>
-<!-- fingers around grip -->
-<path d="M118 328Q139 337 150 358L159 382Q145 398 129 381L110 357Z" fill="url(#skin)" stroke="#694c3d" stroke-width="5"/>
-<path d="M208 315Q237 315 247 340L238 361Q224 362 214 345" fill="url(#skin)" stroke="#694c3d" stroke-width="5"/>
-<!-- small design details -->
-<path d="M150 145H226M150 159H226" stroke="#9aa6ad" stroke-width="3" opacity=".35"/>
-<circle cx="239" cy="229" r="5" fill="#b6c0c3"/>
-</svg>
+<path d="M72 620Q75 525 111 433L139 362Q179 335 220 363L253 436Q287 535 285 620Z" fill="url(#s)" stroke="#080e14" stroke-width="9"/>
+<path d="M105 620Q115 537 146 447L170 389H199L230 450Q255 537 257 620Z" fill="#27394a" stroke="#0a1118" stroke-width="5"/>
+<path d="M112 389Q105 354 130 322L151 285Q177 264 203 278L233 309Q249 338 232 382L211 410Q176 425 141 410Z" fill="url(#g)" stroke="#523a2d" stroke-width="8"/>
+<path d="M128 366Q150 339 179 353L215 380Q205 405 177 408L142 392Z" fill="#b98a6d" stroke="#765541" stroke-width="5"/>
+<path d="M101 402Q90 375 110 351L130 338L153 369L137 413Z" fill="url(#g)" stroke="#694b3b" stroke-width="5"/><path d="M132 52Q132 34 151 31H213Q234 34 235 52L230 266H137Z" fill="url(#m)" stroke="#080e14" stroke-width="10"/>
+<path d="M151 63H216V184H151Z" fill="#354650" stroke="#131d25" stroke-width="5"/>
+<path d="M163 84H208V101H163ZM142 202H229" fill="#aab5ba" opacity=".48"/>
+<path d="M171 25V14H190V25M204 25V14H224V25" stroke="#101820" stroke-width="6"/>
+<path d="M143 255H229L218 386Q215 405 197 410H173Q152 407 151 387Z" fill="#1b2831" stroke="#080e14" stroke-width="9"/>
+<path d="M160 278H211V366H160Z" fill="#3a4d58" stroke="#86959c" stroke-width="3"/>
+<path d="M166 298 207 307M164 324 204 334M162 349 201 359" stroke="#101820" stroke-width="7"/>
+<path d="M169 252Q168 292 188 300Q213 294 210 252" fill="none" stroke="#090f15" stroke-width="8"/></svg>
