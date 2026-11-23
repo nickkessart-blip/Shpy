@@ -7,7 +7,7 @@ export interface MissionSceneDefinition {
   id: string;
   title: string;
   subtitle: string;
-  backgroundSlot: 'backgrounds/casino-main' | 'backgrounds/casino-bar';
+  backgroundSlot: 'backgrounds/casino-main' | 'backgrounds/casino-bar' | 'backgrounds/train-carriage';
   covers: CoverDefinition[];
   waves: WaveDefinition[];
 }
@@ -44,3 +44,31 @@ export const CASINO_MISSION: MissionSceneDefinition[] = [
     ],
   },
 ];
+
+export type MissionId = 'casino' | 'east-express';
+export interface MissionDefinition { id: MissionId; title: string; unlockLevel: number; scenes: MissionSceneDefinition[] }
+export const EAST_EXPRESS_MISSION: MissionSceneDefinition[] = [
+  {
+    id: 'east-express-carriage-1', title: 'Операция «Восточный экспресс»', subtitle: 'ПАССАЖИРСКИЙ ВАГОН',
+    backgroundSlot: 'backgrounds/train-carriage',
+    covers: [
+      { id: 'seat-left', x: 270, y: 430, width: 210, height: 96 },
+      { id: 'seat-right', x: 800, y: 430, width: 210, height: 96 },
+    ],
+    waves: [
+      { enemies: ['guard', 'guard'], spawnPoints: [{ x: 350, y: 345, coverId: 'seat-left' }, { x: 900, y: 345, coverId: 'seat-right' }] },
+      { enemies: ['guard', 'assault'], spawnPoints: [{ x: 530, y: 335, coverId: 'seat-left' }, { x: 770, y: 335, coverId: 'seat-right' }] },
+      { enemies: ['armored', 'guard', 'assault'], spawnPoints: [{ x: 340, y: 340, coverId: 'seat-left' }, { x: 650, y: 330 }, { x: 960, y: 340, coverId: 'seat-right' }] },
+      { enemies: ['assault', 'assault'], spawnPoints: [{ x: 470, y: 330, coverId: 'seat-left' }, { x: 850, y: 330, coverId: 'seat-right' }] },
+      { enemies: ['armored', 'assault', 'guard'], spawnPoints: [{ x: 340, y: 325, coverId: 'seat-left' }, { x: 650, y: 320 }, { x: 970, y: 325, coverId: 'seat-right' }] },
+      { enemies: ['boss'], spawnPoints: [{ x: 640, y: 310 }] },
+    ],
+  },
+];
+export const MISSION_CATALOG: Record<MissionId, MissionDefinition> = {
+  casino: { id: 'casino', title: 'Казино «Рояль»', unlockLevel: 1, scenes: CASINO_MISSION },
+  'east-express': { id: 'east-express', title: 'Восточный экспресс', unlockLevel: 4, scenes: EAST_EXPRESS_MISSION },
+};
+export function getMissionDefinition(id: MissionId): MissionDefinition {
+  return MISSION_CATALOG[id] ?? MISSION_CATALOG.casino;
+}

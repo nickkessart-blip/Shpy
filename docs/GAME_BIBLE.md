@@ -1,5 +1,12 @@
 # SHPY — GAME BIBLE
 
+## Кампания «Восточный экспресс» — 2026-11-23
+
+- Добавлена отдельная операция, открывающаяся с 4-го уровня аккаунта: шесть волн в пассажирском вагоне, финальный босс.
+- Добавлен собственный векторный фон вагона и укрытия в виде кресел. Это лёгкий оригинальный SVG-ассет, а не готовая покадровая иллюстрация.
+- Операция использует общий цикл миссии, наград и отчёта; название операции берётся из каталога.
+
+
 ## Android aiming experiment — 2026-11-23
 
 The mobile default is a fixed-centre reticle with swipe-to-pan world view and a separate fire control. The screen weapon is anchored to the viewport. A classic virtual aim stick remains as an alternate setting. This is provisional until real-device playtesting.

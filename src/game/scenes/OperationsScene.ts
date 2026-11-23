@@ -65,20 +65,27 @@ export class OperationsScene extends Phaser.Scene {
     this.add.text(862, 180, 'СЛЕДУЮЩИЕ ОПЕРАЦИИ', {
       fontSize: '15px', color: '#c3ced8', fontStyle: 'bold', letterSpacing: 1,
     });
+    const trainUnlocked = getAccountLevel(save.accountXp) >= 4;
+    if (trainUnlocked) {
+      g.fillStyle(0x263a43, 0.98); g.fillRoundedRect(852, 230, 334, 72, 8);
+      this.add.text(870, 242, '02  /  ВОСТОЧНЫЙ ЭКСПРЕСС', { fontSize: '13px', color: '#f0c16d', fontStyle: 'bold' });
+      this.add.text(870, 269, 'ПАССАЖИРСКИЙ ВАГОН • 6 ВОЛН', { fontSize: '11px', color: '#c3ced8' });
+      this.button(852, 312, 334, 40, 'НАЧАТЬ ОПЕРАЦИЮ', 0x8b3039, () => { runSession.reset('east-express'); this.scene.start('Mission'); });
+    }
     const locked = [
-      ['02', 'ВОСТОЧНЫЙ ЭКСПРЕСС', 'Уровень 4'],
+      ['03', 'СКЛАД КОНТРАБАНДИСТОВ', 'Уровень 6'],
       ['03', 'СКЛАД КОНТРАБАНДИСТОВ', 'Уровень 6'],
       ['04', 'ПОСОЛЬСТВО', 'Уровень 9'],
       ['05', 'ЛОГОВО ВУЛКАНА', 'Уровень 12'],
     ];
     locked.forEach(([number, title, requirement], index) => {
-      const y = 230 + index * 92;
+      const y = (trainUnlocked ? 378 : 230) + index * (trainUnlocked ? 64 : 92);
       g.fillStyle(0x202c37, 0.95);
-      g.fillRoundedRect(852, y, 334, 72, 8);
+      g.fillRoundedRect(852, y, 334, trainUnlocked ? 54 : 72, 8);
       this.add.text(870, y + 12, number + '  /  ' + title, {
         fontSize: '13px', color: '#8795a2', fontStyle: 'bold', wordWrap: { width: 292 },
       });
-      this.add.text(870, y + 42, 'ЗАКРЫТО • ' + requirement, {
+      this.add.text(870, y + (trainUnlocked ? 31 : 42), 'ЗАКРЫТО • ' + requirement, {
         fontSize: '11px', color: '#b47c78',
       });
     });

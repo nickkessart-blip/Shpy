@@ -1,6 +1,7 @@
 export const ASSET_SLOTS = {
   'backgrounds/casino-main': 'casino-main',
   'backgrounds/casino-bar': 'casino-bar',
+  'backgrounds/train-carriage': 'train-carriage',
   'enemies/guard': 'enemy-guard',
   'enemies/armored': 'enemy-armored',
   'enemies/assault': 'enemy-assault',

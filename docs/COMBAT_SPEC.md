@@ -1,5 +1,12 @@
 # SHPY — COMBAT SPECIFICATION
 
+## Кампания «Восточный экспресс» — 2026-11-23
+
+- Добавлена отдельная операция, открывающаяся с 4-го уровня аккаунта: шесть волн в пассажирском вагоне, финальный босс.
+- Добавлен собственный векторный фон вагона и укрытия в виде кресел. Это лёгкий оригинальный SVG-ассет, а не готовая покадровая иллюстрация.
+- Операция использует общий цикл миссии, наград и отчёта; название операции берётся из каталога.
+
+
 ## Android camera redesign — implementation experiment (2026-11-23)
 
 - Default touch scheme: fixed-centre reticle; drag the playfield to pan the scene; use the separate fire button to shoot.

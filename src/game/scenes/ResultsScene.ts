@@ -3,6 +3,7 @@ import { GAME_HEIGHT, GAME_WIDTH, hasTouchInput } from '../../app/GameConfig';
 import { runSession } from '../systems/missions/runSession';
 import { saveService } from '../../persistence/SaveService';
 import { getAccountLevel, getAccountRank } from '../data/progression';
+import { getMissionDefinition } from '../data/missions';
 
 export class ResultsScene extends Phaser.Scene {
   constructor() { super('Results'); }
@@ -24,7 +25,7 @@ export class ResultsScene extends Phaser.Scene {
     this.add.text(GAME_WIDTH / 2, 142, success ? 'ОПЕРАЦИЯ ЗАВЕРШЕНА' : 'ОПЕРАЦИЯ ПРОВАЛЕНА', {
       fontSize: '32px', color: success ? '#83d7a4' : '#e87575', fontStyle: 'bold',
     }).setOrigin(0.5);
-    this.add.text(GAME_WIDTH / 2, 195, 'КАЗИНО «РОЯЛЬ» • ОТЧЁТ АГЕНТСТВА', {
+    this.add.text(GAME_WIDTH / 2, 195, getMissionDefinition(runSession.missionId).title.toUpperCase() + ' • ОТЧЁТ АГЕНТСТВА', {
       fontSize: '14px', color: '#aebdca', letterSpacing: 2,
     }).setOrigin(0.5);
 
@@ -66,7 +67,7 @@ export class ResultsScene extends Phaser.Scene {
     this.add.text(GAME_WIDTH / 2, 102, success ? 'ОПЕРАЦИЯ ЗАВЕРШЕНА' : 'ОПЕРАЦИЯ ПРОВАЛЕНА', {
       fontSize: '34px', color: success ? '#83d7a4' : '#e87575', fontStyle: 'bold',
     }).setOrigin(0.5);
-    this.add.text(GAME_WIDTH / 2, 150, 'КАЗИНО «РОЯЛЬ»  •  ОТЧЁТ АГЕНТСТВА', {
+    this.add.text(GAME_WIDTH / 2, 150, getMissionDefinition(runSession.missionId).title.toUpperCase() + '  •  ОТЧЁТ АГЕНТСТВА', {
       fontSize: '19px', color: '#aebdca', letterSpacing: 2,
     }).setOrigin(0.5);
     const accuracy = result && result.shots > 0 ? Math.round((result.hits / result.shots) * 100) : 0;
