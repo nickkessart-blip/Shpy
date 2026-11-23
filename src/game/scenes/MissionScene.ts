@@ -21,7 +21,7 @@ interface RuntimeEnemy {
 
 const MUZZLE: Point = { x: GAME_WIDTH / 2, y: 662 };
 const SPRITES: Record<EnemyType, string> = {
-  guard: 'enemy-guard', armored: 'enemy-armored', assault: 'enemy-assault', boss: 'enemy-boss',
+  guard: 'kenney-guard', armored: 'kenney-armored', assault: 'kenney-assault', boss: 'kenney-boss',
 };
 
 export class MissionScene extends Phaser.Scene {
@@ -1424,9 +1424,17 @@ export class MissionScene extends Phaser.Scene {
       const idleBob = Math.sin((this.time.now + enemy.uid * 97) / 270) * 2.2;
       const drawX = enemy.x + hitOffset;
       const drawY = enemy.y - 20 + idleBob;
-      if (AssetCatalog.hasTexture(this, SPRITES[enemy.type])) {
+      AssetCatalog.ensureKenneyEnemyFrames(this);
+      const kenneyAtlasKey = 'enemy-kenney-atlas';
+      const hasKenneyFrame = AssetCatalog.hasTexture(this, kenneyAtlasKey)
+        && this.textures.get(kenneyAtlasKey).has(SPRITES[enemy.type]);
+      const fallbackSpriteKey = 'enemy-' + enemy.type;
+      if (hasKenneyFrame || AssetCatalog.hasTexture(this, fallbackSpriteKey)) {
         let image = sprite;
-        if (!image) image = this.add.image(drawX, drawY, SPRITES[enemy.type]).setName(spriteKey).setDepth(2);
+        if (!image) image = this.add.image(
+          drawX, drawY, hasKenneyFrame ? kenneyAtlasKey : fallbackSpriteKey,
+          hasKenneyFrame ? SPRITES[enemy.type] : undefined,
+        ).setName(spriteKey).setDepth(2);
         const isBoss = enemy.type === 'boss';
         image.setPosition(drawX, drawY).setDisplaySize(isBoss ? 150 : enemy.type === 'armored' ? 92 : 84,
           isBoss ? 224 : enemy.type === 'armored' ? 154 : 146).setVisible(true);

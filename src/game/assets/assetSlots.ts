@@ -6,6 +6,7 @@ export const ASSET_SLOTS = {
   'weapons/first-person-atlas': 'weapon-fp-atlas',
   'effects/muzzle-flare': 'effect-muzzle-flare',
   'effects/impact-smoke': 'effect-impact-smoke',
+  'enemies/kenney-atlas': 'enemy-kenney-atlas',
   'enemies/guard': 'enemy-guard',
   'enemies/armored': 'enemy-armored',
   'enemies/assault': 'enemy-assault',
