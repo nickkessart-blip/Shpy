@@ -181,9 +181,9 @@ export class MissionScene extends Phaser.Scene {
     this.fx = this.add.graphics().setDepth(20);
     this.buildWeaponRig();
     this.hudWeaponImage = undefined;
-    this.hudPanel = this.add.graphics().setDepth(29);
-    this.hudBars = this.add.graphics().setDepth(30);
-    this.hudIcons = this.add.graphics().setDepth(31);
+    this.hudPanel = this.add.graphics().setDepth(29).setScrollFactor(0);
+    this.hudBars = this.add.graphics().setDepth(30).setScrollFactor(0);
+    this.hudIcons = this.add.graphics().setDepth(31).setScrollFactor(0);
     this.hud = this.add.text(78, 20, '', {
       fontSize: '14px', color: '#f0c16d', fontStyle: 'bold', fontFamily: 'Arial, sans-serif',
       shadow: { offsetX: 1, offsetY: 2, color: '#000000', blur: 3, fill: true },
@@ -205,7 +205,7 @@ export class MissionScene extends Phaser.Scene {
     }).setOrigin(0.5).setDepth(30).setScrollFactor(0);
     this.reloadHint = this.add.text(1120, 653, 'R  ПЕРЕЗАРЯДКА', {
       fontSize: '13px', color: '#ffffff', backgroundColor: '#7d2930', padding: { x: 12, y: 9 },
-    }).setOrigin(0.5).setDepth(30);
+    }).setOrigin(0.5).setDepth(30).setScrollFactor(0);
     this.reloadHint.setVisible(!this.isMobileControls);
 
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
@@ -952,7 +952,7 @@ export class MissionScene extends Phaser.Scene {
 
   private refreshMobileControls(): void {
     const stickMode = this.currentSettings.mobileControlMode === 'stick';
-    if (this.mobileFireButton) this.mobileFireButton.style.display = stickMode ? 'grid' : 'none';
+    if (this.mobileFireButton) this.mobileFireButton.style.display = 'grid';
     if (this.mobileAimStick) this.mobileAimStick.style.display = stickMode ? 'block' : 'none';
     if (this.mobileSwitchButton) this.mobileSwitchButton.style.display = this.selectedWeapons.length > 1 ? 'grid' : 'none';
     if (this.appliedMobileControlMode !== this.currentSettings.mobileControlMode) {
