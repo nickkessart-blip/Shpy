@@ -18,9 +18,11 @@ describe('game settings', () => {
     expect(result.aimSensitivity).toBe(4);
   });
 
-  it('migrates legacy tap control to the new swipe-look default', () => {
-    expect(normalizeSettings({ mobileControlMode: 'tap' }).mobileControlMode).toBe('swipe');
+  it('preserves tap, swipe and stick control profiles', () => {
+    expect(normalizeSettings({ mobileControlMode: 'tap' }).mobileControlMode).toBe('tap');
+    expect(normalizeSettings({ mobileControlMode: 'swipe' }).mobileControlMode).toBe('swipe');
     expect(normalizeSettings({ mobileControlMode: 'stick' }).mobileControlMode).toBe('stick');
+    expect(DEFAULT_SETTINGS.mobileControlMode).toBe('tap');
   });
 
   it('preserves supported mobile control and graphics choices', () => {
