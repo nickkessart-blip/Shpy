@@ -7,7 +7,7 @@ export interface MissionSceneDefinition {
   id: string;
   title: string;
   subtitle: string;
-  backgroundSlot: 'backgrounds/casino-main' | 'backgrounds/casino-bar' | 'backgrounds/train-carriage';
+  backgroundSlot: 'backgrounds/casino-main' | 'backgrounds/casino-bar' | 'backgrounds/train-carriage' | 'backgrounds/train-carriage-real';
   covers: CoverDefinition[];
   waves: WaveDefinition[];
 }
@@ -50,7 +50,7 @@ export interface MissionDefinition { id: MissionId; title: string; unlockLevel: 
 export const EAST_EXPRESS_MISSION: MissionSceneDefinition[] = [
   {
     id: 'east-express-carriage-1', title: 'Операция «Восточный экспресс»', subtitle: 'ПАССАЖИРСКИЙ ВАГОН',
-    backgroundSlot: 'backgrounds/train-carriage',
+    backgroundSlot: 'backgrounds/train-carriage-real',
     covers: [
       { id: 'seat-left', x: 270, y: 430, width: 210, height: 96 },
       { id: 'seat-right', x: 800, y: 430, width: 210, height: 96 },

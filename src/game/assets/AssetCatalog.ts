@@ -64,6 +64,17 @@ export class AssetCatalog {
     }
   }
 
+  static ensureFirstPersonWeaponFrames(scene: Phaser.Scene): void {
+    const key = ASSET_SLOTS['weapons/first-person-atlas'];
+    if (!scene.textures.exists(key)) return;
+    const atlas = scene.textures.get(key);
+    const frames = [
+      ['fp-pistol', 0, 0], ['fp-smg', 192, 0],
+      ['fp-shotgun', 0, 144], ['fp-rifle', 192, 144],
+    ] as const;
+    for (const [name, x, y] of frames) if (!atlas.has(name)) atlas.add(name, 0, x, y, 192, 144);
+  }
+
   static hasTexture(scene: Phaser.Scene, key: string): boolean {
     return scene.textures.exists(key);
   }

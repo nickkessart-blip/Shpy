@@ -7,6 +7,14 @@
 - Операция использует общий цикл миссии, наград и отчёта; название операции берётся из каталога.
 
 
+## SHPY 0.8 — Mobile controls and combat feel (in progress)
+
+- [x] Restore direct tap-to-aim-and-fire as a selectable mobile control profile.
+- [x] Keep swipe camera and aim-stick profiles available alongside tap.
+- [x] Increase weapon kick, muzzle flash and tracer readability without camera shake on mobile.
+- [ ] Wire the existing first-person weapon atlas and CC0 muzzle/impact effects into runtime scenes.
+- [ ] Run unit tests and production build; physical Android test remains required.
+
 ## SHPY 0.5.1 — Android camera pass (2026-11-23)
 
 - [x] Add fixed-centre mobile reticle and swipe-to-pan camera mode.

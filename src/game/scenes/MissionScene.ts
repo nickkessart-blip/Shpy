@@ -103,7 +103,7 @@ export class MissionScene extends Phaser.Scene {
   private aimStickPointerId: number | null = null;
   private mobileLookPointerId: number | null = null;
   private mobileLookLast = { x: 0, y: 0 };
-  private appliedMobileControlMode: 'swipe' | 'stick' = 'swipe';
+  private appliedMobileControlMode: 'tap' | 'swipe' | 'stick' = 'tap';
 
   constructor() { super('Mission'); }
 
@@ -224,14 +224,21 @@ export class MissionScene extends Phaser.Scene {
       if (!this.isMobileControls) this.aim = { x: pointer.x, y: pointer.y };
     });
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      if (this.isMobileControls && this.currentSettings.mobileControlMode === 'swipe') {
-        if (this.phase === 'active' && this.mobileLookPointerId === null && !this.isMobileControlPoint(pointer.x, pointer.y)) {
-          this.mobileLookPointerId = pointer.id;
-          this.mobileLookLast = { x: pointer.x, y: pointer.y };
+      if (this.isMobileControls) {
+        if (this.phase !== 'active' || this.isMobileControlPoint(pointer.x, pointer.y)) return;
+        if (this.currentSettings.mobileControlMode === 'swipe') {
+          if (this.mobileLookPointerId === null) {
+            this.mobileLookPointerId = pointer.id;
+            this.mobileLookLast = { x: pointer.x, y: pointer.y };
+          }
+          return;
+        }
+        if (this.currentSettings.mobileControlMode === 'tap') {
+          this.aim = { x: pointer.x, y: pointer.y };
+          this.shoot();
         }
         return;
       }
-      if (this.isMobileControls) return;
       if (this.phase !== 'active' || this.isMobileControlPoint(pointer.x, pointer.y)) return;
       this.aim = { x: pointer.x, y: pointer.y };
       this.desktopFireHeld = true;
@@ -267,6 +274,19 @@ export class MissionScene extends Phaser.Scene {
     const appearance = saveService.load().cosmetics;
     const weaponTint = getCosmetic(appearance.weaponSkinId).tint;
     const heroTint = getCosmetic(appearance.heroSkinId).tint;
+    const atlasKey = 'weapon-fp-atlas';
+    AssetCatalog.ensureFirstPersonWeaponFrames(this);
+    const frameByWeapon: Record<WeaponId, string> = {
+      pistol: 'fp-pistol', smg: 'fp-smg', shotgun: 'fp-shotgun', rifle: 'fp-rifle',
+    };
+    if (AssetCatalog.hasTexture(this, atlasKey)) {
+      const weaponImage = this.add.image(0, -170, atlasKey, frameByWeapon[this.currentWeaponId])
+        .setDisplaySize(320, 240);
+      rig.add(weaponImage);
+      this.weaponRig = rig;
+      this.updateWeaponRig();
+      return;
+    }
     const textureKey = 'weapon-' + this.currentWeaponId;
     if (AssetCatalog.hasTexture(this, textureKey)) {
       rig.add(this.add.image(0, -190, textureKey).setDisplaySize(180, 380).setTint(weaponTint));
@@ -301,6 +321,7 @@ export class MissionScene extends Phaser.Scene {
     if (!this.weaponRig) return;
     if (this.isMobileControls) {
       this.weaponRig.setPosition(GAME_WIDTH / 2, GAME_HEIGHT + 95 + this.weaponRecoil + this.reloadPose * 38);
+      this.weaponRig.setScale(1 + Math.min(0.09, this.weaponRecoil * 0.00055), 1 - Math.min(0.055, this.weaponRecoil * 0.00032));
       this.weaponRig.setRotation(0);
       return;
     }
@@ -719,8 +740,15 @@ export class MissionScene extends Phaser.Scene {
     this.storeCurrentAmmo();
     this.shots += 1;
     this.shotCooldown = weaponStats.shotCooldownMs;
-    this.shotFlash = this.currentWeaponId === 'shotgun' ? 185 : 125;
-    this.weaponRecoil = weapon.recoil;
+    this.shotFlash = this.currentWeaponId === 'shotgun' ? 220 : 165;
+    this.weaponRecoil = weapon.recoil * 2.8;
+    const muzzleFxPoint = this.getWeaponMuzzle();
+    if (AssetCatalog.hasTexture(this, 'effect-muzzle-flare')) {
+      const flash = this.add.image(muzzleFxPoint.x, muzzleFxPoint.y, 'effect-muzzle-flare')
+        .setDepth(24).setBlendMode(Phaser.BlendModes.ADD).setScale(this.currentWeaponId === 'shotgun' ? 0.48 : 0.34);
+      this.tweens.add({ targets: flash, alpha: 0, scale: flash.scale * 1.55, duration: 105,
+        onComplete: () => flash.destroy() });
+    }
     FeedbackService.play(this, 'shot', this.currentWeaponId === 'shotgun' ? 1.2 : 1);
     triggerHaptic('shot');
     if (this.currentSettings.screenShakeEnabled) {
@@ -793,6 +821,12 @@ export class MissionScene extends Phaser.Scene {
       this.impactEffects.push({
         x: result.target.x, y: result.target.y, life: 520, maxLife: 520, kind: 'hit', damage,
       });
+      if (AssetCatalog.hasTexture(this, 'effect-impact-smoke')) {
+        const impact = this.add.image(result.target.x, result.target.y, 'effect-impact-smoke')
+          .setDepth(22).setBlendMode(Phaser.BlendModes.ADD).setScale(0.12).setAlpha(0.75);
+        this.tweens.add({ targets: impact, alpha: 0, scale: 0.28, duration: 260,
+          onComplete: () => impact.destroy() });
+      }
 
       const labelValue = Math.round(damage * 10) / 10;
       const damageLabel = this.add.text(result.target.x + 20, result.target.y - 24,
@@ -1461,12 +1495,16 @@ export class MissionScene extends Phaser.Scene {
     if (this.shotFlash > 0) {
       const muzzle = this.getWeaponMuzzle();
       const alpha = this.shotFlash / 135;
-      this.fx.lineStyle(5, 0xffd58a, alpha * 0.9);
+      this.fx.lineStyle(8, 0xff9b45, alpha * 0.52);
       this.fx.lineBetween(muzzle.x, muzzle.y, this.aim.x, this.aim.y);
-      this.fx.lineStyle(2, 0xffffff, alpha);
+      this.fx.lineStyle(4, 0xffd58a, alpha * 0.95);
       this.fx.lineBetween(muzzle.x, muzzle.y, this.aim.x, this.aim.y);
-      this.fx.fillStyle(0xffd58a, alpha);
-      this.fx.fillCircle(muzzle.x, muzzle.y, 9 + (135 - this.shotFlash) * 0.18);
+      this.fx.lineStyle(1.5, 0xffffff, alpha);
+      this.fx.lineBetween(muzzle.x, muzzle.y, this.aim.x, this.aim.y);
+      this.fx.fillStyle(0xff7b2d, alpha * 0.7);
+      this.fx.fillCircle(muzzle.x, muzzle.y, 15 + (220 - this.shotFlash) * 0.22);
+      this.fx.fillStyle(0xffe2a3, alpha);
+      this.fx.fillCircle(muzzle.x, muzzle.y, 7 + (220 - this.shotFlash) * 0.12);
       this.fx.lineStyle(3, 0xfff0c5, alpha);
       const rayCount = this.currentSettings.graphicsQuality === 'high' ? 12
         : this.currentSettings.graphicsQuality === 'low' ? 4 : 8;
