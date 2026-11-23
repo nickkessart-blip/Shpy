@@ -11,6 +11,8 @@ export interface LoadoutSelection {
   activeItem: ActiveItemId;
 }
 
+export type WeaponFireMode = 'semi' | 'auto' | 'pump';
+
 export interface WeaponDefinition {
   id: WeaponId;
   name: string;
@@ -23,6 +25,11 @@ export interface WeaponDefinition {
   reserveAmmo: number;
   baseReloadSeconds: number;
   intermissionAmmo: number;
+  fireMode: WeaponFireMode;
+  spreadRadius: number;
+  pellets: number;
+  pelletDamageMultiplier: number;
+  recoil: number;
 }
 
 export const WEAPONS: readonly WeaponDefinition[] = [
@@ -31,24 +38,28 @@ export const WEAPONS: readonly WeaponDefinition[] = [
     description: 'Надёжный вариант для первой операции. Хорошая точность и умеренный темп.',
     unlockLevel: 1, damageMultiplier: 1, fireCooldownMs: 210, baseMagazine: 6,
     reserveAmmo: 120, baseReloadSeconds: 2, intermissionAmmo: 48,
+    fireMode: 'semi', spreadRadius: 2, pellets: 1, pelletDamageMultiplier: 1, recoil: 16,
   },
   {
     id: 'smg', name: 'КОМПАКТНЫЙ ПП', role: 'Высокая скорострельность',
     description: 'Быстро выпускает очередь. Урон одного попадания ниже, зато промахи прощаются чаще.',
     unlockLevel: ACCOUNT_UNLOCKS.smg, damageMultiplier: 0.58, fireCooldownMs: 105, baseMagazine: 24,
     reserveAmmo: 180, baseReloadSeconds: 1.9, intermissionAmmo: 48,
+    fireMode: 'auto', spreadRadius: 16, pellets: 1, pelletDamageMultiplier: 1, recoil: 28,
   },
   {
     id: 'shotgun', name: 'ТАКТИЧЕСКИЙ ДРОБОВИК', role: 'Мощный одиночный выстрел',
     description: 'Медленный темп и небольшой магазин. Подходит для опасных целей.',
     unlockLevel: ACCOUNT_UNLOCKS.shotgun, damageMultiplier: 2, fireCooldownMs: 680, baseMagazine: 5,
     reserveAmmo: 45, baseReloadSeconds: 2.8, intermissionAmmo: 15,
+    fireMode: 'pump', spreadRadius: 40, pellets: 7, pelletDamageMultiplier: 0.18, recoil: 48,
   },
   {
     id: 'rifle', name: 'ШТУРМОВАЯ ВИНТОВКА', role: 'Универсальное оружие',
     description: 'Больше магазин и стабильный урон. Хороший выбор для длинных волн.',
     unlockLevel: ACCOUNT_UNLOCKS.rifle, damageMultiplier: 1.22, fireCooldownMs: 165, baseMagazine: 24,
     reserveAmmo: 144, baseReloadSeconds: 2.2, intermissionAmmo: 36,
+    fireMode: 'auto', spreadRadius: 5, pellets: 1, pelletDamageMultiplier: 1, recoil: 22,
   },
 ] as const;
 

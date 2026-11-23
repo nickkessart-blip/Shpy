@@ -15,7 +15,7 @@ describe('game settings', () => {
     });
     expect(result.musicVolume).toBe(1);
     expect(result.sfxVolume).toBe(0);
-    expect(result.aimSensitivity).toBe(2.5);
+    expect(result.aimSensitivity).toBe(4);
   });
 
   it('preserves supported mobile control and graphics choices', () => {

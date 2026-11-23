@@ -36,6 +36,21 @@ describe('arsenal progression', () => {
     }
   });
 
+  it('gives weapons distinct firing modes and projectile profiles', () => {
+    expect(WEAPONS.map(({ id, fireMode, pellets }) => [id, fireMode, pellets])).toEqual([
+      ['pistol', 'semi', 1],
+      ['smg', 'auto', 1],
+      ['shotgun', 'pump', 7],
+      ['rifle', 'auto', 1],
+    ]);
+    const smg = WEAPONS.find((weapon) => weapon.id === 'smg')!;
+    const rifle = WEAPONS.find((weapon) => weapon.id === 'rifle')!;
+    const shotgun = WEAPONS.find((weapon) => weapon.id === 'shotgun')!;
+    expect(smg.fireCooldownMs).toBeLessThan(rifle.fireCooldownMs);
+    expect(shotgun.spreadRadius).toBeGreaterThan(rifle.spreadRadius);
+    expect(shotgun.pelletDamageMultiplier).toBeLessThan(1);
+  });
+
   it('keeps pistol legacy upgrade values intact', () => {
     expect(getWeaponStats('pistol', { damage: 2, magazine: 2, reload: 2 })).toMatchObject({
       damage: 2, magazine: 10, reloadSeconds: 1,
