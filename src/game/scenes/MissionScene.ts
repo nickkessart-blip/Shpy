@@ -724,7 +724,7 @@ export class MissionScene extends Phaser.Scene {
     FeedbackService.play(this, 'shot', this.currentWeaponId === 'shotgun' ? 1.2 : 1);
     triggerHaptic('shot');
     if (this.currentSettings.screenShakeEnabled) {
-      this.cameras.main.shake(this.currentWeaponId === 'shotgun' ? 115 : 55,
+      if (!this.isMobileControls) this.cameras.main.shake(this.currentWeaponId === 'shotgun' ? 115 : 55,
         this.currentWeaponId === 'shotgun' ? 0.0032 : weapon.recoil * 0.00006);
     }
 
@@ -991,7 +991,7 @@ export class MissionScene extends Phaser.Scene {
     this.damageTaken += appliedDamage;
     FeedbackService.play(this, 'hit', 0.85);
     triggerHaptic('damage');
-    if (this.currentSettings.screenShakeEnabled) this.cameras.main.shake(110, 0.0025);
+    if (!this.isMobileControls && this.currentSettings.screenShakeEnabled) this.cameras.main.shake(110, 0.0025);
     this.showToast('ВРАГ ПОПАЛ • −' + appliedDamage + ' HP', 750);
   }
 
