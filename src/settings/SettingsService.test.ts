@@ -18,9 +18,9 @@ describe('game settings', () => {
     expect(result.aimSensitivity).toBe(4);
   });
 
-  it('preserves tap, swipe and stick control profiles', () => {
+  it('migrates legacy tap and swipe profiles to hybrid while preserving stick', () => {
     expect(normalizeSettings({ mobileControlMode: 'tap' }).mobileControlMode).toBe('tap');
-    expect(normalizeSettings({ mobileControlMode: 'swipe' }).mobileControlMode).toBe('swipe');
+    expect(normalizeSettings({ mobileControlMode: 'swipe' }).mobileControlMode).toBe('tap');
     expect(normalizeSettings({ mobileControlMode: 'stick' }).mobileControlMode).toBe('stick');
     expect(DEFAULT_SETTINGS.mobileControlMode).toBe('tap');
   });
@@ -32,7 +32,7 @@ describe('game settings', () => {
       vibrationEnabled: false,
       parallaxEnabled: false,
     });
-    expect(result.mobileControlMode).toBe('swipe');
+    expect(result.mobileControlMode).toBe('tap');
     expect(result.graphicsQuality).toBe('high');
     expect(result.vibrationEnabled).toBe(false);
     expect(result.parallaxEnabled).toBe(false);
