@@ -241,10 +241,12 @@ export class MissionScene extends Phaser.Scene {
       this.desktopFireHeld = true;
       this.shoot();
     });
-    this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
-      if (!this.isMobileControls) this.desktopFireHeld = false;
+    const releaseAimPointer = (pointer: Phaser.Input.Pointer): void => {
       if (pointer.id === this.mobileLookPointerId) this.mobileLookPointerId = null;
-    });
+      if (!this.isMobileControls) this.desktopFireHeld = false;
+    };
+    this.input.on('pointerup', releaseAimPointer);
+    this.input.on('pointerupoutside', releaseAimPointer);
     this.events.on(Phaser.Scenes.Events.RESUME, this.onMissionResume, this);
     if (this.isMobileControls) this.buildMobileControls();
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
