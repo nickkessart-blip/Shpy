@@ -7,13 +7,13 @@
 - Операция использует общий цикл миссии, наград и отчёта; название операции берётся из каталога.
 
 
-## Android camera redesign — implementation experiment (2026-11-23)
+## Android hybrid aiming — SHPY 0.9 (2026-11-25)
 
-- Default touch scheme: fixed-centre reticle; drag the playfield to pan the scene; use the separate fire button to shoot.
+- Primary touch scheme: tap the playfield to set aim and fire once; drag the same pointer to move the aim point and pan the camera.
 - Alternative aim-stick remains available.
 - First-person weapon rig is screen-anchored on touch devices; recoil and reload pose remain visual feedback.
-- Camera pan is clamped to ±210 px horizontally and ±100 px vertically; the background is overscanned to avoid empty edges.
-- This is provisional pending physical Android testing. Desktop mouse aiming is unchanged.
+- Camera bounds are widened to ±420 px horizontally and ±180 px vertically; the background is overscanned and layered parallax responds on mobile.
+- The separate fire button supports second-finger hold-to-fire; the virtual aim stick remains an alternative. Physical Android testing is still required. Desktop mouse aiming is unchanged.
 
 Версия 1.0.0 | Первый боевой прототип
 
@@ -22,7 +22,7 @@
 
 ## Управление
 Desktop: мышь — прицел, ЛКМ — выстрел, R — перезарядка, Esc — пауза/меню.
-Mobile: доступны две схемы. **Касание** — нажатие по игровому полю немедленно стреляет, а перетаскивание того же пальца непрерывно перемещает прицел; стика и отдельной кнопки огня нет. **Виртуальный джойстик** — левый стик задаёт направление и скорость прицела, правая кнопка удерживает огонь. Чувствительность 0.5×–4×, мёртвая зона минимальна, отклик нелинеен и остаётся отзывчивым при просадке FPS, поскольку время input не обрезается ограничителем шага AI. В обоих режимах доступны перезарядка, смена оружия, граната и аптечка. В stick-профиле независимые pointerId исключают взаимную отмену касаний. Desktop: мышь перемещает прицел; ЛКМ стреляет, а автоматические режимы поддерживают огонь при удержании. Во время перестрелки игрок неподвижен; переход к следующей зоне выполняется короткой автоматической walk-сценой.
+Mobile: доступны две схемы. **Гибрид** — тап по игровому полю задаёт прицел и стреляет; перетаскивание того же пальца непрерывно перемещает прицел и панорамирует камеру. Отдельная кнопка справа поддерживает удержание огня вторым пальцем. **Виртуальный джойстик** — левый стик задаёт направление и скорость прицела, правая кнопка удерживает огонь. Чувствительность 0.5×–4×, мёртвая зона минимальна, отклик нелинеен и остаётся отзывчивым при просадке FPS, поскольку время input не обрезается ограничителем шага AI. В обоих режимах доступны перезарядка, смена оружия, граната и аптечка. В stick-профиле независимые pointerId исключают взаимную отмену касаний. Desktop: мышь перемещает прицел; ЛКМ стреляет, а автоматические режимы поддерживают огонь при удержании. Во время перестрелки игрок неподвижен; переход к следующей зоне выполняется короткой автоматической walk-сценой.
 
 ## Свободная стрельба
 Игрок может нажать огонь в любой момент. Фаза врага не запрещает выстрел. Результат зависит от патронов, состояния оружия, координат прицела, хитбокса и препятствий. Скрытый за укрытием враг не получает урон; открытый, выглядывающий или перемещающийся может быть поражён.
