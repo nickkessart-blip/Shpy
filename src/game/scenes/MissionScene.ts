@@ -174,9 +174,9 @@ export class MissionScene extends Phaser.Scene {
     this.weaponRecoil = 0;
     this.playerHitFlash = 0;
     this.backdrop = this.add.graphics().setDepth(-20);
-    this.parallaxFar = this.add.graphics().setDepth(-9);
-    this.parallaxMid = this.add.graphics().setDepth(-7);
-    this.parallaxNear = this.add.graphics().setDepth(-4);
+    this.parallaxFar = this.add.graphics().setDepth(-9).setScrollFactor(0.16);
+    this.parallaxMid = this.add.graphics().setDepth(-7).setScrollFactor(0.42);
+    this.parallaxNear = this.add.graphics().setDepth(-4).setScrollFactor(0.74);
     this.world = this.add.graphics().setDepth(0);
     this.coverLayer = this.add.graphics().setDepth(8);
     this.fx = this.add.graphics().setDepth(20);
@@ -414,16 +414,16 @@ export class MissionScene extends Phaser.Scene {
     this.backdrop.fillGradientStyle(0x18212c, 0x18212c, 0x292a31, 0x121820, 1);
     const overscan = this.isMobileControls ? 520 : 0;
     this.backdrop.fillRect(-overscan, this.isMobileControls ? -140 : 0, GAME_WIDTH + overscan * 2, GAME_HEIGHT + (this.isMobileControls ? 280 : 0));
-    this.backdrop.fillStyle(0x8c3333, 0.13); this.backdrop.fillRect(0, 100, GAME_WIDTH, 340);
-    this.backdrop.fillStyle(0xe9b868, 0.09); this.backdrop.fillRect(0, 100, GAME_WIDTH, 10);
+    this.backdrop.fillStyle(0x8c3333, 0.13); this.backdrop.fillRect(-overscan, 100, GAME_WIDTH + overscan * 2, 340);
+    this.backdrop.fillStyle(0xe9b868, 0.09); this.backdrop.fillRect(-overscan, 100, GAME_WIDTH + overscan * 2, 10);
     for (let i = -4; i < 14; i += 1) {
       const x = 80 + i * 140;
       this.backdrop.fillStyle(0xf3bd66, 0.09); this.backdrop.fillCircle(x, 180, 54);
       this.backdrop.fillStyle(0x111820, 0.42); this.backdrop.fillRect(x - 43, 230, 86, 190);
     }
-    this.backdrop.fillStyle(0x8c242b, 0.5); this.backdrop.fillRect(0, 515, GAME_WIDTH, 90);
-    this.backdrop.lineStyle(2, 0xc58c4b, 0.36); this.backdrop.lineBetween(0, 515, GAME_WIDTH, 515);
-    this.backdrop.fillStyle(0x242c37, 1); this.backdrop.fillRect(0, 590, GAME_WIDTH, 130);
+    this.backdrop.fillStyle(0x8c242b, 0.5); this.backdrop.fillRect(-overscan, 515, GAME_WIDTH + overscan * 2, 90);
+    this.backdrop.lineStyle(2, 0xc58c4b, 0.36); this.backdrop.lineBetween(-overscan, 515, GAME_WIDTH + overscan, 515);
+    this.backdrop.fillStyle(0x242c37, 1); this.backdrop.fillRect(-overscan, 590, GAME_WIDTH + overscan * 2, 130);
     this.drawParallaxLayers();
   }
 
