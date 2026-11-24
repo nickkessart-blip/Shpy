@@ -86,10 +86,10 @@ export class SettingsScene extends Phaser.Scene {
     this.slider(828, 362, 370, this.settings.aimSensitivity, 0.5, 4,
       (value) => this.saveSettings({ aimSensitivity: value }, false),
       (value) => value.toFixed(1) + '×');
-    this.addText('ТАП: касание по цели сразу производит выстрел.', 828, 460, 12, '#d3dce5');
-    this.addText('СВАЙП: перемещение сцены под центральным прицелом.', 828, 490, 12, '#d3dce5');
-    this.addText('СТИК: левый джойстик двигает прицел; огонь отдельно.', 828, 520, 12, '#d3dce5');
-    this.addText('Перезарядка и предметы доступны отдельно.', 828, 550, 12, '#d3dce5');
+    this.addText('ГИБРИД: касание задаёт прицел и стреляет; перетаскивание ведёт прицел.', 828, 460, 12, '#d3dce5');
+    this.addText('КНОПКА ОГОНЬ: удерживайте вторым пальцем для очереди.', 828, 490, 12, '#d3dce5');
+    this.addText('СТИК: альтернативный режим с отдельной кнопкой огня.', 828, 520, 12, '#d3dce5');
+    this.addText('Чувствительность также регулирует панорамирование камеры.', 828, 550, 12, '#d3dce5');
     this.addText('ИЗМЕНЕНИЯ ПРИМЕНЯЮТСЯ СРАЗУ И СОХРАНЯЮТСЯ.', 828, 595, 10, '#718091');
 
     this.addText('ESC / КНОПКА ПАУЗЫ — ПАУЗА В МИССИИ', 56, 682, 11, '#718091');
@@ -181,8 +181,7 @@ export class SettingsScene extends Phaser.Scene {
   }
 
   private cycleControlMode(): void {
-    const next: MobileControlMode = this.settings.mobileControlMode === 'tap' ? 'swipe'
-      : this.settings.mobileControlMode === 'swipe' ? 'stick' : 'tap';
+    const next: MobileControlMode = this.settings.mobileControlMode === 'tap' ? 'stick' : 'tap';
     this.saveSettings({ mobileControlMode: next }, true);
   }
 
@@ -191,8 +190,7 @@ export class SettingsScene extends Phaser.Scene {
   }
 
   private controlModeLabel(value: MobileControlMode): string {
-    return value === 'tap' ? 'ТАП ПО ЦЕЛИ • ВЫСТРЕЛ'
-      : value === 'swipe' ? 'СВОБОДНЫЙ ОБЗОР • СВАЙП' : 'ВИРТУАЛЬНЫЙ ДЖОЙСТИК';
+    return value === 'tap' ? 'ГИБРИД • ТАП + DRAG + ОГОНЬ' : 'ВИРТУАЛЬНЫЙ ДЖОЙСТИК';
   }
 
   private qualityLabel(value: GraphicsQuality): string {
