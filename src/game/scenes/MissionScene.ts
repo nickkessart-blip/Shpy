@@ -102,7 +102,6 @@ export class MissionScene extends Phaser.Scene {
   private aimStickActive = false;
   private aimStickPointerId: number | null = null;
   private mobileLookPointerId: number | null = null;
-  private mobileLookLast = { x: 0, y: 0 };
   private appliedMobileControlMode: 'tap' | 'swipe' | 'stick' = 'tap';
 
   constructor() { super('Mission'); }
@@ -117,7 +116,7 @@ export class MissionScene extends Phaser.Scene {
     this.missionScenes = getMissionDefinition(runSession.missionId).scenes;
     this.aim = { x: GAME_WIDTH / 2, y: GAME_HEIGHT / 2 };
     this.cameras.main.setScroll(0, 0);
-    this.cameras.main.setBounds(-210, -100, GAME_WIDTH + 420, GAME_HEIGHT + 200);
+    this.cameras.main.setBounds(-420, -180, GAME_WIDTH + 840, GAME_HEIGHT + 360);
     this.enemies = [];
     this.sceneIndex = 0;
     this.waveIndex = 0;
@@ -211,30 +210,28 @@ export class MissionScene extends Phaser.Scene {
     this.reloadHint.setVisible(!this.isMobileControls);
 
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-      if (this.isMobileControls && this.currentSettings.mobileControlMode === 'swipe' && pointer.id === this.mobileLookPointerId) {
-        const dx = pointer.x - this.mobileLookLast.x;
-        const dy = pointer.y - this.mobileLookLast.y;
-        this.mobileLookLast = { x: pointer.x, y: pointer.y };
+      if (this.isMobileControls && pointer.id === this.mobileLookPointerId) {
         const sensitivity = this.currentSettings.aimSensitivity;
-        this.cameras.main.scrollX = Phaser.Math.Clamp(this.cameras.main.scrollX - dx * sensitivity * 1.15, -210, 210);
-        this.cameras.main.scrollY = Phaser.Math.Clamp(this.cameras.main.scrollY - dy * sensitivity * 0.85, -100, 100);
-        this.updateCenteredMobileAim();
+        // The hybrid control pans the world only as far as the finger moves from screen centre.
+        // A wider camera bound lets players reach enemies that used to sit just outside the viewport.
+        this.cameras.main.scrollX = Phaser.Math.Clamp(
+          (pointer.x - GAME_WIDTH / 2) * sensitivity * 0.38, -420, 420,
+        );
+        this.cameras.main.scrollY = Phaser.Math.Clamp(
+          (pointer.y - GAME_HEIGHT / 2) * sensitivity * 0.28, -180, 180,
+        );
+        this.aim = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
         return;
       }
       if (!this.isMobileControls) this.aim = { x: pointer.x, y: pointer.y };
     });
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       if (this.isMobileControls) {
-        if (this.phase !== 'active' || this.isMobileControlPoint(pointer.x, pointer.y)) return;
-        if (this.currentSettings.mobileControlMode === 'swipe') {
-          if (this.mobileLookPointerId === null) {
-            this.mobileLookPointerId = pointer.id;
-            this.mobileLookLast = { x: pointer.x, y: pointer.y };
-          }
-          return;
-        }
-        if (this.currentSettings.mobileControlMode === 'tap') {
-          this.aim = { x: pointer.x, y: pointer.y };
+        if (this.phase !== 'active' || this.isMobileControlPoint(pointer.x, pointer.y)
+          || this.currentSettings.mobileControlMode === 'stick') return;
+        if (this.mobileLookPointerId === null) {
+          this.mobileLookPointerId = pointer.id;
+          this.aim = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
           this.shoot();
         }
         return;
@@ -245,7 +242,7 @@ export class MissionScene extends Phaser.Scene {
       this.shoot();
     });
     this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
-      this.desktopFireHeld = false;
+      if (!this.isMobileControls) this.desktopFireHeld = false;
       if (pointer.id === this.mobileLookPointerId) this.mobileLookPointerId = null;
     });
     this.events.on(Phaser.Scenes.Events.RESUME, this.onMissionResume, this);
@@ -335,11 +332,6 @@ export class MissionScene extends Phaser.Scene {
       + Math.PI / 2 + this.reloadPose * 0.12);
   }
 
-  private updateCenteredMobileAim(): void {
-    const point = this.cameras.main.getWorldPoint(GAME_WIDTH / 2, GAME_HEIGHT / 2);
-    this.aim = { x: point.x, y: point.y };
-  }
-
   private getWeaponMuzzle(): Point {
     const rig = this.weaponRig;
     const rotation = rig?.rotation ?? 0;
@@ -358,10 +350,9 @@ export class MissionScene extends Phaser.Scene {
       this.aim = moveAim(this.aim, this.aimStickVector, this.currentSettings.aimSensitivity,
         inputDelta, GAME_WIDTH, GAME_HEIGHT);
     }
-    if (this.isMobileControls && this.currentSettings.mobileControlMode === 'swipe') this.updateCenteredMobileAim();
-    const lookX = this.aim.x / GAME_WIDTH - 0.5;
-    const lookY = this.aim.y / GAME_HEIGHT - 0.5;
-    const parallaxEnabled = !this.isMobileControls && this.currentSettings.parallaxEnabled && this.currentSettings.graphicsQuality !== 'low';
+    const lookX = Phaser.Math.Clamp(this.cameras.main.scrollX / 420, -1, 1);
+    const lookY = Phaser.Math.Clamp(this.cameras.main.scrollY / 180, -1, 1);
+    const parallaxEnabled = this.currentSettings.parallaxEnabled && this.currentSettings.graphicsQuality !== 'low';
     this.parallaxFar?.setPosition(parallaxEnabled ? -lookX * 4 : 0, parallaxEnabled ? -lookY * 2 : 0);
     this.parallaxMid?.setPosition(parallaxEnabled ? -lookX * 9 : 0, parallaxEnabled ? -lookY * 4 : 0);
     this.parallaxNear?.setPosition(parallaxEnabled ? lookX * 13 : 0, parallaxEnabled ? lookY * 6 : 0);
@@ -417,11 +408,11 @@ export class MissionScene extends Phaser.Scene {
   private drawBackground(): void {
     this.backdrop.clear();
     this.backdrop.fillGradientStyle(0x18212c, 0x18212c, 0x292a31, 0x121820, 1);
-    const overscan = this.isMobileControls ? 240 : 0;
+    const overscan = this.isMobileControls ? 520 : 0;
     this.backdrop.fillRect(-overscan, this.isMobileControls ? -140 : 0, GAME_WIDTH + overscan * 2, GAME_HEIGHT + (this.isMobileControls ? 280 : 0));
     this.backdrop.fillStyle(0x8c3333, 0.13); this.backdrop.fillRect(0, 100, GAME_WIDTH, 340);
     this.backdrop.fillStyle(0xe9b868, 0.09); this.backdrop.fillRect(0, 100, GAME_WIDTH, 10);
-    for (let i = 0; i < 9; i += 1) {
+    for (let i = -4; i < 14; i += 1) {
       const x = 80 + i * 140;
       this.backdrop.fillStyle(0xf3bd66, 0.09); this.backdrop.fillCircle(x, 180, 54);
       this.backdrop.fillStyle(0x111820, 0.42); this.backdrop.fillRect(x - 43, 230, 86, 190);
@@ -441,7 +432,7 @@ export class MissionScene extends Phaser.Scene {
     if (this.currentSettings.graphicsQuality === 'low') return;
 
     far.fillStyle(0x09131e, 0.52);
-    for (let i = 0; i < 13; i += 1) {
+    for (let i = -5; i < 18; i += 1) {
       const x = -24 + i * 108;
       const top = 92 + (i % 4) * 22;
       const width = 82 + (i % 3) * 14;
@@ -456,7 +447,7 @@ export class MissionScene extends Phaser.Scene {
     }
 
     mid.fillStyle(0x14202b, 0.34);
-    for (let i = 0; i < 8; i += 1) {
+    for (let i = -3; i < 11; i += 1) {
       const x = i * 188 - 42;
       mid.fillRoundedRect(x, 138 + (i % 2) * 12, 42, 388, 7);
       mid.fillStyle(0xd2a26d, 0.12);
