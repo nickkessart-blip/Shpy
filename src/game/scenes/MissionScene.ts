@@ -102,7 +102,7 @@ export class MissionScene extends Phaser.Scene {
   private aimStickActive = false;
   private aimStickPointerId: number | null = null;
   private mobileLookPointerId: number | null = null;
-  private appliedMobileControlMode: 'tap' | 'swipe' | 'stick' = 'tap';
+  private appliedMobileControlMode: 'tap' | 'stick' = 'tap';
 
   constructor() { super('Mission'); }
 
@@ -350,8 +350,12 @@ export class MissionScene extends Phaser.Scene {
       this.aim = moveAim(this.aim, this.aimStickVector, this.currentSettings.aimSensitivity,
         inputDelta, GAME_WIDTH, GAME_HEIGHT);
     }
-    const lookX = Phaser.Math.Clamp(this.cameras.main.scrollX / 420, -1, 1);
-    const lookY = Phaser.Math.Clamp(this.cameras.main.scrollY / 180, -1, 1);
+    const lookX = this.isMobileControls
+      ? Phaser.Math.Clamp(this.cameras.main.scrollX / 420, -1, 1)
+      : this.aim.x / GAME_WIDTH - 0.5;
+    const lookY = this.isMobileControls
+      ? Phaser.Math.Clamp(this.cameras.main.scrollY / 180, -1, 1)
+      : this.aim.y / GAME_HEIGHT - 0.5;
     const parallaxEnabled = this.currentSettings.parallaxEnabled && this.currentSettings.graphicsQuality !== 'low';
     this.parallaxFar?.setPosition(parallaxEnabled ? -lookX * 4 : 0, parallaxEnabled ? -lookY * 2 : 0);
     this.parallaxMid?.setPosition(parallaxEnabled ? -lookX * 9 : 0, parallaxEnabled ? -lookY * 4 : 0);
