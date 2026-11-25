@@ -79,6 +79,14 @@ describe('world-space mobile aim and camera follow', () => {
       .toEqual({ x: 420, y: 180 });
   });
 
+  it('keeps full-stick movement controllable at maximum sensitivity', () => {
+    const velocity = getAimVelocity({ x: 1, y: 0 }, 4);
+    expect(velocity.x).toBeLessThanOrEqual(1);
+    const moved = moveAimInWorld({ x: 640, y: 360 }, { x: 1, y: 0 }, 1.8, 100,
+      { minX: -420, maxX: 1700, minY: -180, maxY: 900 });
+    expect(moved.x - 640).toBeLessThan(50);
+  });
+
   it('applies drag sensitivity to world-space reticle travel', () => {
     expect(moveAimByPointerDelta({ x: 500, y: 300 }, { x: 20, y: -10 }, 2, worldBounds))
       .toEqual({ x: 540, y: 280 });
