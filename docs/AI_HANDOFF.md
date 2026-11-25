@@ -334,3 +334,12 @@ The user reports a complete failure in graphics quality and mobile shooting and 
 - The button displays cooldown seconds and becomes disabled until ready; a green slash/ring, confirmation SFX and dodge haptic mark a successful miss.
 - Unit tests cover duration/cooldown, crouch ramp, active window, hit-point separation and invalid data.
 - This is a timed duck only. There is no lateral strafe, cover interception or projectile destruction. Physical Android testing and balance tuning remain outstanding.
+## First-operation interactive tutorial — 2026-11-26
+
+- Save schema is v7 with `tutorialCompleted`. New saves default false; v1-v6 migrations set true so existing careers are not forced into onboarding. `SaveService.completeTutorial()` persists finish/skip.
+- Runs only on the first Casino operation for an incomplete save. It is a non-pausing top-center card with skip.
+- Steps: `fire` advances on the first actual player shot; `reload` on starting a valid reload; `telegraph` changes to `dodge` when an enemy projectile launches; `dodge` advances only after the incoming projectile is actually avoided; `cover` advances when a hidden guard peeks; `finish` persists completion after a kill.
+- The signal card explains the red aim ring. A kill/group-clear fallback completes if the player defeats the whole opening group before a peek event.
+- Desktop copy: mouse, R, Shift. Touch copy: aim stick, FIRE/RELOAD, УКЛОН. The first-op tutorial currently covers core combat, not the Casino signature mechanic.
+- Pure transition rules and sequence tests: `src/game/systems/missions/firstOperationTutorial.ts` and `.test.ts`.
+- Physical Android positioning/readability and first-time-player validation remain outstanding.

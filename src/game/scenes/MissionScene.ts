@@ -33,8 +33,10 @@ import {
   getFirstPersonWeaponMuzzlePoint,
   getFirstPersonWeaponRotationOffset,
 } from '../systems/combat/weaponViewmodel';
+import { advanceFirstOperationTutorial, type TutorialEvent } from '../systems/missions/firstOperationTutorial';
 
 type EnemyState = 'Entering' | 'Exposed' | 'Aiming' | 'Attacking' | 'SeekingCover' | 'Hidden' | 'Peeking' | 'Repositioning' | 'Defeated';
+type TutorialStep = 'fire' | 'reload' | 'telegraph' | 'dodge' | 'cover' | 'finish';
 interface RuntimeEnemy {
   uid: number; type: EnemyType; x: number; baseX: number; y: number; originY: number; hp: number; maxHp: number;
   coverId?: string; state: EnemyState; timer: number;
@@ -122,6 +124,12 @@ export class MissionScene extends Phaser.Scene {
   private sceneDef!: MissionSceneDefinition;
   private missionScenes: MissionSceneDefinition[] = CASINO_MISSION;
   private pauseOverlay?: Phaser.GameObjects.Container;
+  private tutorialStep: TutorialStep | null = null;
+  private tutorialOverlay?: Phaser.GameObjects.Container;
+  private tutorialTitle?: Phaser.GameObjects.Text;
+  private tutorialBody?: Phaser.GameObjects.Text;
+  private tutorialProgress?: Phaser.GameObjects.Text;
+  private tutorialSignalSeen = false;
   private resultSent = false;
   private isMobileControls = false;
   private mobileFireHeld = false;
@@ -163,6 +171,12 @@ export class MissionScene extends Phaser.Scene {
     FeedbackService.ensureMusic(this);
     this.startedAt = Date.now();
     this.missionScenes = getMissionDefinition(runSession.missionId).scenes;
+    this.tutorialStep = runSession.missionId === 'casino' && !initialSave.tutorialCompleted ? 'fire' : null;
+    this.tutorialOverlay = undefined;
+    this.tutorialTitle = undefined;
+    this.tutorialBody = undefined;
+    this.tutorialProgress = undefined;
+    this.tutorialSignalSeen = false;
     this.aim = { x: GAME_WIDTH / 2, y: GAME_HEIGHT / 2 };
     this.cameras.main.setScroll(0, 0);
     this.cameras.main.setBounds(-420, -180, GAME_WIDTH + 840, GAME_HEIGHT + 360);
@@ -342,6 +356,7 @@ export class MissionScene extends Phaser.Scene {
     });
 
     this.loadMissionScene(0);
+    if (this.tutorialStep) this.createTutorialOverlay();
     this.showToast('УСТРАНИТЕ ВСЕХ ПРОТИВНИКОВ', 1800);
   }
 
@@ -922,6 +937,7 @@ export class MissionScene extends Phaser.Scene {
       uid: this.uniqueId++, type: enemy.type, start,
       target: { x: target.x, y: target.y }, elapsedMs: 0, durationMs, damage,
     });
+    this.advanceTutorial('projectile');
     this.impactEffects.push({
       x: start.x, y: start.y, life: 130, maxLife: 130, kind: 'enemy-muzzle', damage: 0,
     });
@@ -948,6 +964,7 @@ export class MissionScene extends Phaser.Scene {
           x: projectile.target.x, y: projectile.target.y,
           life: 300, maxLife: 300, kind: 'player-dodge', damage: 0,
         });
+        this.advanceTutorial('evade');
         FeedbackService.play(this, 'confirm', 0.38);
         this.showToast('УКЛОНЕНИЕ • ПРОМАХ', 420);
         continue;
@@ -985,7 +1002,9 @@ export class MissionScene extends Phaser.Scene {
       switch (enemy.state) {
         case 'Exposed': {
           const bossAimScale = enemy.type === 'boss' ? [1, 0.8, 0.62][enemy.bossPhase] : 1;
-          enemy.state = 'Aiming'; enemy.timer = Math.round(def.aimMs * bossAimScale); break;
+          enemy.state = 'Aiming'; enemy.timer = Math.round(def.aimMs * bossAimScale);
+          if (this.tutorialStep === 'telegraph') this.tutorialSignalSeen = true;
+          break;
         }
         case 'Aiming': {
           const bossDamageScale = enemy.type === 'boss' ? [1, 1.25, 1.5][enemy.bossPhase] : 1;
@@ -1026,6 +1045,7 @@ export class MissionScene extends Phaser.Scene {
           break;
         case 'Hidden': {
           enemy.state = 'Peeking';
+          this.advanceTutorial('enemy-peek');
           enemy.timer = def.peekMs;
           enemy.phase += 1;
           const cover = this.sceneDef.covers.find((item) => item.id === enemy.coverId);
@@ -1064,6 +1084,7 @@ export class MissionScene extends Phaser.Scene {
     this.magazine -= 1;
     this.storeCurrentAmmo();
     this.shots += 1;
+    this.advanceTutorial('shot');
     this.shotCooldown = weaponStats.shotCooldownMs;
     this.shotFlash = this.currentWeaponId === 'shotgun' ? 220 : 165;
     this.weaponRecoil = weapon.recoil * 2.8;
@@ -1183,6 +1204,11 @@ export class MissionScene extends Phaser.Scene {
         result.enemy.state = 'Defeated';
         result.enemy.deathElapsedMs = 0;
         this.kills += 1;
+        this.advanceTutorial('kill');
+        if (this.tutorialStep === 'cover' && this.enemies.every((enemy) => enemy.state === 'Defeated')) {
+          this.advanceTutorial('enemy-peek');
+          this.advanceTutorial('kill');
+        }
         const xp = result.enemy.type === 'boss' ? BALANCE.rewards.xp.boss : BALANCE.rewards.xp.kill;
         const dollars = result.enemy.type === 'boss' ? BALANCE.rewards.dollars.boss : BALANCE.rewards.dollars.kill;
         this.award(xp, dollars);
@@ -1219,6 +1245,7 @@ export class MissionScene extends Phaser.Scene {
     if (this.magazine >= weaponStats.magazine || this.reserve <= 0) return;
     this.reloading = weaponStats.reloadSeconds * 1000;
     this.reloadPose = 1;
+    this.advanceTutorial('reload');
     FeedbackService.play(this, 'reload', 0.75);
     triggerHaptic('reload');
     this.showToast('ПЕРЕЗАРЯДКА…', this.reloading);
@@ -1733,6 +1760,83 @@ export class MissionScene extends Phaser.Scene {
       [shade, label, hint, resume, resumeLabel, settingsButton, settingsLabel]).setDepth(100);
   }
 
+  private createTutorialOverlay(): void {
+    if (!this.tutorialStep) return;
+    const panel = this.add.container(GAME_WIDTH / 2, 150).setDepth(80).setScrollFactor(0);
+    const background = this.add.rectangle(0, 0, 720, 116, 0x111b26, 0.96).setStrokeStyle(2, 0xd0a86f, 0.78);
+    background.setInteractive();
+    background.on('pointerdown', (_pointer: Phaser.Input.Pointer, _x: number, _y: number, event: Phaser.Types.Input.EventData) => event.stopPropagation());
+    const kicker = this.add.text(-330, -43, 'ИНСТРУКТАЖ • ПЕРВАЯ ОПЕРАЦИЯ', {
+      fontSize: '11px', color: '#d7b77e', fontStyle: 'bold', letterSpacing: 1.6,
+    }).setOrigin(0, 0.5);
+    this.tutorialProgress = this.add.text(330, -43, '', {
+      fontSize: '11px', color: '#9fadb9', fontStyle: 'bold',
+    }).setOrigin(1, 0.5);
+    this.tutorialTitle = this.add.text(-330, -15, '', {
+      fontSize: '17px', color: '#f5d9a4', fontStyle: 'bold',
+    }).setOrigin(0, 0.5);
+    this.tutorialBody = this.add.text(-330, 18, '', {
+      fontSize: '14px', color: '#e0e6eb', wordWrap: { width: 650 },
+    }).setOrigin(0, 0.5);
+    const skip = this.add.text(330, 48, 'ПРОПУСТИТЬ ×', {
+      fontSize: '11px', color: '#c8d2dc', fontStyle: 'bold', backgroundColor: '#354656', padding: { x: 9, y: 5 },
+    }).setOrigin(1, 0.5).setInteractive({ useHandCursor: true });
+    skip.on('pointerdown', (_pointer: Phaser.Input.Pointer, _x: number, _y: number, event: Phaser.Types.Input.EventData) => {
+      event.stopPropagation();
+      this.skipTutorial();
+    });
+    panel.add([background, kicker, this.tutorialProgress, this.tutorialTitle, this.tutorialBody, skip]);
+    this.tutorialOverlay = panel;
+    this.refreshTutorialOverlay();
+  }
+
+  private refreshTutorialOverlay(): void {
+    const step = this.tutorialStep;
+    if (!step || !this.tutorialTitle || !this.tutorialBody || !this.tutorialProgress) return;
+    const index = ['fire', 'reload', 'telegraph', 'dodge', 'cover', 'finish'].indexOf(step) + 1;
+    const content: Record<TutorialStep, { title: string; body: string }> = {
+      fire: { title: 'ПРИЦЕЛ И ОГОНЬ', body: this.isMobileControls
+        ? 'Наведи прицел левым стиком на охранника и нажми ОГОНЬ. Зелёная рамка означает, что линия выстрела свободна.'
+        : 'Наведи мышь на охранника и нажми левую кнопку. Зелёный прицел означает, что цель доступна.' },
+      reload: { title: 'ПЕРЕЗАРЯДКА', body: this.isMobileControls
+        ? 'Нажми кнопку ЗАРЯД. Не жди пустого магазина: перезаряжаться можно заранее.'
+        : 'Нажми R, когда магазин не полный. Перезаряжаться можно заранее, не обязательно ждать нуля.' },
+      telegraph: { title: 'СЛЕДИ ЗА СИГНАЛОМ', body: this.tutorialSignalSeen
+        ? 'Красное кольцо заполняется вокруг врага. Дождись вспышки и появления летящего трассера.'
+        : 'После красного сигнала враг откроет огонь. Следи за кольцом вокруг охранника и не трать уклонение заранее.' },
+      dodge: { title: 'УКЛОНЕНИЕ', body: this.isMobileControls
+        ? 'Когда увидишь летящий снаряд, нажми УКЛОН. Приседание короткое: попади в момент приближения пули.'
+        : 'Когда увидишь летящий снаряд, нажми Shift. Приседание короткое: попади в момент приближения пули.' },
+      cover: { title: 'УКРЫТИЯ', body: 'Охранник прячется за мебелью. Янтарный прицел означает, что укрытие блокирует выстрел. Жди, пока враг выглянет.' },
+      finish: { title: 'ЗАВЕРШИ ОПЕРАЦИЮ', body: 'Враг снова открыт. Устрани хотя бы одну цель, чтобы завершить инструктаж и продолжить без подсказок.' },
+    };
+    this.tutorialTitle.setText(index + '/6  •  ' + content[step].title);
+    this.tutorialBody.setText(content[step].body);
+    this.tutorialProgress.setText('ОБУЧЕНИЕ ' + index + '/6');
+  }
+
+  private advanceTutorial(event: TutorialEvent): void {
+    if (!this.tutorialStep) return;
+    const next = advanceFirstOperationTutorial(this.tutorialStep, event);
+    if (next === this.tutorialStep) return;
+    if (next === 'complete') { this.finishTutorial(); return; }
+    this.tutorialStep = next;
+    this.refreshTutorialOverlay();
+  }
+
+  private finishTutorial(): void {
+    if (!this.tutorialStep) return;
+    saveService.completeTutorial();
+    this.tutorialStep = null;
+    this.tutorialOverlay?.destroy(true);
+    this.tutorialOverlay = undefined;
+    this.tutorialTitle = undefined;
+    this.tutorialBody = undefined;
+    this.tutorialProgress = undefined;
+    this.showToast('ИНСТРУКТАЖ ЗАВЕРШЁН • УДАЧНОЙ ОХОТЫ', 1500);
+  }
+
+  private skipTutorial(): void { this.finishTutorial(); }
   private getDisplayedWaveNumber(): number {
     return Math.min(this.waveIndex + 1, this.sceneDef.waves.length);
   }

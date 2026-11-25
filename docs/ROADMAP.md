@@ -69,7 +69,7 @@ Implementation status (2026-11-25): PR #18 adds a deterministic route clock, rou
 
 ### P2 — Prologue, campaign writing and onboarding
 - [ ] Write the first campaign's actual narrative beats and antagonist cast; retain Vulkan as one major villain.
-- [ ] Build the first-operation tutorial for aim, fire, reload, enemy telegraphs, cover and the Casino signature mechanic.
+- [x] Build a contextual first-operation tutorial for aim/fire, reload, attack telegraph, timed dodge, cover/peek and first elimination. Steps advance from live gameplay events; skip/completion persist in save schema v7. The Casino signature mechanic explanation remains a follow-up.
 - [ ] Add short operation intros/outros, radio dialogue, messages and evidence/debrief delivery.
 - [ ] Introduce player-agent/operative terminology consistently.
 
@@ -177,3 +177,9 @@ Every completed, CI-validated implementation slice must be integrated into `main
 - [x] Move the first-person rig and chest hit point down through a short duck curve; resolve enemy rounds against the current point rather than automatically damaging the player.
 - [x] Add a 2.4 s cooldown, button countdown, success VFX, sound/haptic feedback and deterministic dodge-window tests.
 - [ ] Add other counterplay methods (cover/interception) and tune readability/timing on physical Android.
+### First-operation interactive tutorial — 2026-11-26
+- [x] New careers enter a six-step contextual guide (aim/fire → reload → enemy telegraph → dodge → cover/peek → first elimination).
+- [x] Advance from real shots, reload input, launched enemy rounds, successful evasion, cover peek and kill events.
+- [x] Add adaptive desktop/touch instructions, always-available skip and persistent completion.
+- [x] Migrate v1-v6 saves as already tutorial-complete so existing players are not forced through onboarding.
+- [ ] Add the Casino signature-mechanic lesson and browser/physical Android usability validation.
