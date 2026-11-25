@@ -221,3 +221,10 @@ Current numeric values in `balance.ts` and `enemies.ts` are prototype values, no
 - Enemy rounds use only non-destroyed cover. Guards assigned to destroyed cover lose that assignment, exit Hidden/SeekingCover/Peeking and return to exposed combat. Future waves ignore destroyed cover for spawn clearance.
 - Cover damage does not add enemy hit/kill credit and does not grant XP. It consumes regular ammo. Cover state resets on entering a new authored room, not on each wave.
 - Deterministic tests cover type-specific HP, damage threshold, lethal clamp and invalid inputs.
+## Enemy fire erodes physical cover — 2026-11-26
+
+- Enemy rounds intercepted by intact/damaged cover now reduce that cover's durability at impact: Guard 14, Assault 20, Armored 18, Boss 30 HP per round.
+- A threshold crossing produces the same cracked/tinted durability state as player fire; destruction uses the same rubble state, removes the cover from future LOS/spawn checks and releases guards assigned to that cover.
+- This means holding one table indefinitely is no longer guaranteed. Repeated enemy volleys gradually open a lane; the player can relocate, dodge or eliminate the shooter before the cover fails.
+- A projectile's cover collision and endpoint are committed when it is launched. If the cover is destroyed before that specific round arrives, the round still strikes the recorded impact point; later shots use the updated geometry and can pass through the open lane.
+- Direct player cover damage and enemy-round cover damage use the same durability state; neither awards enemy kill/XP credit.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findEnemyProjectileCoverImpact } from './enemyProjectileCover';
+import { findEnemyProjectileCoverImpact, getEnemyProjectileCoverDamage } from './enemyProjectileCover';
 
 describe('enemy projectile cover collision', () => {
   it('returns null when every cover is outside the firing line', () => {
@@ -43,6 +43,13 @@ describe('enemy projectile cover collision', () => {
       { x: 50, y: 50 }, { x: 100, y: 50 },
       [{ x: 40, y: 40, width: 30, height: 30 }],
     )).toEqual({ point: { x: 50, y: 50 }, progress: 0, coverIndex: 0 });
+  });
+
+  it('applies archetype-specific durability damage when enemy rounds hit cover', () => {
+    expect(getEnemyProjectileCoverDamage('guard')).toBe(14);
+    expect(getEnemyProjectileCoverDamage('assault')).toBe(20);
+    expect(getEnemyProjectileCoverDamage('armored')).toBe(18);
+    expect(getEnemyProjectileCoverDamage('boss')).toBe(30);
   });
 
   it('rejects non-finite segment or invalid cover geometry', () => {

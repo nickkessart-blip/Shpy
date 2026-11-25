@@ -24,7 +24,7 @@ import {
   getEnemyHitAreaMultiplier,
 } from '../systems/combat/enemyCombatRules';
 import { getEnemyProjectileTravelMs, sampleEnemyProjectile } from '../systems/combat/enemyProjectile';
-import { findEnemyProjectileCoverImpact } from '../systems/combat/enemyProjectileCover';
+import { findEnemyProjectileCoverImpact, getEnemyProjectileCoverDamage } from '../systems/combat/enemyProjectileCover';
 import {
   PLAYER_DODGE_COOLDOWN_MS,
   PLAYER_DODGE_DURATION_MS,
@@ -67,6 +67,7 @@ interface RuntimeEnemy {
 interface RuntimeEnemyProjectile {
   uid: number; type: EnemyType; start: Point; target: Point;
   elapsedMs: number; durationMs: number; damage: number; blockedByCover: boolean;
+  blockedCoverId?: string; coverDamage: number;
 }
 interface RuntimeCover extends CoverDefinition, CoverDurabilityState {}
 
@@ -990,13 +991,17 @@ export class MissionScene extends Phaser.Scene {
       x: enemy.x + (target.x >= enemy.x ? 22 : -22),
       y: enemy.y - 62,
     };
-    const coverImpact = findEnemyProjectileCoverImpact(start, target, this.getActiveCovers());
+    const activeCovers = this.getActiveCovers();
+    const coverImpact = findEnemyProjectileCoverImpact(start, target, activeCovers);
+    const blockedCover = coverImpact ? activeCovers[coverImpact.coverIndex] : undefined;
     const durationMs = getEnemyProjectileTravelMs(enemy.type)
       * (coverImpact ? Math.max(0.12, coverImpact.progress) : 1);
     this.enemyProjectiles.push({
       uid: this.uniqueId++, type: enemy.type, start,
       target: coverImpact?.point ?? { x: target.x, y: target.y },
       elapsedMs: 0, durationMs, damage, blockedByCover: coverImpact !== null,
+      blockedCoverId: blockedCover?.id,
+      coverDamage: blockedCover ? getEnemyProjectileCoverDamage(enemy.type) : 0,
     });
     this.advanceTutorial('projectile');
     this.impactEffects.push({
@@ -1017,11 +1022,21 @@ export class MissionScene extends Phaser.Scene {
 
       this.enemyProjectiles.splice(index, 1);
       if (projectile.blockedByCover) {
-        this.impactEffects.push({
-          x: projectile.target.x, y: projectile.target.y,
-          life: 420, maxLife: 420, kind: 'cover', damage: 0,
-        });
-        FeedbackService.play(this, 'hit', 0.28);
+        const cover = projectile.blockedCoverId ? this.getLiveCover(projectile.blockedCoverId) : undefined;
+        if (cover && projectile.coverDamage > 0) {
+          const previousStage = cover.stage;
+          const destroyed = this.applyCoverHit(cover, projectile.coverDamage, projectile.target);
+          if (destroyed) this.showToast('ВРАЖЕСКИЙ ОГОНЬ • УКРЫТИЕ РАЗРУШЕНО', 850);
+          else if (previousStage === 'intact' && cover.stage === 'damaged') {
+            this.showToast('ВРАЖЕСКИЙ ОГОНЬ • УКРЫТИЕ ТРЕЩИТ', 650);
+          }
+        } else {
+          this.impactEffects.push({
+            x: projectile.target.x, y: projectile.target.y,
+            life: 420, maxLife: 420, kind: 'cover', damage: 0,
+          });
+          FeedbackService.play(this, 'hit', 0.24);
+        }
         continue;
       }
       const currentPlayerPoint = this.getPlayerHitPoint();

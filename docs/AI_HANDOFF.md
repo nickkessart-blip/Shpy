@@ -384,3 +384,10 @@ The user reports a complete failure in graphics quality and mobile shooting and 
 - When a cover is destroyed, enemies assigned to it lose `coverId`; any in SeekingCover/Hidden/Peeking exit to Exposed after their active tweens are killed. Future waves omit destroyed cover from SpawnDirector clearance.
 - Enemy projectile interception consults active cover, so newly destroyed cover opens the firing lane; already launched rounds retain their recorded endpoint.
 - Durability tests cover cover-specific initial HP, damage threshold, lethal clamp, already destroyed and invalid values. Physical Android readability/balance remains unverified.
+## Enemy fire erodes cover — 2026-11-26
+
+- Enemy projectiles now store `blockedCoverId` and `coverDamage` at launch alongside their previously recorded cover endpoint. Cover damage by attacker: Guard 14, Assault 20, Armored 18, Boss 30.
+- At projectile arrival, if the recorded cover still exists, call the same `applyCoverHit()` used by player fire. It creates the cover impact effect, updates stage/HP, and releases enemies assigned to the destroyed object.
+- Toasts occur only on stage transition (intact→damaged) or destruction to avoid one message per ordinary impact. If the recorded cover was already destroyed while the round was in flight, the round still resolves at its committed impact point and cannot damage the player.
+- Subsequent shots compute line-of-sight from `getActiveCovers()`, so new rounds pass through destroyed cover.
+- Pure damage values are in `enemyProjectileCover.ts`, covered by its Vitest file.

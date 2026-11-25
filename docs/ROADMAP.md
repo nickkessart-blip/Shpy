@@ -212,3 +212,9 @@ Every completed, CI-validated implementation slice must be integrated into `main
 - [x] Remove destroyed cover from player/enemy line-of-sight and spawn-clearance checks. Guards assigned to destroyed cover are forced back into exposed combat.
 - [x] Keep damaged cover physically solid until destroyed; add deterministic durability tests for thresholds, clamping and invalid values.
 - [ ] Tune durability/visual clarity on desktop browser and physical Android; destructible cover particles and rubble physics remain future polish.
+### Enemy fire erodes cover — 2026-11-26
+- [x] Enemy rounds intercepted by furniture apply archetype-specific cover damage and reuse the player's crack/destruction states.
+- [x] Destroyed cover disappears from later firing/spawn calculations and releases assigned guards.
+- [x] Keep in-flight shot outcomes deterministic; projectiles launched after destruction use the open lane.
+- [x] Add unit coverage for damage values by enemy archetype.
+- [ ] Tune cover survivability and relocation pressure on physical Android after visual playtesting.
