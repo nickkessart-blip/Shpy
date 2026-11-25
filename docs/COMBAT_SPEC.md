@@ -1,94 +1,125 @@
 # SHPY — COMBAT SPECIFICATION
+Version 2.0 | Rebaseline: 2026-11-25
 
-## Кампания «Восточный экспресс» — 2026-11-23
+## 1. Combat goals
 
-- Добавлена отдельная операция, открывающаяся с 4-го уровня аккаунта: шесть волн в пассажирском вагоне, финальный босс.
-- Добавлен собственный векторный фон вагона и укрытия в виде кресел. Это лёгкий оригинальный SVG-ассет, а не готовая покадровая иллюстрация.
-- Операция использует общий цикл миссии, наград и отчёта; название операции берётся из каталога.
+- Deliver a readable spy-action rail shooter, not a set of unrelated stationary target screens.
+- Keep combat responsive and fair on desktop and touch devices.
+- Make enemy archetypes mechanically distinct.
+- Ensure cover, environmental events and support systems obey visible world rules.
+- Support manual, assisted and autonomous controllers over the same combat simulation.
 
+## 2. Rail and coordinate model
 
-## Android hybrid aiming — SHPY 0.9 (2026-11-25)
+A mission progresses along an authored route. The rail timeline controls camera travel, background movement, segment transitions, enemy entry windows and location events. Background art is split into independent far/mid/near/foreground layers with authored scroll multipliers and looping/transition rules. Foreground props and hazards are separate objects with their own world positions.
 
-- Primary touch scheme: tap the playfield to set aim and fire once; drag the same pointer to move the aim point and pan the camera.
-- Alternative aim-stick remains available.
-- First-person weapon rig is screen-anchored on touch devices; recoil and reload pose remain visual feedback.
-- Camera bounds are widened to ±420 px horizontally and ±180 px vertically; the background is overscanned and layered parallax responds on mobile.
-- The separate fire button supports second-finger hold-to-fire; the virtual aim stick remains an alternative. Physical Android testing is still required. Desktop mouse aiming is unchanged.
+Maintain distinct coordinate spaces:
+- route/world coordinates;
+- camera coordinates and transform;
+- screen coordinates;
+- HUD/viewport coordinates;
+- hitbox coordinates.
 
-Версия 1.0.0 | Первый боевой прототип
+Pointer input is transformed from screen to world using the current camera transform. Visual shake, parallax offsets and decorative layers must never shift authoritative enemy hitboxes. The reticle must map directly to the pointer after the transform; do not apply a curved movement response or position-dependent arc. Any optional aim smoothing must be explicitly tuned, bounded and disabled for precision debugging.
 
-## Цель
-Проверить, интересна ли повторяемая статичная перестрелка с отзывчивым прицеливанием, ограниченными патронами, укрытиями и разными противниками.
+## 3. Weapon and first-person rig
 
-## Управление
-Desktop: мышь — прицел, ЛКМ — выстрел, R — перезарядка, Esc — пауза/меню.
-Mobile: доступны две схемы. **Гибрид** — тап по игровому полю задаёт прицел и стреляет; перетаскивание того же пальца непрерывно перемещает прицел и панорамирует камеру. Отдельная кнопка справа поддерживает удержание огня вторым пальцем. **Виртуальный джойстик** — левый стик задаёт направление и скорость прицела, правая кнопка удерживает огонь. Чувствительность 0.5×–4×, мёртвая зона минимальна, отклик нелинеен и остаётся отзывчивым при просадке FPS, поскольку время input не обрезается ограничителем шага AI. В обоих режимах доступны перезарядка, смена оружия, граната и аптечка. В stick-профиле независимые pointerId исключают взаимную отмену касаний. Desktop: мышь перемещает прицел; ЛКМ стреляет, а автоматические режимы поддерживают огонь при удержании. Во время перестрелки игрок неподвижен; переход к следующей зоне выполняется короткой автоматической walk-сценой.
+The weapon rig occupies the lower foreground. Its hierarchy separates:
+- agent torso/arm and uniform sleeve;
+- hand/glove;
+- weapon body;
+- attachments;
+- muzzle point and firing effects.
 
-## Свободная стрельба
-Игрок может нажать огонь в любой момент. Фаза врага не запрещает выстрел. Результат зависит от патронов, состояния оружия, координат прицела, хитбокса и препятствий. Скрытый за укрытием враг не получает урон; открытый, выглядывающий или перемещающийся может быть поражён.
+Weapon skins affect the weapon layer, agent uniforms affect the arm/sleeve layer, and attachments affect their own visible geometry. One combined sprite tinted in code is not an acceptable final cosmetic pipeline.
 
-## Стартовый пистолет
-Текущий тестовый баланс: магазин 6/8/10/12/15 патронов; урон 1/1.5/2/2.1/2.2; множитель головы ×2/2.05/2.1/2.15/2.2; перезарядка 2.0/1.5/1.0/0.85/0.7 секунды. Охранник имеет 5 HP, штурмовик 8 HP, бронированный 12 HP. Даже максимальный урон не позволяет устранить обычного врага одним попаданием в голову. Стартовый резерв — 120 патронов; между зонами выдаётся ещё 48 патронов и восстанавливается до 30 HP. Это первая плейтестовая настройка, не финальный баланс.
+Each weapon definition exposes at least: role, damage per projectile/shot, fire interval, magazine, reserve, reload time, spread, recoil, projectile/pellet count, damage modifiers and special behaviour. Comparison UI derives DPS where mathematically meaningful and explains limitations (pellet spread, sustained reload cycle, status effects).
 
-## Попадания
-- отдельные хитбоксы головы и тела;
-- голова наносит повышенный урон, тело — базовый;
-- укрытие блокирует попадание;
-- при наведении на видимую цель проверяется её экранный хитбокс; попадание по цели имеет приоритет над геометрией укрытия;
-- укрытие регистрирует выстрел только когда прицел находится непосредственно на его видимой поверхности;
-- попадание вне целей/укрытий — промах.
-Коэффициент головы не утверждён; x2 можно использовать только как временное тестовое значение.
+Feedback: muzzle flash, tracer/projectile where appropriate, impact effect, hit reaction, damage feedback, enemy attack wind-up, attack launch and player damage. Audio mix must make the music audible without masking critical combat cues.
 
-## Укрытия
-Для MVP — простые прямоугольные/полигональные препятствия и заданные точки укрытия. Hidden блокирует хитбокс врага. Peeking временно открывает его. Перемещение между укрытиями уязвимо. Разрушаемые/пробиваемые укрытия отложены.
+## 4. Enemy archetypes
 
-## Состояния AI
-Exposed, Aiming, Attacking, SeekingCover, Hidden, Peeking, Repositioning, Defeated. У архетипов разные тайминги и переходы. Сложный pathfinding не нужен: точки укрытий задаются сценой, переходы управляются таймерами и событиями.
+Enemies are not differentiated only by HP. Each archetype has an attack/defence loop and a tactical counter:
+- Guard: baseline firearm, predictable cover use and controlled attack timing.
+- Armored: slow, resilient and equipped with protected zones/weak points or a vulnerability window.
+- Assault: fast lane changes, aggressive repositioning and short attack wind-ups.
+- Specialist (future): uses grenades, suppression, shields, cameras or other location interactions.
+- Boss: multi-phase encounter with a unique pattern, arena interaction and clear phase transitions.
 
-## Архетипы
-- Guard: базовая прочность и стандартная атака.
-- Armored: 12 HP, повышенная прочность, медленное перемещение, требует приоритизации.
-- Assault: 8 HP, агрессивная смена позиции, быстрая подготовка атаки, частые выглядывания.
-- Guard: 5 HP; базовая цель, которую нельзя устранить одним выстрелом даже при максимальном улучшении урона.
+Every enemy exposes visible state cues: idle/positioning, preparing attack, attacking, seeking cover, hidden, peeking, repositioning, hit and defeated. Damage/animation offsets never move the authoritative hitbox unexpectedly.
 
-## Атака
-Выбрать цель → показать телеграф → выдержать время реакции → нанести урон → перейти в следующее состояние. Устранение врага отменяет атаку. Прерывание попаданием без убийства — параметр для плейтеста.
+## 5. Cover
 
-## Сцена и волна
-Данные сцены: ID, фон, точки появления, укрытия, пять волн, обязательные цели, условие завершения и следующая сцена. После пятой волны запускается walk-сцена: коридор, анимированная походка героя, затем плавная смена фона без перезапуска Phaser Scene. Волна задаёт типы/количество врагов и задержки. Поддержать фиксированный random seed.
+Cover is a spatial object, not an invisibility toggle.
+- Hidden: the object occludes the relevant body/head hit region and blocks shots along the corresponding line of sight.
+- Peeking: only the visible exposed region can be hit.
+- Repositioning: the enemy travels between valid cover positions and remains targetable where line of sight exists.
+- Attack: the enemy exposes the appropriate body/weapon silhouette and communicates its attack.
+- Destroyed/moved cover, if supported, updates both render and collision/occlusion state.
 
-## Обратная связь
-Временные эффекты: вспышка выстрела, маркер попадания, всплывающий урон, реакция врага, телеграф атаки, индикатор попадания в укрытие, изменение HP. Звук может быть временным или отсутствовать в первом техническом срезе.
+Enemies must not simply disappear when taking cover. Their body should be occluded behind the cover with a readable head/weapon silhouette when appropriate. The same geometry must drive rendering, hit-testing and shot blocking.
 
-## Босс казино
-Финальная шестая волна VIP-зоны — начальник охраны с 42 HP. У него увеличенные хитбоксы и отдельный крупный спрайт. На 66% и 33% здоровья босс переходит в следующую фазу: сокращает время подготовки атаки, чаще меняет позицию и наносит больше урона. За победу выдаётся +150 XP. В перерыве между зонами агент получает +36 патронов и до +20 HP.
+## 6. Spawn composition and spacing
 
-## Постоянные перки
-Все шесть веток имеют пять уровней. Урон повышает обычный урон выстрела; обойма увеличивает размер магазина; перезарядка сокращает её длительность; здоровье повышает максимальные HP; бронежилет снижает входящий урон; меткость усиливает попадания в голову. Репутация остаётся накопительным показателем и открывает следующий уровень каждой ветки, не тратясь.
+Spawn points are authored lanes/regions, not a repeated fixed set of exact coordinates. A seeded director selects from valid candidates while enforcing:
+- minimum screen/world separation between living enemies;
+- no spawn inside cover or a blocked line-of-sight region;
+- no overlap with HUD or first-person rig;
+- role and difficulty composition limits;
+- readable entrance direction and warning where needed;
+- bounded repeat protection so the same wave pattern is not shown every run.
 
-## Проверки
-1. Выстрел по открытому врагу уменьшает HP.
-2. Выстрел по скрытому за укрытием врагу не наносит урон.
-3. Выстрел по выглядывающему врагу может нанести урон.
-4. При нуле патронов выстрел не происходит.
-5. Перезарядка восстанавливает магазин по таймеру.
-6. Устранение отменяет подготовленную атаку.
-7. Сцена завершается только после выполнения условий.
+Do not solve overlap by randomly shifting sprite art without updating the authoritative collision/hitbox data.
 
+## 7. Location events
 
-## Отклик и обратная связь (SHPY 0.6)
-Звук выстрела, попадания, перезарядки, взрыва и UI загружается из локальных CC0-файлов; уровни музыки и SFX независимы. На поддерживаемых мобильных браузерах используется Vibration API с разными шаблонами для выстрела, попадания, урона, перезарядки, гранаты, аптечки, победы и поражения. Отсутствие поддержки вибрации не блокирует игровой процесс. Чувствительность стика, графический пресет, параллакс и тряска камеры сохраняются независимо от боевого прогресса.
+Location-specific events are part of combat and obey a common event contract:
+- stable event ID and location ID;
+- trigger window/condition;
+- warning duration and warning presentation;
+- affected world/screen region;
+- duration and recovery;
+- gameplay effect;
+- counterplay or safe response;
+- interaction with enemy, player and automation controllers.
 
+Examples:
+- East Express tunnel darkness: lights warn before the tunnel; darkness changes visibility but not hitbox math.
+- East Express steam: a marked vent emits a bounded cloud that temporarily obscures a region.
+- Train shake: camera feedback is visual and does not alter aim/hitbox mapping.
+- Warehouse crane/cargo: movement has a path, timing and collision/occlusion update.
+- Embassy camera sweep: visible scan area and alarm state.
+- Vulkan infrastructure: warning stages, hazard volume and disable points.
 
-## Профили оружия и управление (SHPY 0.7)
+## 8. Modifiers
 
-| Оружие | Режим | Особенность попадания | Игровая роль |
-|---|---|---|---|
-| Служебный пистолет | Semi | Один точный выстрел, минимальный разброс | Контроль и точные попадания |
-| Компактный ПП | Auto | Небольшой случайный разброс, высокая скорострельность, низкий урон на пулю | Удержание огня и подавление |
-| Тактический дробовик | Pump | Семь дробин в широком конусе, суммарный урон зависит от числа попаданий | Мощный близкий выстрел, может задевать несколько целей |
-| Штурмовая винтовка | Auto | Малый разброс, средний темп и урон выше ПП | Стабильный огонь на средней дистанции |
+Modifiers are operation-level data layered over a location's permanent signature mechanic. They must state effect, frequency/trigger, counterplay, reward adjustment and compatibility tags. Never produce unavoidable damage or permanent total obscuration. Seed random event selection for repeatable tests.
 
-Отдача и экранное смещение оружия различаются по профилю. Рука напрямую следует за прицелом: опорная точка смещается по горизонтали/вертикали и поворачивается, без сглаживающей задержки. Дробовик тратит один патрон на весь выстрел; метрика попаданий считает успешный триггер, а отображаемый урон учитывает отдельные дробины.
+## 9. Manual, assisted and autonomous controllers
 
-Пистолет остаётся полуавтоматическим. ПП, дробовик и винтовка поддерживают повтор при удержании кнопки, но их интервалы, разброс и урон различаются. Баланс параметров предварительный и требует телефонного плейтеста.
+All controllers use the same combat command interface:
+- Manual controller: player aim, fire, reload and item actions.
+- Assisted controller: selected actions handled by unlocked equipment; player retains target selection and intervention.
+- Autonomous controller: after mission preparation and launch, the simulation handles all combat actions, including target selection, aim, fire, reload, healing, weapon switching and support deployment. The player watches the operation and does not need to click during combat.
+
+Automation cannot bypass weapon cooldowns, ammo, cover, hitboxes, enemy state, location events or mission objective checks. Full autonomy is late-game and is unlocked after the player has learned the relevant operation/sector. A missing/busy support operative cannot appear. An agent assigned to the main operation is unavailable for timed roster assignments.
+
+## 10. Attack and damage feedback
+
+Enemy attack sequence: acquire/select target → visible telegraph → attack launch → travel/impact → damage or miss → recovery. Player can interrupt an attack by defeating or disabling the enemy where design allows. Every damaging hazard needs a warning and a readable affected region.
+
+Player-facing effects should communicate shots, hits, blocked shots, reload state, low supplies, incoming attack and location hazards. Camera shake is optional and must not be required to understand that an event occurred.
+
+## 11. Balance and validation
+
+Balance must be tested across:
+- initial pistol/manual play;
+- early upgrades and first boss;
+- one new weapon and one tactical item;
+- first turret and support operative;
+- late-game assisted builds;
+- fully autonomous operation with low-, medium- and high-investment configurations.
+
+Metrics include time to kill by enemy type, player time-to-failure, ammo consumed, hit/miss ratio, damage received, support contribution, clear time, reward per minute and failure cause. A stronger system should reduce repetitive input while preserving investment, preparation and encounter readability.
+
+Current numeric values in `balance.ts` and `enemies.ts` are prototype values, not approved final balance.
