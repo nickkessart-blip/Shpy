@@ -32,7 +32,7 @@ Older roadmap sections and numeric SHPY prototype phase labels are historical im
 - [x] Start, HQ, Operations, Loadout, Computer, Settings, Mission and Results scenes.
 - [x] Casino operation slice and East Express passenger-carriage slice.
 - [x] Four weapon definitions, six personal upgrade tracks, grenades and medkit.
-- [x] Account progression, Dollars and local save migration through schema v5.
+- [x] Account progression, Dollars and local save migration through schema v6.
 - [x] Operative roster with timed assignments and component rewards.
 - [x] Basic enemy archetypes, state machine, wave flow, cover states and attack telegraphs.
 - [x] Mobile hybrid tap/drag and virtual aim-stick profiles.
@@ -111,3 +111,8 @@ Implementation status (2026-11-25): PR #18 adds a deterministic route clock, rou
 - Add deterministic tests for rail events, spawn spacing, cover/line-of-sight, modifier compatibility, reward pacing and automation decisions.
 - Desktop/browser visual review and physical Android testing are manual checks; a green CI run does not replace them.
 - Never mark a backlog item complete because its UI exists. Verify the mechanic in the running game.
+
+
+## Pages-first release rule
+
+For each completed, CI-validated implementation slice, integrate it into `main` and publish it to GitHub Pages before beginning the next feature. Verify the main deployment workflow and deployed commit SHA, then include the live Pages URL in the user report. PR CI alone is not publication. The user validates the game through Pages, mainly on a phone; treat Pages as the primary review channel.
