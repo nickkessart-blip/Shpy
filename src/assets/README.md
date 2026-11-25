@@ -4,7 +4,7 @@
 
 | Папка | Имя файла | Слот |
 |---|---|---|
-| backgrounds | casino-main.png, casino-bar.png | Фоны сцен казино |
+| backgrounds | casino-main-base/far/mid/near.svg, casino-bar-base/far/mid/near.svg | Раздельные планы казино; исходные casino-main.svg и casino-bar.svg остаются fallback |
 | enemies | guard.png, armored.png, assault.png | Враги |
 
 | weapons | pistol.svg, smg.svg, shotgun.svg, rifle.svg | Пистолет |
