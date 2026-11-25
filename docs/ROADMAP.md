@@ -12,7 +12,7 @@
 - [x] Restore direct tap-to-aim-and-fire as a selectable mobile control profile.
 - [x] Keep swipe camera and aim-stick profiles available alongside tap.
 - [x] Increase weapon kick, muzzle flash and tracer readability without camera shake on mobile.
-- [ ] Wire the existing first-person weapon atlas and CC0 muzzle/impact effects into runtime scenes.
+- [x] Wire the existing first-person weapon atlas and CC0 muzzle/impact effects into runtime scenes (first-person atlas for the weapon rig, impact smoke on hit, muzzle-flare sprite on shot).
 - [ ] Run unit tests and production build; physical Android test remains required.
 
 ## SHPY 0.5.1 — Android camera pass (2026-11-23)
@@ -82,7 +82,7 @@
 - [ ] Физически проверить оба Android-режима, громкость, вибрацию и multi-touch на телефоне (CI не заменяет плейтест на устройстве).
 - [x] Очистка спрайтов завершённых волн и проверка целостности данных миссии.
 - [ ] Реальные 2.5D-перемещения камеры по рельсам во время сцен.
-- [ ] Полные спрайтовые анимации героя/врагов, перезарядки и реакции на попадания.
+- [ ] Полноценные циклические спрайтовые анимации героя/врагов, перезарядки и смерти; сейчас atlas обеспечивает только state-based aim/fire/hit pose switching.
 - [x] Локальные SVG-модели четырёх видов оружия в единой перспективе, с различимыми силуэтами и анимационным follow-offset.
 - [x] Production build отключает source maps; добавлено уведомление об авторских правах и различение лицензий собственных/сторонних ассетов.
 - [ ] Миграция исходников в private source-репозиторий с отдельной публичной веткой/репозиторием Web-дистрибутива; публичные исторические копии нельзя отозвать задним числом.
@@ -132,6 +132,17 @@
 
 Не начинать новые крупные системы (престиж/турели/дроны) до проверки отзывчивости и прохождения первой миссии на Android.
 
+
+## SHPY 0.9 — visual polish follow-up (2026-11-25)
+> Current implementation and validation handoff: [docs/AI_HANDOFF.md](AI_HANDOFF.md).
+- [x] Добавить оригинальные SVG-рамки HUD для HP и боезапаса.
+- [x] Перевести здоровье на 12 кодовых сегментов с частичным заполнением.
+- [x] Перевести боезапас на кодовые сегменты, учитывающие размер магазина.
+- [x] Добавить устойчивые визуальные состояния врагов: дыхание/idle, подготовка атаки, импульс выстрела и реакция на попадание; визуальная анимация не меняет хитбоксы.
+- [x] Добавить AGENTS.md и `.ai/skills/` с обязательными правилами для следующих AI-агентов.
+- [ ] Добавить подготовленный прозрачный 3×4 атлас врагов из Library в GitHub и проверить переключение aim/fire/hit; loader/selection scaffolding уже подготовлены, Kenney/SVG пока остаются runtime fallback.
+- [ ] Добавить полноценные idle/death/reload циклы и дополнительные кадры только после проверки текущих поз и при наличии утверждённых исходных материалов.
+- [ ] Проверить HUD на мобильном разрешении и физическом Android.
 
 ## SHPY 0.9 — гибридное мобильное управление (2026-11-25)
 - [x] Объединить tap и swipe в единый режим tap-and-drag.

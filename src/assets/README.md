@@ -6,6 +6,7 @@
 |---|---|---|
 | backgrounds | casino-main.png, casino-bar.png | Фоны сцен казино |
 | enemies | guard.png, armored.png, assault.png | Враги |
+
 | weapons | pistol.svg, smg.svg, shotgun.svg, rifle.svg | Пистолет |
 | props | cover-crate.png | Укрытия |
 | ui | logo.png, cursor.png | Логотип/прицел |
@@ -22,7 +23,7 @@
 
 ## Текущая графика
 
-В `backgrounds/`, `enemies/`, `weapons/`, `props/` и `ui/` находятся авторские SVG-ассеты, подключаемые автоматически. Источники сторонних бесплатных паков и их лицензии собраны в `docs/ASSET_RESEARCH.md`; сами сторонние паки пока не интегрированы.
+В `backgrounds/`, `enemies/`, `weapons/`, `props/` и `ui/` находятся авторские SVG-ассеты, подключаемые автоматически. Атлас поз врагов 3×4 подготовлен в Library, но пока не добавлен в `src/assets/`; текущий runtime использует Kenney atlas и SVG. Источники сторонних бесплатных паков и их лицензии собраны в `docs/ASSET_RESEARCH.md`; сами сторонние паки пока не интегрированы.
 
 
 ## Локальное аудио SHPY 0.6

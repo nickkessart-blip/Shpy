@@ -115,3 +115,32 @@
 - rifle — длинный ствол, оптика, вентилируемое цевьё и изогнутый магазин.
 
 Эти SVG не являются скачанным паком. Они созданы для единой перспективы и палитры проекта; на них не распространяются лицензии сторонних паков из исторической подборки. В оружейном шкафу характеристики теперь визуализируются отдельными шкалами; в бою HUD разделяет блок здоровья/миссии и блок оружия/магазина. Полные покадровые анимации пока не добавлены.
+
+
+## SHPY 0.9 — визуальный pipeline и отдача
+
+### Рендеринг и чёткость текстур
+- Для обычной иллюстративной графики включён сглаженный sampling: `antialias: true` и `roundPixels: false`. Принудительное округление координат вместе с отключённым сглаживанием давало заметные ступеньки при масштабировании экранного оружия.
+- `assetsInlineLimit: 0` сохраняет отдельные файлы ассетов, а не встраивает их в JS-бандл.
+- Для новых полноцветных фонов предпочтителен WebP quality 90–94; для спрайтов с альфа-каналом — lossless WebP или PNG. Не уменьшать исходный размер кадра ниже фактического размера отображения.
+- Не применять pixel-art режим к иллюстративным спрайтам. Текстуры должны иметь прозрачные поля и одинаковую перспективу с фоном.
+
+### Восточный экспресс
+- Сцена использует отдельную схему трёх планов глубины, ограниченных оконными проёмами вагона: дальний ландшафт, средний план и близкие опоры/детали. Слои получают разные коэффициенты прокрутки; интерьер вагона остаётся неподвижной базой.
+- Это отдельная схема, а не повторение процедурного городского параллакса казино.
+
+### Экранное оружие
+- Точка вращения viewmodel перенесена к нижнему краю экрана, как в FPS с закреплённым экранным оружием.
+- Отдача теперь состоит из короткого смещения назад/вниз и небольшого подъёма ствола; горизонтальный маятниковый ход не используется. Направление выстрела и прицел остаются независимыми от декоративной анимации.
+
+### Генерируемые спрайты
+- Подготовленный генерацией атлас противников является исходным художественным материалом, а не автоматически подключённым runtime-ресурсом. Перед включением в сборку кадры нужно экспортировать с прозрачностью, проверить границы и внести в `src/assets/` вместе с метаданными кадров. Не выдавать исходный лист с фоном за готовый sprite atlas.
+
+
+### Texture quality and compression policy (SHPY 0.9)
+- Source file compression and GPU texture compression are different things. PNG/WebP reduce download/build size, but the browser decodes them before uploading to the GPU; they do not automatically reduce VRAM usage.
+- Keep SVG for clean vector UI and props; AssetCatalog rasterizes SVG at explicit dimensions. Existing SVG slots use 2× logical dimensions for weapons and full-screen backgrounds use 1280×720.
+- For painted backgrounds and photographic art use WebP quality 90–94 at the final intended pixel dimensions. For alpha sprites use lossless WebP or PNG; avoid lossy alpha fringes around dark silhouettes.
+- Do not use nearest-neighbour sampling or roundPixels for the project's semi-realistic painted style. antialias stays enabled and roundPixels disabled.
+- The current first-person weapon atlas has 192×144 frames displayed larger than native size. This is a known source of softness/pixelation. Replacing it with high-resolution transparent viewmodel artwork is preferable to sharpening or repeatedly re-encoding the same low-resolution source.
+- KTX2/Basis GPU-compressed textures are not enabled yet. They require a tested transcoder/runtime path and format fallback support across Android browsers; enabling them without device testing could produce missing textures. This remains a separate optimization task, not something to fake with a WebP conversion.

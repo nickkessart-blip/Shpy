@@ -16,11 +16,29 @@
 
 The source pack is distributed as a ZIP by the original publisher. The current integration copied the required atlas and metadata from a public, already-extracted mirror; the original full ZIP has **not** been added to this repository. This avoids committing a duplicate archive when only one atlas is currently used. The original archive remains available from the source page.
 
+## SHPY original HUD ornaments (2026-11-25)
+
+- `src/assets/ui/hud-health-frame.svg` — ornamental health panel frame; runtime key `hud-health-frame`.
+- `src/assets/ui/hud-ammo-frame.svg` — ornamental ammunition panel frame; runtime key `hud-ammo-frame`.
+- Registered in `src/game/assets/assetSlots.ts`; explicit SVG raster sizes are configured in `src/game/assets/AssetCatalog.ts`.
+- Runtime uses code-rendered segmented HP (12 segments) and ammo meter (up to 30 segments based on magazine capacity). Dynamic values are intentionally not baked into image assets.
+- Frame art is decorative only. Keep panel backing, fill, icons/text and border in a deliberate render-depth order.
+
+## Enemy animation source and slicing status
+
+- **Prepared file:** `SHPY_enemy_animation_atlas.webp` in the user's Library (384×1024 RGBA WebP, 115,008 bytes; SHA-256 `27893c782fb375ea892f53ed0ca9d256fffd23ec2ad7cfdac2fa6cc8632faf04`).
+- **Provenance:** previously prepared and sliced SHPY project artwork, retrieved from the user's Library; no new image was generated in this task.
+- **Frame geometry:** 3 columns × 4 rows; 128×256 per frame; baseline y=248; rows guard/armored/assault/boss; columns aim/fire/hit.
+- **Prepared runtime path:** `src/assets/enemies/enemy-animation-atlas.webp` (not present in the branch yet); loader slot and state-based selection scaffolding are committed in `assetSlots.ts`, `AssetCatalog.ts` and `MissionScene.ts`.
+- **Current runtime:** because the binary file is not in the repository, the prepared spritesheet does not load; Kenney CC0 and the four SVG portraits remain active fallbacks.
+- **Integration state:** found in Library and inspected; code path prepared; binary not committed/loaded/runtime-tested. Do not describe the atlas as integrated until the file exists under `src/assets/enemies/`.
+- Mapping and alignment rules are in `docs/ENEMY_ANIMATION_ATLAS.md`.
+
 ## Existing project artwork
 
 - `src/assets/weapons/first-person-atlas.webp` — first-person weapon atlas.
 - `src/assets/backgrounds/train-carriage-real.webp` — East Express carriage background.
-- `src/assets/effects/muzzle-flare.png` and `impact-smoke.png` — Kenney CC0 effects.
+- `src/assets/effects/muzzle-flare.png` and `impact-smoke.png` — Kenney CC0 effects; both are loaded through `AssetCatalog`. `muzzle-flare.png` is now used by the mission muzzle-flash visual and `impact-smoke.png` is used for hit feedback.
 - `src/assets/licenses/Kenney-CC0.txt` — license record for the existing effects.
 
 ## Archive handling policy

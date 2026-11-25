@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "verify:enemy-atlas": "node scripts/verify-enemy-atlas.mjs"
   },
   "dependencies": {
     "phaser": "4.2.1"

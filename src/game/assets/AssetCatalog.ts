@@ -38,6 +38,8 @@ const SVG_SIZES: Record<string, { width: number; height: number }> = {
   'props/cover-crate': { width: 520, height: 188 },
   'props/bar-counter': { width: 520, height: 188 },
   'ui/cursor': { width: 100, height: 100 },
+  'ui/hud-health-frame': { width: 920, height: 184 },
+  'ui/hud-ammo-frame': { width: 744, height: 184 },
   'ui/logo': { width: 512, height: 512 },
 };
 
@@ -47,7 +49,10 @@ export class AssetCatalog {
       const asset = assetsBySlot.get(slot);
       if (!asset) continue;
 
-      if (/\.svg$/i.test(asset.path)) {
+      if (slot === 'enemies/animation-atlas') {
+        // The prepared atlas is a 3×4 sheet of fixed 128×256 frames.
+        scene.load.spritesheet(key, asset.url, { frameWidth: 128, frameHeight: 256 });
+      } else if (/\.svg$/i.test(asset.path)) {
         // Phaser's SVG loader rasterizes vector art at an explicit texture size.
         // Using load.image() leaves SVG sizing to browser defaults and can create
         // empty textures on some mobile browsers.
@@ -88,6 +93,25 @@ export class AssetCatalog {
     for (const [name, x, y, width, height] of frames) {
       if (!atlas.has(name)) atlas.add(name, 0, x, y, width, height);
     }
+  }
+
+  static enemyAnimationFrame(
+    type: 'guard' | 'armored' | 'assault' | 'boss',
+    pose: 'aim' | 'fire' | 'hit',
+  ): number {
+    const row = type === 'guard' ? 0 : type === 'armored' ? 1 : type === 'assault' ? 2 : 3;
+    const column = pose === 'aim' ? 0 : pose === 'fire' ? 1 : 2;
+    return row * 3 + column;
+  }
+
+  static hasEnemyAnimationFrame(
+    scene: Phaser.Scene,
+    type: 'guard' | 'armored' | 'assault' | 'boss',
+    pose: 'aim' | 'fire' | 'hit',
+  ): boolean {
+    const key = ASSET_SLOTS['enemies/animation-atlas'];
+    return scene.textures.exists(key)
+      && scene.textures.get(key).has(String(this.enemyAnimationFrame(type, pose)));
   }
 
   static hasTexture(scene: Phaser.Scene, key: string): boolean {

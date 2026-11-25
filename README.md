@@ -3,6 +3,12 @@
 Модульный 2D-прототип шпионской инкременталки на Phaser 4 + TypeScript + Vite.
 
 ## Документы
+## Инструкции для AI-агентов
+- [docs/AI_HANDOFF.md](docs/AI_HANDOFF.md) — актуальная точка входа: ветка, PR, проверенные статусы, ограничения и следующий шаг.
+- [AGENTS.md](AGENTS.md) — обязательный порядок работы, проверки и handoff.
+- [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md) — политика веток, PR, CI, бинарных ассетов и публикации.
+- [.ai/skills/README.md](.ai/skills/README.md) — индекс проектных skills и базовый промпт; перед задачей агент обязан прочитать релевантные SKILL.md.
+
 - [GAME_BIBLE](docs/GAME_BIBLE.md) — канон игры.
 - [GAME_DESIGN](docs/GAME_DESIGN.md) — цикл, миссии и прогрессия.
 - [TECHNICAL_ARCHITECTURE](docs/TECHNICAL_ARCHITECTURE.md) — архитектура и платформы.

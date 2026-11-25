@@ -34,7 +34,8 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
   width: GAME_WIDTH,
   height: GAME_HEIGHT,
   backgroundColor: '#111821',
-  antialias: false,
+  // Smooth sampling prevents low-resolution weapon atlases and scaled artwork from looking jagged.
+  antialias: true,
   pixelArt: false,
   scale: {
     mode: Phaser.Scale.FIT,
@@ -44,5 +45,5 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
   },
   input: { activePointers: 3, mouse: { preventDefaultWheel: true }, touch: { capture: true } },
   scene: [BootScene, StartScene, HQScene, OperationsScene, ComputerScene, LoadoutScene, MissionScene, ResultsScene, SettingsScene],
-  render: { powerPreference: 'low-power', roundPixels: true },
+  render: { powerPreference: 'low-power', roundPixels: false },
 };

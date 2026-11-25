@@ -38,6 +38,9 @@ export class MissionScene extends Phaser.Scene {
   private medkitCount = 0;
   private reloadPose = 0;
   private weaponRecoil = 0;
+  private weaponRecoilAngle = 0;
+  private parallaxWindowMask?: Phaser.Display.Masks.GeometryMask;
+  private parallaxMaskGraphics?: Phaser.GameObjects.Graphics;
   private playerHitFlash = 0;
   private hud!: Phaser.GameObjects.Text;
   private hudMissionText!: Phaser.GameObjects.Text;
@@ -172,6 +175,7 @@ export class MissionScene extends Phaser.Scene {
     this.mobileControlsElement = undefined;
     this.impactEffects = [];
     this.weaponRecoil = 0;
+    this.weaponRecoilAngle = 0;
     this.playerHitFlash = 0;
     this.backdrop = this.add.graphics().setDepth(-20);
     this.parallaxFar = this.add.graphics().setDepth(-9).setScrollFactor(0.16);
@@ -196,6 +200,14 @@ export class MissionScene extends Phaser.Scene {
       fontSize: '25px', color: '#ffffff', fontStyle: 'bold', fontFamily: 'Arial, sans-serif',
       shadow: { offsetX: 1, offsetY: 2, color: '#000000', blur: 3, fill: true },
     }).setDepth(32).setScrollFactor(0);
+    if (AssetCatalog.hasTexture(this, 'hud-health-frame')) {
+      this.add.image(246, 60, 'hud-health-frame')
+        .setDisplaySize(460, 92).setDepth(33).setScrollFactor(0);
+    }
+    if (AssetCatalog.hasTexture(this, 'hud-ammo-frame')) {
+      this.add.image(1078, 60, 'hud-ammo-frame')
+        .setDisplaySize(372, 92).setDepth(33).setScrollFactor(0);
+    }
     if (AssetCatalog.hasTexture(this, 'weapon-' + this.currentWeaponId)) {
       this.hudWeaponImage = this.add.image(940, 57, 'weapon-' + this.currentWeaponId)
         .setDisplaySize(42, 70).setDepth(32).setScrollFactor(0);
@@ -279,8 +291,8 @@ export class MissionScene extends Phaser.Scene {
       pistol: 'fp-pistol', smg: 'fp-smg', shotgun: 'fp-shotgun', rifle: 'fp-rifle',
     };
     if (AssetCatalog.hasTexture(this, atlasKey)) {
-      const weaponImage = this.add.image(0, -170, atlasKey, frameByWeapon[this.currentWeaponId])
-        .setDisplaySize(320, 240);
+      const weaponImage = this.add.image(0, -75, atlasKey, frameByWeapon[this.currentWeaponId])
+        .setDisplaySize(256, 192);
       rig.add(weaponImage);
       this.weaponRig = rig;
       this.updateWeaponRig();
@@ -288,7 +300,7 @@ export class MissionScene extends Phaser.Scene {
     }
     const textureKey = 'weapon-' + this.currentWeaponId;
     if (AssetCatalog.hasTexture(this, textureKey)) {
-      rig.add(this.add.image(0, -190, textureKey).setDisplaySize(180, 380).setTint(weaponTint));
+      rig.add(this.add.image(0, -95, textureKey).setDisplaySize(180, 380).setTint(weaponTint));
       const cuff = this.add.graphics();
       cuff.fillStyle(heroTint, 0.95); cuff.fillRoundedRect(-36, -54, 72, 22, 8);
       rig.add(cuff);
@@ -311,6 +323,7 @@ export class MissionScene extends Phaser.Scene {
     art.fillStyle(0x0b1016, 1); art.fillRoundedRect(-8, -357, 16, 9, 3);
     art.lineStyle(2, 0x9eabb5, 0.65); art.lineBetween(-15, -310, 15, -310);
     art.lineStyle(2, 0x4f5d69, 0.8); art.lineBetween(-17, -235, 17, -235);
+    art.setPosition(0, 95);
     rig.add(art);
     this.weaponRig = rig;
     this.updateWeaponRig();
@@ -320,8 +333,8 @@ export class MissionScene extends Phaser.Scene {
     if (!this.weaponRig) return;
     if (this.isMobileControls) {
       this.weaponRig.setPosition(GAME_WIDTH / 2, GAME_HEIGHT + 95 + this.weaponRecoil + this.reloadPose * 38);
-      this.weaponRig.setScale(1 + Math.min(0.09, this.weaponRecoil * 0.00055), 1 - Math.min(0.055, this.weaponRecoil * 0.00032));
-      this.weaponRig.setRotation(0);
+      this.weaponRig.setScale(1 + Math.min(0.035, this.weaponRecoil * 0.00022), 1 - Math.min(0.025, this.weaponRecoil * 0.00016));
+      this.weaponRig.setRotation(-this.weaponRecoilAngle);
       return;
     }
     // Desktop weapon follows the mouse reticle.
@@ -331,7 +344,7 @@ export class MissionScene extends Phaser.Scene {
     const originY = GAME_HEIGHT + 95 + this.weaponRecoil + this.reloadPose * 38 + followY;
     this.weaponRig.setPosition(originX, originY);
     this.weaponRig.setRotation(Phaser.Math.Angle.Between(originX, originY, this.aim.x, this.aim.y)
-      + Math.PI / 2 + this.reloadPose * 0.12);
+      + Math.PI / 2 + this.reloadPose * 0.12 - this.weaponRecoilAngle);
   }
 
   private getWeaponMuzzle(): Point {
@@ -339,7 +352,7 @@ export class MissionScene extends Phaser.Scene {
     const rotation = rig?.rotation ?? 0;
     const originX = rig?.x ?? GAME_WIDTH / 2;
     const originY = rig?.y ?? GAME_HEIGHT + 95 + this.weaponRecoil;
-    const point = { x: originX + 357 * Math.sin(rotation), y: originY - 357 * Math.cos(rotation) };
+    const point = { x: originX + 300 * Math.sin(rotation), y: originY - 300 * Math.cos(rotation) };
     return this.isMobileControls ? this.cameras.main.getWorldPoint(GAME_WIDTH / 2, GAME_HEIGHT - 175) : point;
   }
 
@@ -348,6 +361,8 @@ export class MissionScene extends Phaser.Scene {
     const dt = Math.min(delta, 50);
     const inputDelta = Math.min(Math.max(0, delta), 120);
     this.shotCooldown = Math.max(0, this.shotCooldown - inputDelta);
+    this.weaponRecoil = Math.max(0, this.weaponRecoil - inputDelta * 0.16);
+    this.weaponRecoilAngle = Math.max(0, this.weaponRecoilAngle - inputDelta * 0.00038);
     if (this.aimStickActive && this.phase === 'active') {
       this.aim = moveAim(this.aim, this.aimStickVector, this.currentSettings.aimSensitivity,
         inputDelta, GAME_WIDTH, GAME_HEIGHT);
@@ -367,6 +382,7 @@ export class MissionScene extends Phaser.Scene {
       && getWeapon(this.currentWeaponId).fireMode !== 'semi') this.shoot();
     this.shotFlash = Math.max(0, this.shotFlash - inputDelta);
     this.weaponRecoil = Math.max(0, this.weaponRecoil - inputDelta * 0.16);
+    this.weaponRecoilAngle = Math.max(0, this.weaponRecoilAngle - inputDelta * 0.00038);
     this.reloadPose = Math.max(0, this.reloadPose - inputDelta * 0.0045);
     this.playerHitFlash = Math.max(0, this.playerHitFlash - inputDelta);
     for (const effect of this.impactEffects) effect.life -= inputDelta;
@@ -435,7 +451,61 @@ export class MissionScene extends Phaser.Scene {
     const near = this.parallaxNear;
     if (!far || !mid || !near) return;
     far.clear(); mid.clear(); near.clear();
-    if (this.currentSettings.graphicsQuality === 'low') return;
+    if (this.currentSettings.graphicsQuality === 'low') {
+      far.clearMask(false); mid.clearMask(false); near.clearMask(false);
+      this.parallaxMaskGraphics?.destroy();
+      this.parallaxMaskGraphics = undefined;
+      this.parallaxWindowMask = undefined;
+      return;
+    }
+
+    if (this.sceneDef?.id.startsWith('east-express')) {
+      const mask = this.add.graphics();
+      mask.fillStyle(0xffffff, 1);
+      // Keep the exterior scenery inside the carriage's panoramic windows.
+      mask.fillRect(38, 142, 300, 320);
+      mask.fillRect(942, 142, 300, 320);
+      mask.setVisible(false);
+      this.parallaxMaskGraphics?.destroy();
+      this.parallaxMaskGraphics = mask;
+      this.parallaxWindowMask = mask.createGeometryMask();
+      far.setMask(this.parallaxWindowMask);
+      mid.setMask(this.parallaxWindowMask);
+      near.setMask(this.parallaxWindowMask);
+
+      far.fillStyle(0x1a3150, 0.42);
+      for (let i = 0; i < 16; i += 1) {
+        const x = i * 92 - 40;
+        const h = 95 + (i % 5) * 22;
+        far.fillTriangle(x, 430, x + 46, 430 - h, x + 92, 430);
+      }
+      far.fillStyle(0x7895ad, 0.14);
+      for (let i = 0; i < 12; i += 1) far.fillCircle(i * 128 - 20, 230 + (i % 3) * 18, 34);
+
+      mid.fillStyle(0x172a37, 0.52);
+      for (let i = 0; i < 18; i += 1) {
+        const x = i * 86 - 30;
+        mid.fillTriangle(x, 445, x + 38, 350 + (i % 4) * 14, x + 76, 445);
+      }
+      near.lineStyle(5, 0x18232b, 0.5);
+      for (let i = 0; i < 9; i += 1) {
+        const x = i * 170 - 50;
+        near.lineBetween(x, 145, x + 10, 460);
+        near.lineBetween(x - 40, 190, x + 60, 190);
+      }
+      far.setAlpha(0.9);
+      mid.setAlpha(0.8);
+      near.setAlpha(0.65);
+      return;
+    }
+
+    far.clearMask(false);
+    mid.clearMask(false);
+    near.clearMask(false);
+    this.parallaxMaskGraphics?.destroy();
+    this.parallaxMaskGraphics = undefined;
+    this.parallaxWindowMask = undefined;
+
 
     far.fillStyle(0x09131e, 0.52);
     for (let i = -5; i < 18; i += 1) {
@@ -739,6 +809,7 @@ export class MissionScene extends Phaser.Scene {
     this.shotCooldown = weaponStats.shotCooldownMs;
     this.shotFlash = this.currentWeaponId === 'shotgun' ? 220 : 165;
     this.weaponRecoil = weapon.recoil * 2.8;
+    this.weaponRecoilAngle = Math.min(0.075, 0.038 + weapon.recoil * 0.00045);
     const muzzleFxPoint = this.getWeaponMuzzle();
     if (AssetCatalog.hasTexture(this, 'effect-muzzle-flare')) {
       const flash = this.add.image(muzzleFxPoint.x, muzzleFxPoint.y, 'effect-muzzle-flare')
@@ -1365,13 +1436,19 @@ export class MissionScene extends Phaser.Scene {
     this.hudMissionText.setText('КАЗИНО  •  СЕКТОР ' + (this.sceneIndex + 1) + '/' + this.missionScenes.length
       + '  •  ВОЛНА ' + this.getDisplayedWaveNumber() + '/' + this.sceneDef.waves.length);
 
-    this.hudBars.fillStyle(0x293744, 0.95);
-    this.hudBars.fillRoundedRect(76, 43, 270, 13, 6);
-    this.hudBars.fillStyle(this.hp / Math.max(1, this.maxHp) > 0.4 ? 0x69b58b : 0xc84d4d, 0.98);
-    this.hudBars.fillRoundedRect(76, 43, 270 * (this.hp / Math.max(1, this.maxHp)), 13, 6);
-    for (let segment = 1; segment < 10; segment += 1) {
-      this.hudBars.fillStyle(0x08111a, 0.72);
-      this.hudBars.fillRect(76 + segment * 27, 43, 2, 13);
+    const healthRatio = Phaser.Math.Clamp(this.hp / Math.max(1, this.maxHp), 0, 1);
+    const healthSegments = 12;
+    const healthGap = 3;
+    const healthSegmentWidth = (270 - healthGap * (healthSegments - 1)) / healthSegments;
+    for (let segment = 0; segment < healthSegments; segment += 1) {
+      const segmentFill = Phaser.Math.Clamp(healthRatio * healthSegments - segment, 0, 1);
+      const x = 76 + segment * (healthSegmentWidth + healthGap);
+      this.hudBars.fillStyle(0x293744, 0.98);
+      this.hudBars.fillRoundedRect(x, 43, healthSegmentWidth, 13, 3);
+      if (segmentFill > 0) {
+        this.hudBars.fillStyle(healthRatio > 0.4 ? 0x69b58b : 0xc84d4d, 0.98);
+        this.hudBars.fillRoundedRect(x, 43, healthSegmentWidth * segmentFill, 13, 3);
+      }
     }
     this.hudAmmoText.setText(ammoLabel);
 
@@ -1388,14 +1465,21 @@ export class MissionScene extends Phaser.Scene {
     this.hudIcons.fillTriangle(918, 31, 926, 31, 922, 25);
     this.hudIcons.fillTriangle(933, 24, 941, 24, 937, 18);
     this.hudIcons.fillTriangle(948, 35, 956, 35, 952, 29);
-    this.hudBars.fillStyle(0x293744, 0.95);
-    this.hudBars.fillRoundedRect(1000, 75, 236, 8, 4);
-    this.hudBars.fillStyle(this.reloading > 0 ? 0xd6a35c : 0x8db5a4, 0.98);
-    this.hudBars.fillRoundedRect(1000, 75,
-      236 * (this.magazine / Math.max(1, ammoStats.magazine)), 8, 4);
-    for (let segment = 1; segment < 12; segment += 1) {
-      this.hudBars.fillStyle(0x08111a, 0.62);
-      this.hudBars.fillRect(1000 + segment * 19.6, 75, 1.5, 8);
+    const ammoCapacity = Math.max(1, ammoStats.magazine);
+    const ammoSegments = Math.min(30, ammoCapacity);
+    const ammoGap = 2;
+    const ammoSegmentWidth = (236 - ammoGap * (ammoSegments - 1)) / ammoSegments;
+    for (let segment = 0; segment < ammoSegments; segment += 1) {
+      const bulletStart = segment * ammoCapacity / ammoSegments;
+      const bulletFill = Phaser.Math.Clamp(this.magazine - bulletStart, 0, ammoCapacity / ammoSegments)
+        / (ammoCapacity / ammoSegments);
+      const x = 1000 + segment * (ammoSegmentWidth + ammoGap);
+      this.hudBars.fillStyle(0x293744, 0.98);
+      this.hudBars.fillRoundedRect(x, 75, ammoSegmentWidth, 8, 2);
+      if (bulletFill > 0) {
+        this.hudBars.fillStyle(this.reloading > 0 ? 0xd6a35c : 0x8db5a4, 0.98);
+        this.hudBars.fillRoundedRect(x, 75, ammoSegmentWidth * bulletFill, 8, 2);
+      }
     }
 
     if (this.hudWeaponImage && AssetCatalog.hasTexture(this, 'weapon-' + this.currentWeaponId)) {
@@ -1422,22 +1506,50 @@ export class MissionScene extends Phaser.Scene {
       const drawX = enemy.x + hitOffset;
       const drawY = enemy.y - 20 + idleBob;
       AssetCatalog.ensureKenneyEnemyFrames(this);
+      const animationPose = enemy.hitFlash > 0 ? 'hit'
+        : enemy.state === 'Attacking' ? 'fire' : 'aim';
+      const animationFrame = AssetCatalog.enemyAnimationFrame(enemy.type, animationPose);
+      const hasAnimationFrame = AssetCatalog.hasEnemyAnimationFrame(this, enemy.type, animationPose);
+      const animationAtlasKey = AssetCatalog.imageKeyFor('enemies/animation-atlas');
       const kenneyAtlasKey = 'enemy-kenney-atlas';
       const hasKenneyFrame = AssetCatalog.hasTexture(this, kenneyAtlasKey)
         && this.textures.get(kenneyAtlasKey).has(SPRITES[enemy.type]);
       const fallbackSpriteKey = 'enemy-' + enemy.type;
-      if (hasKenneyFrame || AssetCatalog.hasTexture(this, fallbackSpriteKey)) {
+      const textureKey = hasAnimationFrame ? animationAtlasKey
+        : hasKenneyFrame ? kenneyAtlasKey : fallbackSpriteKey;
+      const frame: string | number | undefined = hasAnimationFrame ? animationFrame
+        : hasKenneyFrame ? SPRITES[enemy.type] : undefined;
+      if (hasAnimationFrame || hasKenneyFrame || AssetCatalog.hasTexture(this, fallbackSpriteKey)) {
         let image = sprite;
-        if (!image) image = this.add.image(
-          drawX, drawY, hasKenneyFrame ? kenneyAtlasKey : fallbackSpriteKey,
-          hasKenneyFrame ? SPRITES[enemy.type] : undefined,
-        ).setName(spriteKey).setDepth(2);
+        if (!image) {
+          image = this.add.image(drawX, drawY, textureKey, frame).setName(spriteKey).setDepth(2);
+        } else {
+          const expectedFrameName = frame === undefined ? undefined : String(frame);
+          if (image.texture.key !== textureKey
+            || (expectedFrameName !== undefined && image.frame.name !== expectedFrameName)) {
+            image.setTexture(textureKey, frame);
+          }
+        }
         const isBoss = enemy.type === 'boss';
-        image.setPosition(drawX, drawY).setDisplaySize(isBoss ? 150 : enemy.type === 'armored' ? 92 : 84,
-          isBoss ? 224 : enemy.type === 'armored' ? 154 : 146).setVisible(true);
-        if (enemy.hitFlash > 0) image.setAlpha(0.72 + Math.sin(this.time.now / 20) * 0.28);
-        else image.setAlpha(1);
-        image.setAngle(Math.sin((this.time.now + enemy.uid * 113) / 420) * 1.1);
+        const baseWidth = isBoss ? 150 : enemy.type === 'armored' ? 92 : 84;
+        const baseHeight = isBoss ? 224 : enemy.type === 'armored' ? 154 : 146;
+        const phaseTime = (this.time.now + enemy.uid * 137) / 1000;
+        const breathing = Math.sin(phaseTime * 2.4);
+        const aiming = enemy.state === 'Aiming';
+        const attacking = enemy.state === 'Attacking';
+        const hitPulse = enemy.hitFlash > 0 ? Math.sin(this.time.now / 18) : 0;
+        const attackProgress = attacking ? 1 - Phaser.Math.Clamp(enemy.timer / 260, 0, 1) : 0;
+        const recoilKick = attacking ? Math.sin(attackProgress * Math.PI) : 0;
+        const poseScaleX = 1 + (aiming ? -0.018 : 0) + breathing * 0.008;
+        const poseScaleY = 1 + (aiming ? 0.025 : 0) - breathing * 0.006;
+        const poseLean = (aiming ? -1.8 : 0) + (attacking ? recoilKick * 2.2 : 0);
+        // Keep the atlas's 1:2 cell aspect ratio instead of stretching its characters.
+        const displayWidth = hasAnimationFrame ? baseHeight * 0.5 : baseWidth;
+        image.setPosition(drawX, drawY + (aiming ? -2 : 0) + (attacking ? recoilKick * 3 : 0))
+          .setDisplaySize(displayWidth * poseScaleX, baseHeight * poseScaleY).setVisible(true);
+        image.setAlpha(enemy.hitFlash > 0 ? 0.72 + Math.abs(hitPulse) * 0.28 : 1);
+        image.setAngle(poseLean + Math.sin(phaseTime * 1.7) * (aiming ? 0.25 : 0.7));
+        image.setTint(enemy.hitFlash > 0 ? 0xffd5d5 : (attacking ? 0xffe3c2 : 0xffffff));
       } else {
         this.world.fillStyle(0x05080c, 0.45); this.world.fillEllipse(drawX, enemy.y + 3, 65, 15);
         this.world.fillStyle(def.color, 1); this.world.fillRoundedRect(drawX - 24, drawY - 18, 48, 76, 8);
@@ -1499,7 +1611,21 @@ export class MissionScene extends Phaser.Scene {
 
     if (this.shotFlash > 0) {
       const muzzle = this.getWeaponMuzzle();
-      const alpha = this.shotFlash / 135;
+      const alpha = Phaser.Math.Clamp(this.shotFlash / 135, 0, 1);
+      if (AssetCatalog.hasTexture(this, 'effect-muzzle-flare')) {
+        const flareKey = 'muzzle-flare-image';
+        let flare = this.children.getByName(flareKey) as Phaser.GameObjects.Image | null;
+        if (!flare) {
+          flare = this.add.image(muzzle.x, muzzle.y, 'effect-muzzle-flare')
+            .setName(flareKey).setDepth(22).setBlendMode(Phaser.BlendModes.ADD);
+        }
+        const flareSize = 76 + (1 - alpha) * 18;
+        const sourceSize = Math.max(flare.frame.realWidth, flare.frame.realHeight, 1);
+        flare.setPosition(muzzle.x, muzzle.y)
+          .setScale(flareSize / sourceSize)
+          .setRotation(Phaser.Math.Angle.Between(muzzle.x, muzzle.y, this.aim.x, this.aim.y))
+          .setAlpha(alpha).setVisible(true);
+      }
       this.fx.lineStyle(8, 0xff9b45, alpha * 0.52);
       this.fx.lineBetween(muzzle.x, muzzle.y, this.aim.x, this.aim.y);
       this.fx.lineStyle(4, 0xffd58a, alpha * 0.95);
@@ -1520,6 +1646,9 @@ export class MissionScene extends Phaser.Scene {
           muzzle.x + Math.cos(angle) * 25, muzzle.y + Math.sin(angle) * 25,
         );
       }
+    } else {
+      const flare = this.children.getByName('muzzle-flare-image') as Phaser.GameObjects.Image | null;
+      flare?.setVisible(false);
     }
 
     for (const effect of this.impactEffects) {
