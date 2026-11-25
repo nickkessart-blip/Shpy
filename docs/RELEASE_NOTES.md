@@ -1,5 +1,12 @@
 # SHPY — Release notes
 
+## 2026-11-25 — Combat visual recovery (in progress)
+- Rebuilt the Casino main room and bar as detailed four-layer vector environments.
+- First-person combat uses the individual 720×1240 rasterized SVG weapon illustrations instead of enlarging the low-resolution weapon atlas.
+- Mobile weapon viewmodel now rotates toward the world-space reticle and the muzzle follows its direction.
+- Enemy SVGs rasterize at 2× source resolution; runtime state atlas cells are now 192×384.
+- This is a first art-quality recovery pass. Full enemy animation cycles and visual QA on a physical Android device remain outstanding.
+
 ## 2026-11-25 — Batch operative report collection
 - Added an inbox action to claim all completed operative reports at once.
 - The AgentService snapshots only completed run IDs and processes them through the existing collectMission flow, preserving component rewards, failure results and operative XP.

@@ -73,3 +73,10 @@ The original Casino SVG scenes were split into transparent, same-canvas vector p
 | Royale Bar | `casino-bar-base.svg` — wall/floor | `casino-bar-far.svg` — back cabinets and shelves | `casino-bar-mid.svg` — bottles, lamps and sign | `casino-bar-near.svg` — floor perspective and lower trim |
 
 All eight SVGs use the original 1280×720 viewBox and transparent overlay planes. AssetCatalog loads each plane at 1280×720. MissionScene scrolls the planes independently at 0.16/0.42/0.74 camera factors and applies a bounded route pan; the original full-scene SVG remains the fallback if a complete plane set is unavailable.
+
+
+## SHPY combat art recovery — 2026-11-25
+
+The Casino main room and bar now use a rebuilt four-layer SVG environment: architectural shell, distant windows/lighting, midground machines/bar shelving, and foreground furniture/counter. The assets remain lightweight, locally loaded vector files. The four first-person weapon illustrations are rasterized at 720×1240 (2×) and used directly by the combat rig instead of enlarging the low-resolution 192×144 atlas frames. Enemy source art is rasterized at 2× and composed into a larger 192×384 runtime state atlas.
+
+This is an improvement to the current art baseline, not a claim that the final game art is complete: true frame-by-frame character animation, additional location backgrounds, and physical mobile visual QA remain outstanding.

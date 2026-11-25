@@ -189,3 +189,22 @@ The user reports a complete failure in graphics quality and mobile shooting and 
 - Code review found the virtual aim stick's base speed was 1.35 px/ms; at default sensitivity 1.8 that is ~2,430 px/s at full deflection, far too fast for precise thumb aiming.
 - Patch branch fix/mobile-combat-controls-and-aim-2026-11-25 aligns overlay to canvas bounds on resize/orientation changes, tracks the aim pointer globally so a second finger on fire cannot break it, and reduces stick speed to a controllable range. CI and manual Android QA pending.
 - Visual assets are also still weak: Casino backgrounds are sparse flat SVG geometry, enemy runtime atlas is synthesized from static SVG poses rather than true animation, and first-person weapon atlas is only 192x144 per frame while displayed enlarged. User-facing art upgrade is required, not optional cosmetic polish.
+
+
+## Current blocker recovery work — 2026-11-25
+
+### Mobile controls PR #26
+- PR #26 merged: https://github.com/nickkessart-blip/Shpy/pull/26
+- Merge commit: 80ce798f2d24237bc2e62c5ea5e1bb4f366c479d.
+- PR CI run 45694183354 succeeded (typecheck, Vitest, lint, production build). Main CI run 45694299114 succeeded, including publish-build; prototype-build updated to 4c3a45da183d4e60e2e29e43386f5c9e6981ed96.
+- Pages deployment run 45694299113 initially failed because deploy-pages could not immediately discover the uploaded artifact. The artifact was confirmed in the Actions artifacts endpoint; deploy job 139487545258 was re-run and the latest attempt completed successfully. Main SHA 80ce798f2d24237bc2e62c5ea5e1bb4f366c479d is now deployed to Pages.
+- Changes: controls overlay aligns with actual canvas rect and scales to FIT viewport; resize/orientation listeners update layout; aim-stick pointer tracked globally to avoid second-finger interruption; base aim speed lowered from 1.35 to 0.24 px/ms. Regression tests added.
+- Physical Android QA remains outstanding.
+
+### Graphics branch
+- Active branch: feat/combat-visual-rebuild-2026-11-25, based on main 80ce798f.
+- Rebuilt all eight Casino main/bar SVG background layers with stronger architectural detail, slot machines, roulette table, shelving, bottles, lighting, stools and bar counter.
+- Combat now prefers the original individual weapon SVG viewmodels at 720×1240 raster resolution instead of the low-resolution 192×144-per-frame first-person atlas; the viewmodel rotates toward the world-space aim on mobile and its muzzle point follows that rotation.
+- Enemy SVG source textures are rasterized at 2× resolution; generated runtime atlas upgraded from 128×256 cells to 192×384 cells (576×1536 overall), with aspect-ratio-preserving display sizing.
+- Documentation updated in ASSET_CATALOG, ENEMY_ANIMATION_ATLAS, ROADMAP and src/assets/README. Full hand-authored animation cycles and additional location art remain outstanding.
+- PR #27 is open: https://github.com/nickkessart-blip/Shpy/pull/27. Head SHA c22bb98faf68b7b4cdd67cd05616449ba9d8b1bd. CI run 45694833455 is queued/pending; verify it before merging. Re-fetch live main and branch heads before proceeding.

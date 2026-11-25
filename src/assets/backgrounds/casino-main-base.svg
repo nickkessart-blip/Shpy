@@ -1,20 +1,29 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
 <defs>
- <linearGradient id="wall" x2="0" y2="1"><stop stop-color="#172330"/><stop offset=".58" stop-color="#34404b"/><stop offset="1" stop-color="#151c24"/></linearGradient>
- <linearGradient id="floor" x2="0" y2="1"><stop stop-color="#4b3034"/><stop offset="1" stop-color="#111821"/></linearGradient>
- <linearGradient id="gold" x2="0" y2="1"><stop stop-color="#f4d18a"/><stop offset=".45" stop-color="#9d6c35"/><stop offset="1" stop-color="#4e3420"/></linearGradient>
- <linearGradient id="glass" x2="0" y2="1"><stop stop-color="#8296a5" stop-opacity=".5"/><stop offset="1" stop-color="#15202b" stop-opacity=".9"/></linearGradient>
- <radialGradient id="lamp"><stop stop-color="#ffe8ae" stop-opacity=".9"/><stop offset="1" stop-color="#e9ad58" stop-opacity="0"/></radialGradient>
- <pattern id="carpet" width="54" height="54" patternUnits="userSpaceOnUse"><path d="M27 2 52 27 27 52 2 27Z" fill="none" stroke="#c18a53" stroke-opacity=".2" stroke-width="2"/><circle cx="27" cy="27" r="5" fill="#d9ad72" fill-opacity=".12"/></pattern>
- <filter id="shadow"><feGaussianBlur stdDeviation="12"/></filter>
+ <linearGradient id="ceiling" x2="0" y2="1"><stop stop-color="#080e15"/><stop offset="1" stop-color="#1d2934"/></linearGradient>
+ <linearGradient id="wall" x2="0" y2="1"><stop stop-color="#26333d"/><stop offset=".48" stop-color="#4a4540"/><stop offset="1" stop-color="#1b252e"/></linearGradient>
+ <linearGradient id="floor" x2="0" y2="1"><stop stop-color="#744b42"/><stop offset=".35" stop-color="#3b2930"/><stop offset="1" stop-color="#101820"/></linearGradient>
+ <linearGradient id="brass" x2="0" y2="1"><stop stop-color="#f2d59b"/><stop offset=".38" stop-color="#b17b42"/><stop offset="1" stop-color="#4d3020"/></linearGradient>
+ <linearGradient id="velvet" x2="0" y2="1"><stop stop-color="#7b2633"/><stop offset="1" stop-color="#260e19"/></linearGradient>
+ <radialGradient id="ceilingGlow"><stop stop-color="#eab66e" stop-opacity=".35"/><stop offset="1" stop-color="#eab66e" stop-opacity="0"/></radialGradient>
+ <pattern id="wallpaper" width="84" height="84" patternUnits="userSpaceOnUse"><path d="M42 8 76 42 42 76 8 42Z" fill="none" stroke="#d3b17a" stroke-opacity=".08" stroke-width="2"/><circle cx="42" cy="42" r="4" fill="#d3b17a" fill-opacity=".08"/></pattern>
+ <pattern id="carpet" width="64" height="64" patternUnits="userSpaceOnUse"><path d="M32 3 61 32 32 61 3 32Z" fill="none" stroke="#d3a56e" stroke-opacity=".2" stroke-width="2"/><path d="M32 15 49 32 32 49 15 32Z" fill="none" stroke="#a04c43" stroke-opacity=".35" stroke-width="2"/><circle cx="32" cy="32" r="4" fill="#e0bc82" fill-opacity=".18"/></pattern>
+ <linearGradient id="floorSheen" x2="0" y2="1"><stop stop-color="#e6bb81" stop-opacity=".16"/><stop offset="1" stop-color="#e6bb81" stop-opacity="0"/></linearGradient>
 </defs>
-<rect width="1280" height="720" fill="#0c121a"/>
-<path d="M0 0H1280V480L640 390 0 480Z" fill="#111923"/>
-<path d="M90 80H1190L1280 470H0Z" fill="url(#wall)" stroke="#7a6348" stroke-width="5"/>
-<path d="M125 105H1155L1215 440H65Z" fill="#202d39" stroke="#c39a5c" stroke-width="3"/>
-<path d="M150 125H1130V420H150Z" fill="#18232e"/>
-<path d="M0 480 640 375 1280 480V720H0Z" fill="url(#floor)"/>
-<path d="M0 480 640 375 1280 480V720H0Z" fill="url(#carpet)" opacity=".75"/>
-<path d="M0 480 640 375 1280 480" fill="none" stroke="#d2a86a" stroke-opacity=".65" stroke-width="5"/>
-<path d="M640 375V720M320 428 180 720M960 428 1100 720M485 401 430 720M795 401 850 720" stroke="#a97b4d" stroke-opacity=".3" stroke-width="3"/>
+<rect width="1280" height="720" fill="#080e14"/>
+<path d="M0 0H1280V462L640 360 0 462Z" fill="url(#ceiling)"/>
+<path d="M72 74H1208L1280 470H0Z" fill="url(#wall)" stroke="#8d6844" stroke-width="6"/>
+<path d="M94 92H1186L1245 450H35Z" fill="url(#wallpaper)" stroke="#c19a63" stroke-opacity=".45" stroke-width="2"/>
+<path d="M0 465 640 356 1280 465V720H0Z" fill="url(#floor)"/>
+<path d="M0 465 640 356 1280 465V720H0Z" fill="url(#carpet)" opacity=".85"/>
+<path d="M0 465 640 356 1280 465" fill="none" stroke="url(#brass)" stroke-width="7"/>
+<path d="M640 356V720M320 411 170 720M960 411 1110 720M470 385 390 720M810 385 890 720" stroke="#d4a36b" stroke-opacity=".23" stroke-width="3"/>
+<path d="M0 518 640 416 1280 518V720H0Z" fill="url(#floorSheen)"/>
+<path d="M90 74H1190M45 452H1235" stroke="#f0d39a" stroke-opacity=".22" stroke-width="2"/>
+<g fill="none" stroke="url(#brass)" stroke-width="8" opacity=".58">
+ <path d="M120 80V444M1160 80V444"/><path d="M95 116H1185M65 426H1215"/>
+ <path d="M150 452Q640 350 1130 452"/>
+</g>
+<ellipse cx="640" cy="140" rx="450" ry="170" fill="url(#ceilingGlow)"/>
+<g fill="#0a1017" opacity=".35"><path d="M0 0H1280V22H0Z"/><path d="M0 700H1280V720H0Z"/></g>
 </svg>

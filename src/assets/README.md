@@ -34,3 +34,10 @@
 ## Оружие SHPY 0.7
 
 `weapons/pistol.svg`, `smg.svg`, `shotgun.svg` и `rifle.svg` — четыре собственные векторные модели. Их силуэты различаются длиной/формой ствола, ресивером, магазином, оптикой и помповым цевьём; файлы используются в боевой сцене и в оружейном шкафу. Это оригинальные проектные файлы, а не сторонний CC0-пак. Правовой режим проекта описан в `/COPYRIGHT.md`.
+
+
+## Visual recovery pass
+
+- Casino main/bar: detailed layered 1280×720 SVG backgrounds.
+- First-person weapon viewmodels: original weapon SVGs rasterized at 720×1240 for the combat rig; the old small atlas remains fallback only.
+- Enemies: 2× source rasterization and a 192×384 runtime atlas. State poses are still generated from static source SVGs, so full animation cycles remain future work.

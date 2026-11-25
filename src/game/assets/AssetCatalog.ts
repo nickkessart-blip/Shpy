@@ -35,14 +35,14 @@ const SVG_SIZES: Record<string, { width: number; height: number }> = {
   'backgrounds/casino-bar-mid': { width: 1280, height: 720 },
   'backgrounds/casino-bar-near': { width: 1280, height: 720 },
   'backgrounds/train-carriage': { width: 1280, height: 720 },
-  'enemies/guard': { width: 240, height: 400 },
-  'enemies/armored': { width: 240, height: 400 },
-  'enemies/assault': { width: 240, height: 400 },
-  'enemies/boss': { width: 320, height: 500 },
-  'weapons/pistol': { width: 360, height: 620 },
-  'weapons/smg': { width: 360, height: 620 },
-  'weapons/shotgun': { width: 360, height: 620 },
-  'weapons/rifle': { width: 360, height: 620 },
+  'enemies/guard': { width: 480, height: 800 },
+  'enemies/armored': { width: 480, height: 800 },
+  'enemies/assault': { width: 480, height: 800 },
+  'enemies/boss': { width: 640, height: 1000 },
+  'weapons/pistol': { width: 720, height: 1240 },
+  'weapons/smg': { width: 720, height: 1240 },
+  'weapons/shotgun': { width: 720, height: 1240 },
+  'weapons/rifle': { width: 720, height: 1240 },
   'props/cover-crate': { width: 520, height: 188 },
   'props/bar-counter': { width: 520, height: 188 },
   'ui/cursor': { width: 100, height: 100 },
@@ -92,9 +92,9 @@ export class AssetCatalog {
     }
     const types = ['guard', 'armored', 'assault', 'boss'] as const;
     const poses = ['aim', 'fire', 'hit'] as const;
-    const frameWidth = 128;
-    const frameHeight = 256;
-    const baseline = 248;
+    const frameWidth = 192;
+    const frameHeight = 384;
+    const baseline = 372;
     const sources = types.map((type) => {
       const sourceSlot = ('enemies/' + type) as keyof typeof ASSET_SLOTS;
       const sourceKey = ASSET_SLOTS[sourceSlot];
@@ -114,7 +114,7 @@ export class AssetCatalog {
       poses.forEach((pose, column) => {
         const x = column * frameWidth;
         const y = row * frameHeight;
-        const scale = Math.min(frameWidth / entry.width, 216 / entry.height);
+        const scale = Math.min(frameWidth / entry.width, 324 / entry.height);
         const width = entry.width * scale;
         const height = entry.height * scale;
         const drawX = x + (frameWidth - width) / 2;
