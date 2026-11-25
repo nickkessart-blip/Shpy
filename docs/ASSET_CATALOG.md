@@ -48,3 +48,16 @@ Keep original archives outside the runtime asset folders. Before importing a pac
 2. Inspect the archive contents and reject executables, scripts, and path traversal entries.
 3. Copy only the files actually used by the game into `src/assets/`.
 4. Record the original source, license, selected files, and runtime integration here.
+
+
+## Library asset audit — 2026-11-25
+
+| Library source | Technical inspection | Runtime status |
+|---|---|---|
+| `SHPY_enemy_animation_atlas.webp` | 384×1024 RGBA; transparent; 3×4 fixed cells, 128×256. Rows: guard, armored, assault, boss. Columns: aim, fire, hit/reaction. | Prepared in Library only; not committed, registered or loaded. It matches the existing authored-atlas loader contract and is the strongest next asset candidate. |
+| `SHPY_enemy_character_atlas.webp` | 1024×1536 RGBA; multiple rows/poses. Visible panel-like remnants require alpha-edge/frame inspection. | Research only; not sliced or integrated. |
+| `Спрайт-лист оперативников в боевых позах.png` | 1024×1536 RGBA; four rows with four poses each; exact cell bounds and alpha need validation. | Research only; not sliced or integrated. |
+| `Атлас игровых ассетов: Восточный экспресс.png` | 1536×1024 RGB, opaque labelled contact sheet. | Art reference only; not a runtime atlas. |
+| `Игровой артбук: поезд и оружие.png` | 1536×1024 RGB, opaque contact sheet/mockup. | Art reference only; not a runtime atlas. |
+
+The Library files are not repository assets. Do not describe them as integrated until the exact binary is committed, its frame map and provenance are recorded, the loader registers it, and a runtime screenshot confirms correct rendering. See `docs/AI_SKILLS_RESEARCH.md`.
