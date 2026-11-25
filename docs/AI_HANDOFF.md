@@ -61,7 +61,7 @@ The current prototype already has Start/HQ/Operations/Loadout/Computer/Settings/
 
 These are prototype implementations, not proof of final quality. The user's 2026-11-25 feedback identifies unresolved issues: weak/inconsistent menu and screen layout, confusing/platform-irrelevant settings, inactive/unclear HQ props, chart-like operations map and missing story/tutorial, weak tab states and shallow armory/progression, overlap/predictable enemy spawns, disappearing cover behaviour, limited enemy attack feedback, incorrect reticle movement, insufficiently layered background/parallax and economy runaway.
 
-The first deterministic rail timeline and independently moving Casino/Royale Bar SVG planes are now implemented in PR #18. This is a bounded pan of the authored rooms, not the complete rail-shooter route. The complete location event framework, enemy route-lane/spawn director, physical cover occlusion, full autonomous mission director, fully separated first-person arm/hand/weapon cosmetic layers, and balanced late-game economy remain unimplemented. Do not claim these systems are complete because their specs now exist.
+The first deterministic rail timeline and independently moving Casino/Royale Bar SVG planes are now implemented in PR #18. This is a bounded pan of the authored rooms, not the complete rail-shooter route. The complete location event framework, continuous enemy route-lane movement, seeded dynamic role-composition director, full autonomous mission director, fully separated first-person arm/hand/weapon cosmetic layers, and balanced late-game economy remain unimplemented. The current P0 follow-up now has seeded lane assignment/entry staggering and first-pass physical cover occlusion; these are prototype slices requiring browser validation. Do not claim these systems are complete because their specs now exist.
 
 ### First Casino rail-timeline implementation slice (PR #18)
 
@@ -75,6 +75,15 @@ The first deterministic rail timeline and independently moving Casino/Royale Bar
 - The container could not clone GitHub (DNS/network unavailable), so no local npm test/build or browser screenshot was run. GitHub Actions PR run `45674036540` on commit `5a27635d3661f9887d8b47b61acefbe31171a03d` completed successfully: dependency install, TypeScript, Vitest, ESLint and production build all passed. Publish-build was skipped because this is a feature PR, not a main deployment. Physical Android and desktop visual QA remain unperformed.
 - No Library image was committed or edited. The 384×1024 transparent enemy state atlas remains prepared in Library only. The larger East Express art sheets are opaque contact sheets, not ready-to-load sprite atlases.
 
+### Seeded spawn and cover occlusion follow-up (current P0 slice)
+
+- Added `src/game/systems/waves/SpawnDirector.ts`, a Phaser-independent seeded planner. It uses authored spawn points plus bounded lane candidates, filters cover collision margins, enforces 135px preferred separation (105px fallback), and varies enemy order, lane assignment and staggered entry timing by run seed.
+- The director deliberately preserves the authored enemy-role roster for each wave. It does not yet generate dynamic role compositions or difficulty budgets; those remain balance-sensitive follow-up work.
+- Integrated staggered `Entering` state in MissionScene with a fading enemy appearance and pulsing lane marker.
+- Enemies taking cover remain rendered at their cover position behind the cover layer. The muzzle-to-target segment is checked against the same cover rectangles before damage is applied; hidden targets cannot be shot through cover. Enemies sharing a cover use distinct peek offsets to reduce stacking.
+- Added six SpawnDirector tests (seed determinism, seed variation, bounds, separation/cover clearance, stagger/order with roster preservation, single boss) and two cover line-of-sight tests.
+- This is a code-level implementation only. Browser screenshots, manual combat QA and physical Android checks have not yet been performed. CI for the newest head is pending until the current workflow run finishes.
+
 ### Skills and asset research
 
 - Read the project gameplay, asset-pipeline and release/validation skills.
@@ -85,11 +94,11 @@ The first deterministic rail timeline and independently moving Casino/Royale Bar
 
 ## Next production work
 
-1. Run desktop/browser visual QA at 1280×720 and a desktop viewport; verify Casino/Bar planes move independently without seams or misalignment.
-2. Add route-lane enemy entry/exit and a seeded SpawnDirector with minimum separation and composition limits.
-3. Correct the pointer-to-world/reticle mapping before any camera/world transform is introduced.
-4. Make cover a physical occluder shared by rendering, hit-testing and shot blocking; hidden enemies must not simply vanish.
-5. Differentiate enemy attack patterns and add readable attack launch/projectile/impact effects.
+1. Run desktop/browser visual QA at 1280×720 and a desktop viewport; verify Casino/Bar planes, spawn spacing, entry markers and cover occlusion.
+2. Add continuous route-lane enemy entry/exit and authored spawn/exit paths; the current director selects bounded screen lanes but does not move enemies along the rail.
+3. Add seeded role-composition budgets and wave difficulty constraints without changing balance until simulation tests exist.
+4. Correct the pointer-to-world/reticle mapping before any camera/world transform is introduced.
+5. Validate cover peeking, line-of-sight, visual occlusion and hitboxes in browser; add authored attack launch/projectile/impact effects and stronger archetype differences.
 6. Implement the Casino signature lighting/distraction mechanic with warnings and counterplay.
 7. Perform physical Android touch/orientation testing. CI is not a substitute.
 8. Only after the combat foundation passes, continue P1 UI/HQ, P2 prologue/tutorial, P3 economy, P4 operative department/location framework and P5 autonomy.
