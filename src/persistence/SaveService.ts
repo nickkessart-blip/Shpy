@@ -219,7 +219,24 @@ export class SaveService {
     return { success: true, reason: null, data };
   }
 
-  purchaseAgencyResearch(id: AgencyResearchId): {\n    success: boolean; reason: 'maxed' | 'components' | 'locked' | null; data: SaveData;\n  } {\n    const data = this.load();\n    if (getAccountLevel(data.accountXp) < 3) return { success: false, reason: 'locked', data };\n    const definition = AGENCY_RESEARCH.find((entry) => entry.id === id);\n    if (!definition) return { success: false, reason: 'maxed', data };\n    const next = data.agencyResearch[id] + 1;\n    if (next >= definition.costs.length) return { success: false, reason: 'maxed', data };\n    const cost = definition.costs[next] ?? Number.POSITIVE_INFINITY;\n    if (data.components < cost) return { success: false, reason: 'components', data };\n    data.components -= cost;\n    data.agencyResearch[id] = next;\n    this.save(data);\n    return { success: true, reason: null, data };\n  }\n\n  purchaseCosmetic(id: CosmeticId): {
+  purchaseAgencyResearch(id: AgencyResearchId): {
+    success: boolean; reason: 'maxed' | 'components' | 'locked' | null; data: SaveData;
+  } {
+    const data = this.load();
+    if (getAccountLevel(data.accountXp) < 3) return { success: false, reason: 'locked', data };
+    const definition = AGENCY_RESEARCH.find((entry) => entry.id === id);
+    if (!definition) return { success: false, reason: 'maxed', data };
+    const next = data.agencyResearch[id] + 1;
+    if (next >= definition.costs.length) return { success: false, reason: 'maxed', data };
+    const cost = definition.costs[next] ?? Number.POSITIVE_INFINITY;
+    if (data.components < cost) return { success: false, reason: 'components', data };
+    data.components -= cost;
+    data.agencyResearch[id] = next;
+    this.save(data);
+    return { success: true, reason: null, data };
+  }
+
+  purchaseCosmetic(id: CosmeticId): {
     success: boolean; reason: 'unknown' | 'owned' | 'components' | null; data: SaveData;
   } {
     const data = this.load();
