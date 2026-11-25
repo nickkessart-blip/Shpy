@@ -104,7 +104,8 @@ Implementation status (2026-11-25): PR #18 adds a deterministic route clock, rou
 - [ ] Build Warehouse, Embassy and Vulkan's Lair around their signature mechanics.
 - [ ] Add compatible operation modifier pools, elite encounters and distinct bosses.
 - [ ] Expand weapon/attachment, operative, gadget and cosmetic content.
-- [~] Rebuild initial Casino combat art: detailed four-layer main/bar backgrounds, 2× weapon viewmodels and 2× enemy atlas are in progress; full authored animation cycles and additional location art remain open.
+- [x] Integrate authored 4×4 enemy state atlas (idle/aim/fire/hit), with a tested 0–15 frame map and SVG CanvasTexture fallback. Full multi-frame locomotion/death cycles, additional location art and browser/Android visual QA remain open.
+- [~] Rebuild initial Casino combat art: detailed four-layer main/bar backgrounds and 2× weapon viewmodels are integrated; broader location art and physical mobile visual QA remain open.
 - [ ] Profile low-end desktop and mobile; validate actual Android controls and rendering.
 - [ ] Extend the visual rebuild to East Express, Warehouse, Embassy and Vulkan's Lair; add hand-authored idle/walk/fire/hit/death cycles and complete physical Android visual QA.
 - [ ] Review save migration, persistence and release packaging.
@@ -138,3 +139,11 @@ Every completed, CI-validated implementation slice must be integrated into `main
 ### Enemy attack charge telegraph — 2026-11-26
 - [x] Make the existing enemy aim wind-up readable with a filling warning ring, intensifying target line and player danger marker; add charge-sampling tests. Physical Android readability check remains open.
 
+
+
+### Authored enemy state atlas — 2026-11-26
+- [x] Import the Library 4×4 operative sheet as a transparent, optimized PNG (768×1152; 192×288 cells).
+- [x] Register all 16 idle/aim/fire/hit frames in AssetCatalog and select the frame from enemy state in MissionScene.
+- [x] Add a pure frame mapper, 16-frame uniqueness/order tests and an exact PNG integrity script.
+- [ ] Browser screenshot inspection and physical Android checks remain outstanding; CI is not visual QA.
+- [ ] Add genuine multi-frame walk/idle/reload/death cycles in a later art pass.

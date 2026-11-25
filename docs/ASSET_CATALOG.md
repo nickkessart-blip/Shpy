@@ -26,13 +26,14 @@ The source pack is distributed as a ZIP by the original publisher. The current i
 
 ## Enemy state atlas (runtime-integrated)
 
-- Runtime source: four original project SVGs in src/assets/enemies/ (guard, armored, assault, boss).
-- Runtime builder: AssetCatalog.ensureEnemyAnimationAtlas() composes a deterministic 384×1024 Phaser CanvasTexture after BootScene preload. Frame geometry is 3×4, 128×256; rows are enemy types and columns are aim/fire/hit.
-- Visual states: aim uses the source pose; fire adds a restrained muzzle flash/recoil offset; hit adds a source-atop red tint. These are state variants, not hand-drawn animation cycles.
-- MissionScene creates the atlas once and selects frames by enemy combat state. An authored atlas is preserved; missing SVGs or canvas failure leave Kenney/SVG fallback intact.
-- Prepared Library WebP remains uncommitted (384×1024 RGBA; 115,008 bytes; SHA-256 27893c782fb375ea892f53ed0ca9d256fffd23ec2ad7cfdac2fa6cc8632faf04). It is not the runtime source.
-- Full implementation and limits: docs/ENEMY_ANIMATION_ATLAS.md.
-
+- Runtime source: `src/assets/enemies/animation-atlas.png`, imported from Library and optimized as a transparent 768×1152 indexed PNG (96 palette entries, 63,266 bytes).
+- Source artwork: original 1024×1536 RGBA 4×4 character sheet; rows: guard, armored, assault, boss; columns: idle, aim, fire, hit.
+- Runtime texture key: `enemy-animation-atlas`; Phaser spritesheet cells: 192×288, 4×4, frame IDs 0–15.
+- Frame mapping helper and tests: `src/game/assets/enemyAnimationFrames.ts` and `enemyAnimationFrames.test.ts`.
+- `MissionScene.drawEnemies()` now selects idle/aim/fire/hit frames from the actual enemy state. Existing breathing, recoil, hit and death presentation remain layered on top.
+- Fallback: a matching 4×4 CanvasTexture can still be generated from the four committed SHPY SVG enemy archetypes if the authored PNG is unavailable.
+- Integrity check: `npm run verify:enemy-atlas` validates PNG geometry, indexed transparency, byte size and SHA-256.
+- Import note: the user's WebP upload attempt failed in the current Git workflow, so the authored sheet was committed as PNG. This is a workflow workaround, not a statement that Vite lacks WebP support.
 
 ## Enemy archetype silhouette pass (2026-11-26)
 
@@ -60,11 +61,11 @@ Keep original archives outside the runtime asset folders. Before importing a pac
 |---|---|---|
 | `SHPY_enemy_animation_atlas.webp` | 384×1024 RGBA; transparent; 3×4 fixed cells, 128×256. Rows: guard, armored, assault, boss. Columns: aim, fire, hit/reaction. | Prepared in Library only; not committed, registered or loaded. It matches the existing authored-atlas loader contract and is the strongest next asset candidate. |
 | `SHPY_enemy_character_atlas.webp` | 1024×1536 RGBA; multiple rows/poses. Visible panel-like remnants require alpha-edge/frame inspection. | Research only; not sliced or integrated. |
-| `Спрайт-лист оперативников в боевых позах.png` | 1024×1536 RGBA; four rows with four poses each; exact cell bounds and alpha need validation. | Research only; not sliced or integrated. |
+| `Спрайт-лист оперативников в боевых позах.png` | 1024×1536 RGBA, transparent 4×4 sheet; source resized to 768×1152 indexed PNG, 192×288 per frame, 96 palette entries. | Imported as `src/assets/enemies/animation-atlas.png`; frame mapping and runtime state selection are integrated. |
 | `Атлас игровых ассетов: Восточный экспресс.png` | 1536×1024 RGB, opaque labelled contact sheet. | Art reference only; not a runtime atlas. |
 | `Игровой артбук: поезд и оружие.png` | 1536×1024 RGB, opaque contact sheet/mockup. | Art reference only; not a runtime atlas. |
 
-The Library files are not repository assets. Do not describe them as integrated until the exact binary is committed, its frame map and provenance are recorded, the loader registers it, and a runtime screenshot confirms correct rendering. See `docs/AI_SKILLS_RESEARCH.md`.
+The imported 4×4 operative sheet is now committed and runtime-loaded; other Library files in this table remain research-only unless their exact binaries, provenance and runtime mapping are separately recorded. CI does not replace browser or Android visual review. See `docs/AI_SKILLS_RESEARCH.md`.
 
 
 ## Casino authored parallax planes — 2026-11-25

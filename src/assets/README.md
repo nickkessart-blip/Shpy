@@ -12,7 +12,7 @@
 | ui | logo.png, cursor.png | Логотип/прицел |
 | audio | Любые имена ogg/mp3/wav | Звуковые ресурсы |
 
-Поддерживаемые изображения: PNG, JPG/JPEG, WEBP, SVG. Предпочтительно WebP или PNG с прозрачностью.
+Поддерживаемые изображения: PNG, JPG/JPEG, WEBP, SVG. Для атласов с прозрачностью используйте PNG как основной переносимый формат: в текущем процессе загрузка пользовательского WebP в Git не сработала, поэтому атлас врагов опубликован как PNG. Сам Vite по-прежнему поддерживает WEBP через import.meta.glob.
 Для новых именованных слотов добавьте соответствие в src/game/assets/assetSlots.ts.
 
 
@@ -23,7 +23,7 @@
 
 ## Текущая графика
 
-В `backgrounds/`, `enemies/`, `weapons/`, `props/` и `ui/` находятся авторские SVG-ассеты, подключаемые автоматически. Атлас состояний врагов 3×4 строится в Phaser CanvasTexture из четырёх загруженных SVG при старте MissionScene; frame IDs 0–11 используются для aim/fire/hit. Подробности: docs/ENEMY_ANIMATION_ATLAS.md. Источники сторонних бесплатных паков и их лицензии собраны в `docs/ASSET_RESEARCH.md`; сами сторонние паки пока не интегрированы.
+В `src/assets/enemies/animation-atlas.png` находится прозрачный авторский атлас 4×4: idle/aim/fire/hit для guard/armored/assault/boss, 192×288 на кадр. Он загружается напрямую как Phaser spritesheet (frame IDs 0–15); при отсутствии PNG остаётся совместимая CanvasTexture-заглушка из SVG. Подробности: docs/ENEMY_ANIMATION_ATLAS.md. Источники сторонних бесплатных паков и их лицензии собраны в `docs/ASSET_RESEARCH.md`; сами сторонние паки пока не интегрированы.
 
 
 ## Локальное аудио SHPY 0.6

@@ -1699,7 +1699,8 @@ export class MissionScene extends Phaser.Scene {
       const drawY = enemy.y - 20 + idleBob + hitReaction.offsetY;
       AssetCatalog.ensureKenneyEnemyFrames(this);
       const animationPose = enemy.hitFlash > 0 ? 'hit'
-        : enemy.state === 'Attacking' ? 'fire' : 'aim';
+        : enemy.state === 'Attacking' ? 'fire'
+          : enemy.state === 'Aiming' ? 'aim' : 'idle';
       const animationFrame = AssetCatalog.enemyAnimationFrame(enemy.type, animationPose);
       const hasAnimationFrame = AssetCatalog.hasEnemyAnimationFrame(this, enemy.type, animationPose);
       const animationAtlasKey = AssetCatalog.imageKeyFor('enemies/animation-atlas');
@@ -1736,12 +1737,9 @@ export class MissionScene extends Phaser.Scene {
         const poseScaleY = 1 + (aiming ? 0.025 : 0) - breathing * 0.006;
         const poseLean = (aiming ? -1.8 : 0) + (attacking ? recoilKick * 2.2 : 0)
           + hitReaction.angle;
-        // Keep the atlas's 1:2 cell aspect ratio instead of stretching its characters.
-        const generatedAtlas = hasAnimationFrame && AssetCatalog.usesGeneratedEnemyAnimationAtlas(this);
-        const atlasContentHeight = enemy.type === 'boss' ? 300 : 320;
-        const displayHeight = generatedAtlas ? baseHeight * (384 / atlasContentHeight) : baseHeight;
-        const atlasAspect = enemy.type === 'boss' ? 0.64 : 0.6;
-        const displayWidth = generatedAtlas ? displayHeight * atlasAspect : hasAnimationFrame ? baseHeight * 0.5 : baseWidth;
+        // Authored and generated atlases share 192×288 (2:3) cells.
+        const displayHeight = baseHeight;
+        const displayWidth = hasAnimationFrame ? displayHeight * (2 / 3) : baseWidth;
         image.setPosition(drawX, drawY + (aiming ? -2 : 0) + (attacking ? recoilKick * 3 : 0))
           .setDisplaySize(displayWidth * poseScaleX * hitReaction.scaleX,
             displayHeight * poseScaleY * hitReaction.scaleY).setVisible(true);

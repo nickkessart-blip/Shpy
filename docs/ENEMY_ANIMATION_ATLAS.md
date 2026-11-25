@@ -1,77 +1,42 @@
 # SHPY enemy animation atlas
 
-## Runtime implementation
+## Runtime-integrated authored atlas
 
-AssetCatalog.ensureEnemyAnimationAtlas() builds a deterministic 576×1536 Phaser CanvasTexture from the four committed SVG enemy assets after BootScene preload. This removes the runtime dependency on transferring the prepared Library-only WebP. The implementation uses Phaser's documented CanvasTexture API (createCanvas, getContext, refresh and add), makes no network requests, and does not mutate source assets or combat coordinates.
+- Asset: `src/assets/enemies/animation-atlas.png`.
+- Texture key: `enemy-animation-atlas`.
+- File geometry: 768×1152 PNG, indexed colour, 96 palette entries and transparency table.
+- Sprite geometry: 4 columns × 4 rows, 192×288 pixels per frame (2:3 aspect ratio).
+- Source: Library file «Спрайт-лист оперативников в боевых позах.png», originally 1024×1536 RGBA with 256×384 cells. It was resized cell-for-cell to 192×288 and palette-optimized for the mobile build; frame boundaries and alpha were retained.
+- SHA-256: `6af559f7b2b6fd4950cdd098e4792e6e56c9ca3bbb8324a691335f030fa3cc67`.
+- Runtime loading: AssetCatalog.preload() loads the PNG as a Phaser spritesheet; MissionScene selects the frame from the enemy type and current combat state.
 
-- Texture key: enemy-animation-atlas.
-- Geometry: 3 columns × 4 rows; 192×384 per cell.
-- Rows: guard, armored, assault, boss.
-- Columns: aim, fire, hit.
-- Frame index: row * 3 + column (0–11).
-- Baseline: y=248 in each cell.
-- Source/license: original SHPY SVG assets; no third-party material and no newly generated image.
-- Runtime integration: in-memory texture registered with Phaser TextureManager and selected by MissionScene.drawEnemies().
+| Row | Archetype | Frame IDs |
+|---:|---|---|
+| 0 | Guard | 0–3 |
+| 1 | Armored | 4–7 |
+| 2 | Assault | 8–11 |
+| 3 | Boss | 12–15 |
 
-## Meaning and limits of states
+Columns are ordered left to right: **idle**, **aim**, **fire**, **hit**. Frame index is `row * 4 + column`. The mapping lives in `src/game/assets/enemyAnimationFrames.ts` and is covered by unit tests.
 
-This is a state atlas, not a hand-drawn frame animation:
-- aim: original SVG pose, fitted into a fixed 192×384 transparent cell and baseline-aligned.
-- fire: same silhouette with a restrained recoil offset and muzzle flash.
-- hit: same silhouette with a small offset and red source-atop damage tint.
+## Presentation behaviour and limits
 
-These variants provide deterministic state feedback. They do not invent limb motion, idle cycles, reload or death animation. Existing code-driven breathing, aiming lean, recoil timing and hit feedback remain separate and do not alter hitboxes. The prepared hand-authored WebP remains a possible future replacement, not a prerequisite for the current runtime path.
+- Idle is used for entering, exposed, cover, hidden and repositioning states where the enemy is not currently aiming or firing.
+- Aim is selected during the existing Aiming state.
+- Fire is selected during the existing Attacking state.
+- Hit overrides the state frame while the existing hit-flash timer is active.
+- Existing code-driven breathing, small idle bob, aiming lean, recoil, directional hit reaction and defeat fall/fade remain active. These effects do not modify authoritative coordinates, hitboxes, damage or combat timing.
 
-## Safety and fallback
+This is a four-pose authored **state atlas**, not a multi-frame walk/idle loop. It provides distinct authored silhouettes for idle/ready, aiming, firing and hit reaction. Continuous locomotion, reload and multi-frame death animations remain future art work.
 
-- If a complete authored spritesheet is already loaded under enemy-animation-atlas, it is preserved and used as-is.
-- The runtime atlas is created only when that key is absent and all four SVG textures are loaded.
-- If a source texture is missing or canvas creation fails, the builder returns false and the existing Kenney CC0/SVG fallback remains active.
-- A malformed/partial authored texture is never overwritten.
-- No external fetch, image generation, filesystem writes or persistent asset mutation occurs at runtime.
-- The generated-atlas marker is tracked per Phaser Scene, so authored atlases do not receive generated-atlas sizing adjustments.
+## Fallback and validation
 
-## Archetype silhouette pass — 2026-11-26
+If the PNG is unavailable, AssetCatalog builds a compatible 4×4, 192×288 CanvasTexture from the four committed SHPY SVG archetypes. The fallback preserves the same 0–15 frame mapping and provides restrained offset/muzzle-flash/hit-tint variants. Kenney CC0 and SVG fallback rendering remains available if neither atlas path can be completed.
 
-The committed SVG fallback sources now separate the four roles beyond palette changes:
-- Guard: security shoulder tabs and cap badge.
-- Armored: broad shoulder guards and reinforced chest plate.
-- Assault: dark balaclava, red-edged goggles and red equipment markers.
-- Boss: wider command-coat silhouette and stance.
+Run `npm run verify:enemy-atlas` to validate the exact PNG signature, dimensions, indexed transparency, 4×4 frame grid, byte size and SHA-256. Unit tests validate that all 16 type/pose combinations map to unique contiguous frame IDs. CI typecheck/tests/build do not visually inspect the rendered scene.
 
-These are source-art distinctions, not frame-by-frame animation. The existing 3×4 state atlas continues to render aim/fire/hit variants and retains its Kenney fallback. The 4×4 Library contact sheet remains uncommitted and is not runtime-loaded.
+## Import note — 2026-11-26
 
-## Validation and replacement
+The user's attempt to upload the WebP version through the Git workflow did not succeed. The selected Library source was therefore committed as an optimized PNG instead. This records a limitation of that upload path, **not** a claim that Vite or Phaser categorically cannot load WebP; the asset discovery glob still lists WebP as a supported extension. PNG is the committed source of truth for this atlas.
 
-CI typecheck and production build validate Phaser API usage. Frame IDs 0–11 are created and checked before hasEnemyAnimationFrame reports success. CI does not visually inspect rendered sprites; desktop/browser and physical Android checks remain required for baseline, crop and appearance. The optional npm run verify:enemy-atlas script validates only the exact prepared WebP, not the runtime CanvasTexture.
-
-The separate Library copy SHPY_enemy_animation_atlas.webp remains uncommitted: 384×1024 RGBA WebP, 115,008 bytes, SHA-256 27893c782fb375ea892f53ed0ca9d256fffd23ec2ad7cfdac2fa6cc8632faf04. It is not the current runtime source and must not be described as integrated. The current path is reproducible from four committed SVG files and uses the same frame mapping/state selection, so a future approved replacement does not require rewriting combat code.
-
-
-## Prepared Library atlases audited on 2026-11-25
-
-Two native Library files were visually inspected; neither is committed or runtime-loaded.
-
-### SHPY_enemy_animation_atlas.webp
-- 384×1024 RGBA WebP; 3 columns × 4 rows; each cell 128×256.
-- Rows: guard, armored, assault, boss.
-- Columns: aim, fire, hit.
-- Alpha channel is present. All 12 cells have a consistent bottom bound at y=248, so the sheet is structurally more suitable for direct Phaser spritesheet loading than the larger contact sheet.
-- This is a real multi-pose authored state sheet, unlike the runtime-generated SVG atlas below.
-
-### SHPY_enemy_character_atlas.webp
-- 1024×1536 RGBA WebP; visually arranged as 4 columns × 4 rows of 256×384.
-- Rows appear to represent guard, armored, assault and boss; columns show idle/ready, aim, fire and hit/reaction.
-- Alpha channel is present, but bottom bounds vary by cell; normalize baselines and pivots before using it for frame animation.
-
-### Current integration status
-- The committed runtime now uses the generated 576×1536 CanvasTexture from four static SVGs, with aim, fire and hit state variants. It is not using either Library atlas.
-- A prepared asset is not integrated until the exact binary is committed, loaded by BootScene, registered with AssetCatalog, mapped to runtime animation states and visually validated.
-- The available tool path in this audit could inspect/materialize the Library WebP but could not pass its binary bytes to GitHub. Do not claim integration or silently substitute the runtime-generated state atlas for the prepared sheet.
-
-
-## SHPY visual recovery pass — 2026-11-25
-
-- Runtime enemy SVG source textures are rasterized at 2× source resolution (guard/armored/assault 480×800; boss 640×1000).
-- The runtime CanvasTexture now uses 192×384 cells (3×4, 576×1536) and a 372px baseline. It preserves the SVG source silhouette more cleanly than the former 128×256 atlas.
-- These are still three state variants generated from one source pose per enemy. This resolution upgrade is not a substitute for hand-authored idle/walk/fire/hit/death animation cycles.
+The desktop image inspection confirmed a transparent 4×4 sheet and the final PNG retained alpha. Browser screenshot review and physical Android validation are still outstanding; do not mark them complete based on CI alone.
