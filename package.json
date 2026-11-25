@@ -12,7 +12,8 @@
     "test:watch": "vitest",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "verify:enemy-atlas": "node scripts/verify-enemy-atlas.mjs"
+    "verify:enemy-atlas": "node scripts/verify-enemy-atlas.mjs",
+    "verify:first-person-atlas": "node scripts/verify-first-person-atlas.mjs"
   },
   "dependencies": {
     "phaser": "4.2.1"

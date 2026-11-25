@@ -23,6 +23,10 @@ import {
   getEnemyHitAreaMultiplier,
 } from '../systems/combat/enemyCombatRules';
 import { getEnemyProjectileTravelMs, sampleEnemyProjectile } from '../systems/combat/enemyProjectile';
+import {
+  getFirstPersonWeaponMuzzlePoint,
+  getFirstPersonWeaponRotationOffset,
+} from '../systems/combat/weaponViewmodel';
 
 type EnemyState = 'Entering' | 'Exposed' | 'Aiming' | 'Attacking' | 'SeekingCover' | 'Hidden' | 'Peeking' | 'Repositioning' | 'Defeated';
 interface RuntimeEnemy {
@@ -327,28 +331,28 @@ export class MissionScene extends Phaser.Scene {
   }
 
   private buildWeaponRig(): void {
-    const rig = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT + 95).setDepth(18).setScrollFactor(0);
+    const rig = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT + 50).setDepth(18).setScrollFactor(0);
     const appearance = saveService.load().cosmetics;
     const weaponTint = getCosmetic(appearance.weaponSkinId).tint;
     const heroTint = getCosmetic(appearance.heroSkinId).tint;
     const textureKey = 'weapon-' + this.currentWeaponId;
-    if (AssetCatalog.hasTexture(this, textureKey)) {
-      // Use the original vector viewmodel at native 2× raster size. The old
-      // 192×144 atlas was enlarged to 256×192 and looked visibly soft on phones.
-      const weaponImage = this.add.image(0, -140, textureKey).setDisplaySize(240, 413);
-      rig.add(weaponImage);
-      this.weaponRig = rig;
-      this.updateWeaponRig();
-      return;
-    }
     const atlasKey = 'weapon-fp-atlas';
     AssetCatalog.ensureFirstPersonWeaponFrames(this);
     const frameByWeapon: Record<WeaponId, string> = {
       pistol: 'fp-pistol', smg: 'fp-smg', shotgun: 'fp-shotgun', rifle: 'fp-rifle',
     };
     if (AssetCatalog.hasTexture(this, atlasKey)) {
-      const weaponImage = this.add.image(0, -75, atlasKey, frameByWeapon[this.currentWeaponId])
-        .setDisplaySize(256, 192);
+      // Primary viewmodel: full weapon, gloves and forearms in its authored 4:3 cell ratio.
+      const weaponImage = this.add.image(0, -95, atlasKey, frameByWeapon[this.currentWeaponId])
+        .setDisplaySize(360, 270);
+      rig.add(weaponImage);
+      this.weaponRig = rig;
+      this.updateWeaponRig();
+      return;
+    }
+    if (AssetCatalog.hasTexture(this, textureKey)) {
+      // Per-weapon SVGs remain a fallback if the authored full-arm sheet is missing.
+      const weaponImage = this.add.image(0, -140, textureKey).setDisplaySize(240, 413);
       rig.add(weaponImage);
       this.weaponRig = rig;
       this.updateWeaponRig();
@@ -379,29 +383,41 @@ export class MissionScene extends Phaser.Scene {
     if (!this.weaponRig) return;
     if (this.isMobileControls) {
       const originX = GAME_WIDTH / 2;
-      const originY = GAME_HEIGHT + 95 + this.weaponRecoil + this.reloadPose * 38;
+      const originY = GAME_HEIGHT + 50 + this.weaponRecoil + this.reloadPose * 38;
       this.weaponRig.setPosition(originX, originY);
       this.weaponRig.setScale(1 + Math.min(0.035, this.weaponRecoil * 0.00022), 1 - Math.min(0.025, this.weaponRecoil * 0.00016));
       const screenAim = { x: this.aim.x - this.cameras.main.scrollX, y: this.aim.y - this.cameras.main.scrollY };
+      const viewmodelOffset = AssetCatalog.hasTexture(this, 'weapon-fp-atlas')
+        ? getFirstPersonWeaponRotationOffset(this.currentWeaponId) : 0;
       this.weaponRig.setRotation(Phaser.Math.Angle.Between(originX, originY, screenAim.x, screenAim.y)
-        + Math.PI / 2 - this.weaponRecoilAngle);
+        + Math.PI / 2 + viewmodelOffset - this.weaponRecoilAngle);
       return;
     }
     // Desktop weapon follows the mouse reticle.
     const followX = Phaser.Math.Clamp((this.aim.x - GAME_WIDTH / 2) * 0.11, -72, 72);
     const followY = Phaser.Math.Clamp((this.aim.y - GAME_HEIGHT / 2) * 0.055, -20, 22);
     const originX = GAME_WIDTH / 2 + followX;
-    const originY = GAME_HEIGHT + 95 + this.weaponRecoil + this.reloadPose * 38 + followY;
+    const originY = GAME_HEIGHT + 50 + this.weaponRecoil + this.reloadPose * 38 + followY;
     this.weaponRig.setPosition(originX, originY);
+    const viewmodelOffset = AssetCatalog.hasTexture(this, 'weapon-fp-atlas')
+      ? getFirstPersonWeaponRotationOffset(this.currentWeaponId) : 0;
     this.weaponRig.setRotation(Phaser.Math.Angle.Between(originX, originY, this.aim.x, this.aim.y)
-      + Math.PI / 2 + this.reloadPose * 0.12 - this.weaponRecoilAngle);
+      + Math.PI / 2 + viewmodelOffset + this.reloadPose * 0.12 - this.weaponRecoilAngle);
   }
 
   private getWeaponMuzzle(): Point {
     const rig = this.weaponRig;
     const rotation = rig?.rotation ?? 0;
     const originX = rig?.x ?? GAME_WIDTH / 2;
-    const originY = rig?.y ?? GAME_HEIGHT + 95 + this.weaponRecoil;
+    const originY = rig?.y ?? GAME_HEIGHT + 50 + this.weaponRecoil;
+    if (AssetCatalog.hasTexture(this, 'weapon-fp-atlas')) {
+      const muzzle = getFirstPersonWeaponMuzzlePoint(
+        this.currentWeaponId, { x: originX, y: originY }, rotation,
+      );
+      return this.isMobileControls
+        ? this.cameras.main.getWorldPoint(muzzle.x, muzzle.y)
+        : muzzle;
+    }
     if (this.isMobileControls) {
       const distance = AssetCatalog.hasTexture(this, 'weapon-' + this.currentWeaponId) ? 326 : 300;
       const screenPoint = {

@@ -32,6 +32,9 @@ jobs:
       - name: Verify authored enemy atlas integrity
         run: npm run verify:enemy-atlas
 
+      - name: Verify first-person weapon atlas integrity
+        run: npm run verify:first-person-atlas
+
       - run: npm run typecheck
       - run: npm run test
       - run: npm run lint

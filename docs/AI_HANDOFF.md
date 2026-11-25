@@ -314,3 +314,14 @@ The user reports a complete failure in graphics quality and mobile shooting and 
 - Pure trajectory logic and tests are in src/game/systems/combat/enemyProjectile.ts and enemyProjectile.test.ts. Linear progress clamps to [0,1], validates finite coordinates/timing and uses explicit endpoints.
 - This is not dodge/interception gameplay: incoming rounds currently hit the recorded target on arrival. Mobile/browser visual QA and tuning of travel speeds remain outstanding.
 - The lower-screen agent arms/hands/weapon artwork remains an open visual task; this slice does not claim to solve it.
+
+## First-person arms and weapon viewmodels — 2026-11-26
+
+- Primary viewmodel asset: `src/assets/weapons/first-person-atlas.png`, a transparent indexed PNG at 768×576, 61,810 bytes. It contains 2×2 cells at 384×288: pistol, SMG, shotgun, rifle. Every cell includes both gloved hands and forearms.
+- Source: the Library first-person weapon sheet (1448×1086 RGBA), cropped cell-by-cell, resized and optimized. It is a user Library artwork resource; no third-party license has been inferred.
+- AssetCatalog loads the atlas at 384×288 and creates named frames fp-pistol/fp-smg/fp-shotgun/fp-rifle. MissionScene prefers it; individual weapon SVGs and the procedural arm remain fallbacks.
+- The viewmodel is drawn at 360×270 with a bottom-screen rig origin at GAME_HEIGHT + 50. Per-weapon rotation corrections straighten diagonal SMG/shotgun/rifle poses toward the reticle.
+- Muzzle points are mapped per frame in `src/game/systems/combat/weaponViewmodel.ts`. The same rig origin/rotation transforms those local coordinates; getWeaponMuzzle, muzzle flash and player tracer now share the visible barrel point.
+- Added tests for frame muzzle coordinates, rigid rotation, per-weapon alignment and invalid inputs.
+- Added `scripts/verify-first-person-atlas.mjs` and `npm run verify:first-person-atlas` to validate PNG signature, indexed transparency, dimensions, exact size and SHA-256. CI and Pages workflows execute the check.
+- This does not yet create separate swappable arm/sleeve/weapon cosmetic layers. Physical Android viewmodel scale/alignment is not yet tested.

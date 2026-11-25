@@ -33,6 +33,8 @@ jobs:
         run: npm ci
       - name: Verify
         run: |
+          npm run verify:enemy-atlas
+          npm run verify:first-person-atlas
           npm run typecheck
           npm run test
           npm run lint
