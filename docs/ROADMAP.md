@@ -1,40 +1,154 @@
-# SHPY enemy animation atlas
+# SHPY — ROADMAP
 
-## Exported source
+## Кампания «Восточный экспресс» — 2026-11-23
 
-The generated reference sheet was segmented by its actual alpha mask, not by equal-sized grid guesses. Only the 16 connected character silhouettes were retained; transparent panel artwork and stray marks were excluded.
+- Добавлена отдельная операция, открывающаяся с 4-го уровня аккаунта: шесть волн в пассажирском вагоне, финальный босс.
+- Добавлен собственный векторный фон вагона и укрытия в виде кресел. Это лёгкий оригинальный SVG-ассет, а не готовая покадровая иллюстрация.
+- Операция использует общий цикл миссии, наград и отчёта; название операции берётся из каталога.
 
-The prepared export is available in the user's Library as `SHPY_enemy_animation_atlas.webp` (115,008 bytes; 3 columns × 4 rows, 384×1024 px). Each cell is exactly 128×256 px, RGBA transparency is retained, and the character baseline is aligned to y=248 in every cell. SHA-256: `27893c782fb375ea892f53ed0ca9d256fffd23ec2ad7cfdac2fa6cc8632faf04`. It has **not yet been committed to this Git branch**.
 
-## Frame map
+## SHPY 0.8 — Mobile controls and combat feel (in progress)
 
-| Enemy row | Enemy | Frame 0 | Frame 1 | Frame 2 |
-|---|---|---|---|---|
-| 0 | guard | aim | fire | hit |
-| 1 | armored | aim | fire | hit |
-| 2 | assault | aim | fire | hit |
-| 3 | boss | aim | fire | hit |
+- [x] Restore direct tap-to-aim-and-fire as a selectable mobile control profile.
+- [x] Keep swipe camera and aim-stick profiles available alongside tap.
+- [x] Increase weapon kick, muzzle flash and tracer readability without camera shake on mobile.
+- [x] Wire the existing first-person weapon atlas and CC0 muzzle/impact effects into runtime scenes (first-person atlas for the weapon rig, impact smoke on hit, muzzle-flare sprite on shot).
+- [ ] Run unit tests and production build; physical Android test remains required.
 
-Frames are row-major: `row * 3 + column`. Use `aim` as the stable combat pose, play `fire` briefly on attack, and `hit` briefly after damage. Do not loop the hit frame. Idle should use the aim pose with a restrained breathing/bob tween until a dedicated idle drawing is available.
+## SHPY 0.5.1 — Android camera pass (2026-11-23)
 
-## Slicing and alignment rules
+- [x] Add fixed-centre mobile reticle and swipe-to-pan camera mode.
+- [x] Keep fire/reload/weapon controls separate from look input.
+- [x] Keep mobile weapon rig and HUD screen-anchored.
+- [ ] Verify portrait/landscape, touch capture and camera bounds on physical Android.
+- [ ] Integrate first-person weapon atlas and weapon-specific animation states.
+- [ ] Add and validate the next campaign operation.
 
-- Cell size is fixed at 128×256 px; never crop each frame to its own runtime dimensions.
-- Each enemy row uses one shared scale factor across its three poses.
-- Every pose is bottom-aligned to the same baseline and horizontally centered.
-- Keep alpha edges; do not apply a dark matte or a lossy background-removal pass.
-- Do not stretch cells independently. Display size must be identical for all poses of the same enemy.
-- The original first-column portraits were intentionally excluded from animation because the guard portrait is a cropped, shorter pose and would cause visible scale popping.
-- The runtime loader slot and state-selection code are prepared in `assetSlots.ts`, `AssetCatalog.ts` and `MissionScene.ts`, but the Library-only file is absent from `src/assets/` in the current branch. Therefore the atlas is **not loaded or displayed by the build**; active enemies continue to use Kenney CC0/SVG fallbacks.
-- Once the binary file is present at `src/assets/enemies/enemy-animation-atlas.webp`, the existing code will select aim/fire/hit frames by combat state. This is **state-based pose switching**, not a continuously looping animation. The sheet has no dedicated idle cycle, reload or death poses.
+Версия 1.0.0 | План без календарных обещаний
 
-## Binary integrity check
+## Фаза 0 — Документация
+- [x] Концепция и исходный дизайн зафиксированы.
+- [x] Выбран гибрид статичных и кинематографичных сцен.
+- [x] Зафиксированы свободная стрельба и укрытия.
+- [x] Выбран кроссплатформенный подход.
+- [x] Созданы базовые документы.
+- [ ] Проверить состояние репозитория и подготовить каркас проекта.
 
-Run `npm run verify:enemy-atlas` after placing the exact prepared file at `src/assets/enemies/enemy-animation-atlas.webp`. The script checks the WebP/VP8X signature, alpha flag, 384×1024 dimensions, 3×4 frame geometry, exact byte size and SHA-256. It accepts an alternate file path as its first argument, which is useful for checking a separately materialized copy. This check validates the source file only; it does not prove Phaser runtime rendering.
+## Фаза 1 — Технический каркас
+- [ ] Phaser + TypeScript + Vite.
+- [ ] Типизация, линтер, форматтер, тесты.
+- [ ] Базовая сцена и штаб.
+- [ ] Платформенные адаптеры и сохранение.
+- [ ] GitHub Actions.
+- [ ] Production build.
 
-## Validation still required
+## Фаза 2 — Боевое ядро
+- [ ] Прицеливание, стрельба, магазин, перезарядка.
+- [ ] Хитбоксы головы/тела.
+- [ ] Укрытия и блокирование выстрелов.
+- [ ] Guard, Armored, Assault.
+- [ ] Телеграфируемые атаки и HP игрока.
+- [ ] Волны и завершение сцены.
 
-- Run the CI typecheck, lint, unit tests and production build for the integrating commit; do not infer these from successful file writes.
-- Check pose transitions at runtime on desktop and Android, especially armored aim-to-hit scale consistency and boss hit silhouette.
-- Verify that the 1:2 frame aspect ratio and baseline look correct at gameplay size on narrow Android screens.
-- The loader slot and gameplay selection path are committed, but the binary asset is Library-only and has not been added to the repo. Until that file is committed, runtime uses the fallback sprites. Visual/runtime validation remains pending.
+## Фаза 3 — Вертикальный срез «Казино»
+- [ ] Цикл штаб → миссия → результаты → штаб.
+- [ ] Одна законченная сцена.
+- [ ] Вторая сцена и переход, если первая интересна.
+- [x] Раздельная экономика: доллары на покупки и account XP для уровня/разблокировок.
+- [ ] Плейтест и баланс.
+
+## Фаза 4 — Кроссплатформенная проверка
+- [ ] Desktop browser.
+- [ ] Capacitor и Android debug APK.
+- [ ] Сенсорное управление на телефоне.
+- [ ] Tauri и Windows installer.
+- [ ] Требования iOS-сборки через macOS/Xcode.
+
+## Текущее состояние вертикального среза SHPY
+- [x] Стартовое меню «Новая игра» / «Продолжить» с подтверждением сброса прогресса.
+- [x] Миграция сохранений v1–v4 → v5 с конвертацией старой репутации в доллары и account XP.
+- [x] Шесть веток перков: урон, обойма, перезарядка, здоровье, броня и точность; пять уровней каждая, тиры открываются по рангу.
+- [x] Две зоны казино: пять волн в главном зале, пять волн в VIP-зоне и отдельная финальная волна-босс.
+- [x] Переход между зонами внутри одной Phaser Scene с короткой анимацией ходьбы.
+- [x] Android: tap-and-drag aim или aim-stick + отдельный fire hold; независимые pointerId и настраиваемая чувствительность 0.5×–4×.
+- [x] Скорость прицела отделена от ограниченного шага симуляции; вход не теряет половину времени на низком FPS.
+- [x] Рука/оружие не запаздывают за прицелом: прямой поворот и смещение опорной точки без tween-задержки.
+- [x] Оружие получило разные semi/auto/pump-профили, разброс, дробь/пеллеты и отдачу.
+- [x] Четыре модели оружия перерисованы с различимыми силуэтами; в оружейном шкафу добавлены графические шкалы характеристик.
+- [x] HUD переработан в два графических блока: здоровье, миссия, силуэт оружия и индикатор магазина.
+- [x] Экран настроек: графика, музыка/SFX, схема управления, чувствительность, вибрация, параллакс и тряска камеры; отдельное сохранение настроек.
+- [x] Локальные CC0 аудиоресурсы: варианты пистолетного выстрела, tail, UI, перезарядка, попадание, взрыв и музыка; источники/лицензии сохранены.
+- [x] Процедурные планы глубины, параллакс, улучшенный HUD/полоса HP и лёгкая idle-анимация противников.
+- [ ] Физически проверить оба Android-режима, громкость, вибрацию и multi-touch на телефоне (CI не заменяет плейтест на устройстве).
+- [x] Очистка спрайтов завершённых волн и проверка целостности данных миссии.
+- [ ] Реальные 2.5D-перемещения камеры по рельсам во время сцен.
+- [ ] Полноценные циклические спрайтовые анимации героя/врагов, перезарядки и смерти; сейчас atlas обеспечивает только state-based aim/fire/hit pose switching.
+- [x] Локальные SVG-модели четырёх видов оружия в единой перспективе, с различимыми силуэтами и анимационным follow-offset.
+- [x] Production build отключает source maps; добавлено уведомление об авторских правах и различение лицензий собственных/сторонних ассетов.
+- [ ] Миграция исходников в private source-репозиторий с отдельной публичной веткой/репозиторием Web-дистрибутива; публичные исторические копии нельзя отозвать задним числом.
+- [ ] Загрузка и интеграция проверенных внешних CC0-спрайтов/анимаций после получения архивов и проверки содержимого.
+
+## Фаза 5 — Расширение геймплея
+- [ ] Новые сегменты казино.
+- [x] Первый босс казино: три фазы, ускорение атак и смена позиции.
+- [x] Четыре типа оружия: пистолет, ПП, дробовик и штурмовая винтовка.
+- [x] Выбор комплекта перед операцией, развитие оружейных слотов и сохранение выбора.
+- [x] Тактический слот гранаты и активный предмет аптечка с порогами разблокировки.
+- [ ] Новые миссии.
+- [ ] Модификаторы.
+- [ ] Проверка автоматизации освоенных сегментов.
+
+- [x] Доллары за миссии/убийства/волны/боссов и покупка улучшений.
+- [x] 15 рангов аккаунта с отдельными порогами account XP.
+- [x] Уровневые разблокировки оружия, слотов, гранат, аптечки и веток/тиров перков.
+
+## Фаза 6 — Инкрементальная мета-игра
+- [ ] Турели и дроны.
+- [x] Система вербовки и развития агентов.
+- [x] Отдельные таймерные операции братства с риском, составом отряда и наградами-комплектующими.
+- [x] Параллельные слоты агентских заданий, открываемые по рангу.
+- [ ] Престиж.
+- [ ] Поздние ранги и финальная операция.
+
+## Фаза 7 — Контент и релиз
+- [ ] Утвердить визуальный стиль после проверки прототипа.
+- [ ] Финальные ассеты и звук.
+- [ ] UI/UX desktop и mobile.
+- [ ] Оптимизация, профилирование.
+- [ ] Проверка сохранений и миграций.
+- [ ] Подготовка магазинов и установщиков.
+- [ ] Релизная проверка.
+
+Фаза завершена только при работающей сборке, проверяемом результате и зафиксированных тестах.
+
+
+## Следующий производственный этап — SHPY 0.8
+
+1. Проверка обоих мобильных профилей на реальном Android: отзывчивость, multi-touch, автоповтор, перезарядка и переключение оружия. CI не заменяет это испытание.
+2. 2.5D-камера по рельсам и параллакс, который реагирует на прицел, но не смещает хитбоксы относительно видимого мира.
+3. Покадровые состояния героя и противников: idle, aim, fire, hit, reload, death; отдельные анимации затвора/помпы/отдачи оружия.
+4. Следующая сюжетная операция — «Восточный экспресс»: новый фон, укрытия, противники, собственный босс и уникальные звуковые слои.
+5. Баланс оружия по DPS, точности, расходу патронов и цене улучшений после плейтеста.
+
+Не начинать новые крупные системы (престиж/турели/дроны) до проверки отзывчивости и прохождения первой миссии на Android.
+
+
+## SHPY 0.9 — visual polish follow-up (2026-11-25)
+> Current implementation and validation handoff: [docs/AI_HANDOFF.md](AI_HANDOFF.md).
+- [x] Добавить оригинальные SVG-рамки HUD для HP и боезапаса.
+- [x] Перевести здоровье на 12 кодовых сегментов с частичным заполнением.
+- [x] Перевести боезапас на кодовые сегменты, учитывающие размер магазина.
+- [x] Добавить устойчивые визуальные состояния врагов: дыхание/idle, подготовка атаки, импульс выстрела и реакция на попадание; визуальная анимация не меняет хитбоксы.
+- [x] Добавить AGENTS.md и `.ai/skills/` с обязательными правилами для следующих AI-агентов.
+- [x] Подключить воспроизводимый 3×4 state atlas врагов: Phaser CanvasTexture строится из четырёх SVG, frame IDs 0–11 выбираются по aim/fire/hit; authored WebP из Library остаётся необязательной будущей заменой.
+- [ ] Добавить полноценные idle/death/reload циклы и дополнительные кадры только после проверки текущих поз и при наличии утверждённых исходных материалов.
+- [ ] Проверить HUD на мобильном разрешении и физическом Android.
+
+## SHPY 0.9 — гибридное мобильное управление (2026-11-25)
+- [x] Объединить tap и swipe в единый режим tap-and-drag.
+- [x] Оставить отдельную кнопку удержания огня для второго пальца.
+- [x] Сохранить виртуальный стик как альтернативную схему.
+- [x] Мигрировать старые настройки tap/swipe без потери пользовательских настроек.
+- [x] Расширить границы камеры и включить параллакс на мобильных устройствах.
+- [x] Проверить typecheck, тесты, lint и production build в CI (успешно, workflow run #45503170112).
+- [ ] Проверить управление и края камеры на физическом Android.
