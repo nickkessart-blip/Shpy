@@ -132,3 +132,6 @@ Every completed, CI-validated implementation slice must be integrated into `main
 ### Directional enemy hit reaction — 2026-11-26
 - [x] Add a deterministic, short directional knockback/lean pose on confirmed hits; unit tests verify direction and decay. Full authored hit/recoil animation frames remain open.
 
+### Enemy attack charge telegraph — 2026-11-26
+- [x] Make the existing enemy aim wind-up readable with a filling warning ring, intensifying target line and player danger marker; add charge-sampling tests. Physical Android readability check remains open.
+
