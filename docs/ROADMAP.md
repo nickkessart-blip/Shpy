@@ -206,3 +206,9 @@ Every completed, CI-validated implementation slice must be integrated into `main
 - [x] Render a yellow impact/spark effect and prevent player damage on cover interception. Clear lanes retain dodge/impact behavior.
 - [x] Add deterministic geometry tests for earliest cover, boundaries, no intersection and invalid values.
 - [ ] Validate cover interception readability/balance on desktop browser and physical Android; destructible cover remains future work.
+### Destructible physical cover — 2026-11-26
+- [~] Add weapon damage and visible stages to authored tables/barriers: intact → cracked/damaged → destroyed rubble. Durability varies by cover type.
+- [x] Direct reticle shots and rounds blocked while targeting an enemy damage the first intersected cover instead of silently stopping.
+- [x] Remove destroyed cover from player/enemy line-of-sight and spawn-clearance checks. Guards assigned to destroyed cover are forced back into exposed combat.
+- [x] Keep damaged cover physically solid until destroyed; add deterministic durability tests for thresholds, clamping and invalid values.
+- [ ] Tune durability/visual clarity on desktop browser and physical Android; destructible cover particles and rubble physics remain future polish.

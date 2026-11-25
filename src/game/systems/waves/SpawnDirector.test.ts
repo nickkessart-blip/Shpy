@@ -64,6 +64,17 @@ describe('SpawnDirector', () => {
     expect(plan[plan.length - 1].entryDelayMs).toBeGreaterThan(0);
   });
 
+  it('drops authored cover assignments when that cover has been destroyed', () => {
+    const plan = planEnemyWave(
+      ['guard'],
+      [{ x: 365, y: 350, coverId: 'left' }],
+      [{ id: 'right', x: 850, y: 420, width: 185, height: 94 }],
+      5,
+    );
+    expect(plan).toHaveLength(1);
+    expect(plan[0].spawn).toEqual({ x: 365, y: 350 });
+  });
+
   it('handles a single boss spawn without requiring cover', () => {
     const plan = planEnemyWave(['boss'], [{ x: 640, y: 315 }], [], 5);
     expect(plan).toHaveLength(1);
