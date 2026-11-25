@@ -22,7 +22,7 @@ Do not start a new project. Do not silently change canon. Do not generate or edi
 - Latest verified main commit at the start of this task: `a99476fe254e3c235dad5bb12de02fd0f2c0d56c`.
 - PR #15, #16 and #17 are historical/integrated work; do not recreate their branches or duplicate their changes.
 - PR #18 (`docs/shpy-canon-rebaseline-2026-11-25`) was merged into `main` as `a99476fe254e3c235dad5bb12de02fd0f2c0d56c`. Do not recreate it.
-- Active feature branch for mobile world-space aim: `fix/mobile-world-aim-and-camera-2026-11-25` → PR #19 (base `main`). Latest verified feature head before this handoff update: `9ec21c7904bcd6643801eed9a025f0295473b004`. Latest verified main: `a99476fe254e3c235dad5bb12de02fd0f2c0d56c`.
+- Active feature branch for mobile world-space aim: `fix/mobile-world-aim-and-camera-2026-11-25` → PR #19 (base `main`). Latest verified feature code commit: `381c55fa62404b03ff2ba038050634e89932c1ac`. Latest verified main: `a99476fe254e3c235dad5bb12de02fd0f2c0d56c`.
 - Historical branch head before the first handoff refresh in this work session: `5a27635d3661f9887d8b47b61acefbe31171a03d`. Always query the live branch HEAD before editing. Query live branch HEAD before any subsequent edit; documentation commits may have moved it. Always query the live branch/PR head before writing; subsequent commits may move it.
 - Keep one shared game codebase for Web, Android and desktop. Do not create separate PC/mobile gameplay branches.
 - The latest user environment report is Node.js 24.19.0, npm 11.17.0 and Git 2.55.0.windows.3. CI currently uses Node.js 26.
@@ -133,8 +133,8 @@ User explicitly asked to continue development after reporting that the prior rel
 
 ### Mobile world-space aim — CI evidence and release boundary
 - PR #19: https://github.com/nickkessart-blip/Shpy/pull/19
-- Latest gameplay-code commit: `9ec21c7904bcd6643801eed9a025f0295473b004`.
-- GitHub Actions PR run `45684166228` completed successfully: typecheck, Vitest, ESLint and production build all passed. The publish-build job was skipped as expected for a PR.
+- Latest gameplay-code commit: `381c55fa62404b03ff2ba038050634e89932c1ac`.
+- GitHub Actions run `45684886138` completed successfully on the latest code commit: typecheck, Vitest, ESLint and production build all passed. The publish-build job was skipped as expected for a PR.
 - This work is not yet in `main` or GitHub Pages. Do not send the live game URL as though this PR were deployed.
 - Physical Android/browser QA is still outstanding.
 
