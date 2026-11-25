@@ -62,7 +62,10 @@ function insideExpandedCover(
 }
 
 function attachNearestCover(point: SpawnPoint, covers: CoverDefinition[]): SpawnPoint {
-  if (point.coverId) return point;
+  if (point.coverId) {
+    return covers.some((cover) => cover.id === point.coverId)
+      ? point : { x: point.x, y: point.y };
+  }
   const nearest = covers
     .filter((cover) => point.y < cover.y && point.x >= cover.x - 150
       && point.x <= cover.x + cover.width + 150)
