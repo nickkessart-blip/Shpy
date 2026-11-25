@@ -47,6 +47,18 @@ export class RailTimeline {
   }
 
   /**
+   * Bounded travel for a non-tileable authored layer. Progress drives a single
+   * finite pan so a full-scene SVG never wraps or exposes an artificial seam.
+   */
+  layerTravel(maxTravel: number, progressScale = 1): number {
+    this.assertPositiveFinite(maxTravel, 'maxTravel');
+    if (!Number.isFinite(progressScale) || progressScale < 0) {
+      throw new RangeError('progressScale must be a finite non-negative number');
+    }
+    return -Math.min(maxTravel, this.progress * maxTravel * progressScale);
+  }
+
+  /**
    * Negative tile offset for a repeating decorative layer. Each layer supplies
    * its own period and speed multiplier; this never changes gameplay positions.
    */
