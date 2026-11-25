@@ -226,3 +226,14 @@ The user reports a complete failure in graphics quality and mobile shooting and 
 - Correct touch scale measurements: at 640×360, the old 0.65 floor rendered the 96px fire button at ~62px and 154px stick at ~100px. New 0.8 floor renders them at ~77px and ~123px.
 - Follow-up branch feat/mobile-target-feedback-2026-11-25 adds target-aware feedback: green reticle/fire rim for a clear hit, amber for cover-blocked, white when no target overlaps. It reuses the same head/body radii and cover geometry as actual shots; no aim assist or hitbox changes. Unit tests added.
 - Follow-up CI/Pages pending. Physical Android QA remains outstanding.
+
+
+## Latest mobile aim feedback release — 2026-11-25
+
+- PR #29 merged: https://github.com/nickkessart-blip/Shpy/pull/29. Main commit 3b537faedde2111094fc7b809c91ce070580e8a4.
+- PR CI run 45697402784 and main CI run 45697492795 passed typecheck, Vitest, lint and production build.
+- Pages run 45697492821 initially failed to find its uploaded artifact due to a transient Actions artifact metadata race. The artifact (ID 15061911596) was confirmed and the Pages job was rerun; the rerun completed successfully for the same main SHA.
+- prototype-build updated to f70202d3ef790027a98dcd8803c20eb94308192d.
+- Live Pages: https://nickkessart-blip.github.io/Shpy/.
+- Aim feedback uses the same hit radii and cover geometry as firing. Green = clear target, amber = cover blocked, white = no target. It does not modify aim, hitboxes or damage.
+- Physical Android QA remains outstanding.
