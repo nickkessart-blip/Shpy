@@ -200,3 +200,9 @@ Every completed, CI-validated implementation slice must be integrated into `main
 - [x] A successful shot consumes ammunition and triggers a 420 ms central jackpot flash, temporarily distracting eligible security in a wider radius. It does not damage enemies or delete projectiles.
 - [x] Add deterministic parallax target geometry tests; hide the interaction during the first-operation tutorial and after the wheel has been activated.
 - [ ] Validate aiming tolerance and touch usability on physical Android; the automatic slot-bank cycle remains a separate recurring event.
+### Enemy projectile cover collision — 2026-11-26
+- [x] Resolve enemy fire against the same physical cover rectangles used by player shots; first intersected cover point becomes the projectile endpoint.
+- [x] Scale travel duration by the distance to cover so a blocked tracer reaches the barrier before it would have reached the player.
+- [x] Render a yellow impact/spark effect and prevent player damage on cover interception. Clear lanes retain dodge/impact behavior.
+- [x] Add deterministic geometry tests for earliest cover, boundaries, no intersection and invalid values.
+- [ ] Validate cover interception readability/balance on desktop browser and physical Android; destructible cover remains future work.
