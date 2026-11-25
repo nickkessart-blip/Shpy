@@ -44,6 +44,7 @@ const SVG_SIZES: Record<string, { width: number; height: number }> = {
 };
 
 export class AssetCatalog {
+  private static readonly generatedEnemyAtlasScenes = new WeakSet<Phaser.Scene>();
   static preload(scene: Phaser.Scene): void {
     for (const [slot, key] of Object.entries(ASSET_SLOTS)) {
       const asset = assetsBySlot.get(slot);
@@ -143,9 +144,15 @@ export class AssetCatalog {
         atlas.add(String(row * 3 + column), 0, column * frameWidth, row * frameHeight, frameWidth, frameHeight);
       });
     });
-    return types.every((_type, row) =>
+    const complete = types.every((_type, row) =>
       poses.every((_pose, column) => atlas.has(String(row * 3 + column))),
     );
+    if (complete) this.generatedEnemyAtlasScenes.add(scene);
+    return complete;
+  }
+
+  static usesGeneratedEnemyAnimationAtlas(scene: Phaser.Scene): boolean {
+    return this.generatedEnemyAtlasScenes.has(scene);
   }
 
   static ensureFirstPersonWeaponFrames(scene: Phaser.Scene): void {

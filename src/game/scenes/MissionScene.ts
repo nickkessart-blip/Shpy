@@ -1546,7 +1546,7 @@ export class MissionScene extends Phaser.Scene {
         const poseScaleY = 1 + (aiming ? 0.025 : 0) - breathing * 0.006;
         const poseLean = (aiming ? -1.8 : 0) + (attacking ? recoilKick * 2.2 : 0);
         // Keep the atlas's 1:2 cell aspect ratio instead of stretching its characters.
-        const generatedAtlas = hasAnimationFrame && textureKey === animationAtlasKey;
+        const generatedAtlas = hasAnimationFrame && AssetCatalog.usesGeneratedEnemyAnimationAtlas(this);
         const displayHeight = generatedAtlas ? baseHeight * (256 / 216) : baseHeight;
         const displayWidth = generatedAtlas ? displayHeight * 0.5 : hasAnimationFrame ? baseHeight * 0.5 : baseWidth;
         image.setPosition(drawX, drawY + (aiming ? -2 : 0) + (attacking ? recoilKick * 3 : 0))

@@ -1,50 +1,36 @@
-# SHPY Asset Catalog
+# Автоподхват ассетов
 
-## Integrated third-party assets
+Кладите файлы прямо в соответствующие папки. Vite обнаруживает их через import.meta.glob при dev-запуске и сборке. Если файл для слота отсутствует, игра использует геометрическую заглушку.
 
-### Kenney Top-down Shooter
+| Папка | Имя файла | Слот |
+|---|---|---|
+| backgrounds | casino-main.png, casino-bar.png | Фоны сцен казино |
+| enemies | guard.png, armored.png, assault.png | Враги |
 
-- **Source:** https://kenney.nl/assets/top-down-shooter
-- **Mirror used for source files:** https://github.com/Tiddybub/2d-assets/tree/main/modern-urban/top-down-shooter
-- **License:** CC0 1.0 (public domain; commercial use permitted).
-- **Integrated file:** `src/assets/enemies/kenney-topdown-shooter.png`
-- **Atlas metadata:** `src/assets/licenses/Kenney-Topdown-Shooter-atlas.xml`
-- **License copy:** `src/assets/licenses/Kenney-Topdown-Shooter-CC0.txt`
-- **Runtime texture key:** `enemy-kenney-atlas`
-- **Used frames:** guard, armored, assault, boss.
-- **Integration:** `src/game/assets/AssetCatalog.ts`, `src/game/assets/assetSlots.ts`, `src/game/scenes/MissionScene.ts`.
+| weapons | pistol.svg, smg.svg, shotgun.svg, rifle.svg | Пистолет |
+| props | cover-crate.png | Укрытия |
+| ui | logo.png, cursor.png | Логотип/прицел |
+| audio | Любые имена ogg/mp3/wav | Звуковые ресурсы |
 
-The source pack is distributed as a ZIP by the original publisher. The current integration copied the required atlas and metadata from a public, already-extracted mirror; the original full ZIP has **not** been added to this repository. This avoids committing a duplicate archive when only one atlas is currently used. The original archive remains available from the source page.
-
-## SHPY original HUD ornaments (2026-11-25)
-
-- `src/assets/ui/hud-health-frame.svg` — ornamental health panel frame; runtime key `hud-health-frame`.
-- `src/assets/ui/hud-ammo-frame.svg` — ornamental ammunition panel frame; runtime key `hud-ammo-frame`.
-- Registered in `src/game/assets/assetSlots.ts`; explicit SVG raster sizes are configured in `src/game/assets/AssetCatalog.ts`.
-- Runtime uses code-rendered segmented HP (12 segments) and ammo meter (up to 30 segments based on magazine capacity). Dynamic values are intentionally not baked into image assets.
-- Frame art is decorative only. Keep panel backing, fill, icons/text and border in a deliberate render-depth order.
-
-## Enemy state atlas (runtime-integrated)
-
-- Runtime source: four original project SVGs in src/assets/enemies/ (guard, armored, assault, boss).
-- Runtime builder: AssetCatalog.ensureEnemyAnimationAtlas() composes a deterministic 384×1024 Phaser CanvasTexture after BootScene preload. Frame geometry is 3×4, 128×256; rows are enemy types and columns are aim/fire/hit.
-- Visual states: aim uses the source pose; fire adds a restrained muzzle flash/recoil offset; hit adds a source-atop red tint. These are state variants, not hand-drawn animation cycles.
-- MissionScene creates the atlas once and selects frames by enemy combat state. An authored atlas is preserved; missing SVGs or canvas failure leave Kenney/SVG fallback intact.
-- Prepared Library WebP remains uncommitted (384×1024 RGBA; 115,008 bytes; SHA-256 27893c782fb375ea892f53ed0ca9d256fffd23ec2ad7cfdac2fa6cc8632faf04). It is not the runtime source.
-- Full implementation and limits: docs/ENEMY_ANIMATION_ATLAS.md.
+Поддерживаемые изображения: PNG, JPG/JPEG, WEBP, SVG. Предпочтительно WebP или PNG с прозрачностью.
+Для новых именованных слотов добавьте соответствие в src/game/assets/assetSlots.ts.
 
 
-## Existing project artwork
+## Подборка источников
 
-- `src/assets/weapons/first-person-atlas.webp` — first-person weapon atlas.
-- `src/assets/backgrounds/train-carriage-real.webp` — East Express carriage background.
-- `src/assets/effects/muzzle-flare.png` and `impact-smoke.png` — Kenney CC0 effects; both are loaded through `AssetCatalog`. `muzzle-flare.png` is now used by the mission muzzle-flash visual and `impact-smoke.png` is used for hit feedback.
-- `src/assets/licenses/Kenney-CC0.txt` — license record for the existing effects.
+Проверенные бесплатные источники и условия лицензирования собраны в docs/ASSET_RESEARCH.md. Наличие ссылки в подборке не означает, что архив уже включён в билд: перед интеграцией ассет нужно загрузить в репозиторий, проверить содержимое архива и сохранить лицензию рядом с файлами.
 
-## Archive handling policy
 
-Keep original archives outside the runtime asset folders. Before importing a pack:
-1. Verify the publisher's license and retain the license file.
-2. Inspect the archive contents and reject executables, scripts, and path traversal entries.
-3. Copy only the files actually used by the game into `src/assets/`.
-4. Record the original source, license, selected files, and runtime integration here.
+## Текущая графика
+
+В `backgrounds/`, `enemies/`, `weapons/`, `props/` и `ui/` находятся авторские SVG-ассеты, подключаемые автоматически. Атлас поз врагов 3×4 подготовлен в Library, но пока не добавлен в `src/assets/`; текущий runtime использует Kenney atlas и SVG. Источники сторонних бесплатных паков и их лицензии собраны в `docs/ASSET_RESEARCH.md`; сами сторонние паки пока не интегрированы.
+
+
+## Локальное аудио SHPY 0.6
+
+Подпапки `audio/sfx/` и `audio/music/` содержат файлы, используемые в игре напрямую. Для каждого файла записан источник и лицензия в `audio/LICENSES.md`. Файлы подхватываются автоматически через Vite/AssetCatalog, сетевое скачивание при запуске не требуется.
+
+
+## Оружие SHPY 0.7
+
+`weapons/pistol.svg`, `smg.svg`, `shotgun.svg` и `rifle.svg` — четыре собственные векторные модели. Их силуэты различаются длиной/формой ствола, ресивером, магазином, оптикой и помповым цевьём; файлы используются в боевой сцене и в оружейном шкафу. Это оригинальные проектные файлы, а не сторонний CC0-пак. Правовой режим проекта описан в `/COPYRIGHT.md`.
