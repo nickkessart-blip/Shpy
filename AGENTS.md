@@ -7,7 +7,7 @@ This repository is an active game project. Before changing anything, read these 
 3. `docs/GAME_BIBLE.md` — canonical game intent; do not silently change canon.
 4. `docs/DECISIONS.md` — accepted decisions and constraints.
 5. `docs/ROADMAP.md` — current priorities and deferred work.
-6. `docs/TECHNICAL_ARCHITECTURE.md` and the relevant gameplay spec.
+6. `docs/TECHNICAL_ARCHITECTURE.md`, `docs/GAME_DESIGN.md`, `docs/COMBAT_SPEC.md`, `docs/CAMPAIGN_AND_LOCATIONS.md`, `docs/AUTOMATION_DESIGN.md`, `docs/UI_UX_SPEC.md` and `docs/MVP_SCOPE.md` as relevant to the task.
 7. `.ai/skills/README.md`, then every skill relevant to the task.
 8. `docs/ASSET_CATALOG.md`, `docs/ASSET_RESEARCH.md`, and `src/assets/README.md` before asset work.
 
