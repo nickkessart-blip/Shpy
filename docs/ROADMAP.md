@@ -194,3 +194,9 @@ Every completed, CI-validated implementation slice must be integrated into `main
 - [x] Guard and assault are distracted for different durations; armored enemies recover faster and the boss is unaffected. Only stationary exposed/aiming/attacking/peeking states qualify; active cover/reposition tweens are not interrupted. A projectile already launched remains in flight.
 - [x] Add an event clock that pauses with the mission, lane rotation per room/cycle, temporary enemy sparkle/tint, and tests for phase boundaries and enemy response durations.
 - [ ] Browser and physical Android review; add player-triggered slot interactions and a separate optional jackpot modifier only after the baseline signature is validated.
+### Player-triggered Casino roulette — 2026-11-26
+- [~] Let the player trigger one manual jackpot pulse per main hall by shooting the visible central roulette wheel. The target follows the background's parallax transform on touch and desktop.
+- [x] Add a live target outline and context label; respect the existing cover line-of-sight test before accepting the shot.
+- [x] A successful shot consumes ammunition and triggers a 420 ms central jackpot flash, temporarily distracting eligible security in a wider radius. It does not damage enemies or delete projectiles.
+- [x] Add deterministic parallax target geometry tests; hide the interaction during the first-operation tutorial and after the wheel has been activated.
+- [ ] Validate aiming tolerance and touch usability on physical Android; the automatic slot-bank cycle remains a separate recurring event.

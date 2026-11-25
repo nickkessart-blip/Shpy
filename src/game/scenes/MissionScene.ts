@@ -40,12 +40,18 @@ import {
   type CasinoLightPhase,
 } from '../systems/missions/casinoLightEvent';
 import {
+  CASINO_JACKPOT_FLASH_MS,
   canCasinoJackpotDistract,
   getCasinoJackpotDistractionMs,
   sampleCasinoJackpotEvent,
   type CasinoJackpotEventState,
   type CasinoJackpotPhase,
 } from '../systems/missions/casinoJackpotEvent';
+import {
+  getCasinoRouletteTargetScreenRect,
+  isCasinoRouletteTargetAtScreenPoint,
+  type CasinoRouletteTargetScreenRect,
+} from '../systems/missions/casinoRouletteTarget';
 
 type EnemyState = 'Entering' | 'Exposed' | 'Aiming' | 'Attacking' | 'SeekingCover' | 'Hidden' | 'Peeking' | 'Repositioning' | 'Defeated';
 type TutorialStep = 'fire' | 'reload' | 'telegraph' | 'dodge' | 'cover' | 'finish';
@@ -80,6 +86,10 @@ export class MissionScene extends Phaser.Scene {
   private casinoJackpotElapsedMs = 0;
   private casinoJackpotState: CasinoJackpotEventState | null = null;
   private casinoJackpotPhase: CasinoJackpotPhase = 'idle';
+  private casinoJackpotManualFlashMs = 0;
+  private casinoJackpotManualState: CasinoJackpotEventState | null = null;
+  private casinoRouletteActivated = false;
+  private casinoRouletteHint?: Phaser.GameObjects.Text;
   private weaponRig?: Phaser.GameObjects.Container;
   private impactEffects: Array<{ x: number; y: number; life: number; maxLife: number; kind: 'hit' | 'cover' | 'miss' | 'explosion' | 'enemy-muzzle' | 'player-hit' | 'player-dodge'; damage: number }> = [];
   private selectedWeapons: WeaponId[] = ['pistol'];
@@ -238,6 +248,11 @@ export class MissionScene extends Phaser.Scene {
     this.uniqueId = 1;
     this.resultSent = false;
     this.pauseOverlay = undefined;
+    this.casinoRouletteHint?.destroy();
+    this.casinoRouletteHint = undefined;
+    this.casinoRouletteActivated = false;
+    this.casinoJackpotManualFlashMs = 0;
+    this.casinoJackpotManualState = null;
     this.backgroundArt = undefined;
     this.transitionOverlay = undefined;
     this.transitionWalkTweens = [];
@@ -572,6 +587,10 @@ export class MissionScene extends Phaser.Scene {
     this.casinoLightState = this.isCasinoRoom() ? sampleCasinoLightEvent(0, this.sceneDef.id as 'casino-main' | 'casino-bar') : null;
     this.casinoJackpotElapsedMs = 0;
     this.casinoJackpotPhase = 'idle';
+    this.casinoJackpotManualFlashMs = 0;
+    this.casinoJackpotManualState = null;
+    this.casinoRouletteActivated = false;
+    this.casinoRouletteHint?.setVisible(false);
     this.casinoJackpotState = this.isCasinoRoom()
       ? sampleCasinoJackpotEvent(0, this.sceneDef.id as 'casino-main' | 'casino-bar') : null;
     // Every authored room starts from its own camera origin and a predictable reticle position.
@@ -1136,6 +1155,20 @@ export class MissionScene extends Phaser.Scene {
     if (this.currentSettings.screenShakeEnabled) {
       if (!this.isMobileControls) this.cameras.main.shake(this.currentWeaponId === 'shotgun' ? 115 : 55,
         this.currentWeaponId === 'shotgun' ? 0.0032 : weapon.recoil * 0.00006);
+    }
+
+    const rouletteTarget = this.getCasinoRouletteTargetAtAim();
+    if (rouletteTarget) {
+      const targetWorld = this.cameras.main.getWorldPoint(
+        rouletteTarget.x + rouletteTarget.width / 2,
+        rouletteTarget.y + rouletteTarget.height / 2,
+      );
+      if (isShotBlocked(muzzleFxPoint, targetWorld, this.sceneDef.covers)) {
+        this.showToast('РУЛЕТКА ЗА СТОЛОМ • СМЕНИТЕ УГОЛ', 850);
+        return;
+      }
+      this.activateCasinoRoulette();
+      return;
     }
 
     const targetHits = new Map<number, {
@@ -1900,20 +1933,78 @@ export class MissionScene extends Phaser.Scene {
       const sector = jackpot.laneIndex === 0 ? 'ЛЕВЫЙ' : jackpot.laneIndex === 1 ? 'ЦЕНТРАЛЬНЫЙ' : 'ПРАВЫЙ';
       this.showToast('ИГРОВОЙ АВТОМАТ • ' + sector + ' СЕКТОР • ДЖЕКПОТ', 900);
     }
-    if (jackpot.phase === 'flash' && this.casinoJackpotPhase !== 'flash') {
+    const manualFlashActive = this.casinoJackpotManualFlashMs > 0;
+    if (jackpot.phase === 'flash' && this.casinoJackpotPhase !== 'flash' && !manualFlashActive) {
       this.applyCasinoJackpotDistraction(jackpot);
     }
-    this.casinoJackpotState = jackpot;
     this.casinoJackpotPhase = jackpot.phase;
+    if (manualFlashActive) {
+      this.casinoJackpotManualFlashMs = Math.max(0, this.casinoJackpotManualFlashMs - dt);
+      this.casinoJackpotState = this.casinoJackpotManualFlashMs > 0 ? this.casinoJackpotManualState : jackpot;
+      if (this.casinoJackpotManualFlashMs <= 0) this.casinoJackpotManualState = null;
+    } else {
+      this.casinoJackpotState = jackpot;
+    }
   }
 
-  private applyCasinoJackpotDistraction(state: CasinoJackpotEventState): void {
+  private getCasinoRouletteTargetAtAim(): CasinoRouletteTargetScreenRect | null {
+    if (this.sceneDef?.id !== 'casino-main' || this.casinoRouletteActivated || this.tutorialStep) return null;
+    const camera = this.cameras.main;
+    const aimScreen = this.isMobileControls
+      ? { x: this.aim.x - camera.scrollX, y: this.aim.y - camera.scrollY }
+      : this.aim;
+    if (!isCasinoRouletteTargetAtScreenPoint(aimScreen, camera.scrollX, camera.scrollY)) return null;
+    return getCasinoRouletteTargetScreenRect(camera.scrollX, camera.scrollY);
+  }
+
+  private activateCasinoRoulette(): void {
+    this.casinoRouletteActivated = true;
+    const state: CasinoJackpotEventState = {
+      phase: 'flash', cycleIndex: Math.floor(this.casinoJackpotElapsedMs / 15_000),
+      laneIndex: 1, centerX: 640, sweepOffset: 0, phaseProgress: 0, intensity: 1,
+    };
+    this.casinoJackpotManualState = state;
+    this.casinoJackpotManualFlashMs = CASINO_JACKPOT_FLASH_MS;
+    this.casinoJackpotState = state;
+    FeedbackService.play(this, 'confirm', 1);
+    this.applyCasinoJackpotDistraction(state, 300);
+  }
+
+  private drawCasinoRouletteTargetHint(): void {
+    const rect = this.getCasinoRouletteTargetAtAim();
+    if (!rect) {
+      this.casinoRouletteHint?.setVisible(false);
+      return;
+    }
+    const camera = this.cameras.main;
+    const topLeft = camera.getWorldPoint(rect.x, rect.y);
+    const target = camera.getWorldPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+    const blocked = isShotBlocked(this.getWeaponMuzzle(), target, this.sceneDef.covers);
+    const color = blocked ? 0xffc46a : 0xffd66f;
+    this.fx.lineStyle(3, color, 0.96);
+    this.fx.strokeRoundedRect(topLeft.x, topLeft.y, rect.width, rect.height, 9);
+    this.fx.lineStyle(1.5, 0xfff3c1, 0.86);
+    this.fx.strokeCircle(target.x, target.y, 9 + Math.sin(this.time.now / 70) * 2);
+    if (!this.casinoRouletteHint) {
+      this.casinoRouletteHint = this.add.text(0, 0, '', {
+        fontSize: '12px', color: '#ffe3a3', fontStyle: 'bold', stroke: '#141a20', strokeThickness: 5,
+        backgroundColor: '#111820d9', padding: { x: 8, y: 5 },
+      }).setOrigin(0.5).setDepth(28).setScrollFactor(0);
+    }
+    this.casinoRouletteHint
+      .setPosition(rect.x + rect.width / 2, Math.max(120, rect.y - 20))
+      .setText(blocked ? 'РУЛЕТКА • УГОЛ ЗАКРЫТ' : 'РУЛЕТКА • ВЫСТРЕЛ ДЛЯ ДЖЕКПОТА')
+      .setColor(blocked ? '#ffc46a' : '#ffe3a3')
+      .setVisible(true);
+  }
+
+  private applyCasinoJackpotDistraction(state: CasinoJackpotEventState, laneRadius = 170): void {
     const laneCenter = this.cameras.main.getWorldPoint(state.centerX + state.sweepOffset, 0).x;
     let distractedCount = 0;
     for (const enemy of this.enemies) {
       if (!canCasinoJackpotDistract(enemy.type, enemy.state)) continue;
       const duration = getCasinoJackpotDistractionMs(enemy.type);
-      if (duration <= 0 || Math.abs(enemy.x - laneCenter) > 170) continue;
+      if (duration <= 0 || Math.abs(enemy.x - laneCenter) > laneRadius) continue;
       enemy.distractionRemainingMs = Math.max(enemy.distractionRemainingMs, duration);
       distractedCount += 1;
     }
@@ -2296,6 +2387,7 @@ export class MissionScene extends Phaser.Scene {
       this.fx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
     }
     this.drawEnemyOverlays();
+    this.drawCasinoRouletteTargetHint();
     this.drawCasinoJackpotFlash();
     this.drawCasinoLightFlash();
     this.drawEnemyProjectiles();
