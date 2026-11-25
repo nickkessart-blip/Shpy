@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
+<defs>
+ <linearGradient id="wall" x2="0" y2="1"><stop stop-color="#172330"/><stop offset=".58" stop-color="#34404b"/><stop offset="1" stop-color="#151c24"/></linearGradient>
+ <linearGradient id="floor" x2="0" y2="1"><stop stop-color="#4b3034"/><stop offset="1" stop-color="#111821"/></linearGradient>
+ <linearGradient id="gold" x2="0" y2="1"><stop stop-color="#f4d18a"/><stop offset=".45" stop-color="#9d6c35"/><stop offset="1" stop-color="#4e3420"/></linearGradient>
+ <linearGradient id="glass" x2="0" y2="1"><stop stop-color="#8296a5" stop-opacity=".5"/><stop offset="1" stop-color="#15202b" stop-opacity=".9"/></linearGradient>
+ <radialGradient id="lamp"><stop stop-color="#ffe8ae" stop-opacity=".9"/><stop offset="1" stop-color="#e9ad58" stop-opacity="0"/></radialGradient>
+ <pattern id="carpet" width="54" height="54" patternUnits="userSpaceOnUse"><path d="M27 2 52 27 27 52 2 27Z" fill="none" stroke="#c18a53" stroke-opacity=".2" stroke-width="2"/><circle cx="27" cy="27" r="5" fill="#d9ad72" fill-opacity=".12"/></pattern>
+ <filter id="shadow"><feGaussianBlur stdDeviation="12"/></filter>
+</defs>
+<rect width="1280" height="720" fill="#0c121a"/>
+<path d="M0 0H1280V480L640 390 0 480Z" fill="#111923"/>
+<path d="M90 80H1190L1280 470H0Z" fill="url(#wall)" stroke="#7a6348" stroke-width="5"/>
+<path d="M125 105H1155L1215 440H65Z" fill="#202d39" stroke="#c39a5c" stroke-width="3"/>
+<path d="M150 125H1130V420H150Z" fill="#18232e"/>
+<path d="M0 480 640 375 1280 480V720H0Z" fill="url(#floor)"/>
+<path d="M0 480 640 375 1280 480V720H0Z" fill="url(#carpet)" opacity=".75"/>
+<path d="M0 480 640 375 1280 480" fill="none" stroke="#d2a86a" stroke-opacity=".65" stroke-width="5"/>
+<path d="M640 375V720M320 428 180 720M960 428 1100 720M485 401 430 720M795 401 850 720" stroke="#a97b4d" stroke-opacity=".3" stroke-width="3"/>
+</svg>

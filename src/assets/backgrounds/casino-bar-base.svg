@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
+<defs>
+ <linearGradient id="wall" x2="0" y2="1"><stop stop-color="#17232c"/><stop offset="1" stop-color="#422d2d"/></linearGradient>
+ <linearGradient id="floor" x2="0" y2="1"><stop stop-color="#5c3c3b"/><stop offset="1" stop-color="#101820"/></linearGradient>
+ <linearGradient id="brass" x2="0" y2="1"><stop stop-color="#f1d28d"/><stop offset=".5" stop-color="#a66d36"/><stop offset="1" stop-color="#52351f"/></linearGradient>
+ <linearGradient id="bottle" x2="0" y2="1"><stop stop-color="#8dbb9b" stop-opacity=".8"/><stop offset="1" stop-color="#234c47"/></linearGradient>
+ <radialGradient id="glow"><stop stop-color="#e99c58" stop-opacity=".65"/><stop offset="1" stop-color="#e99c58" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="1280" height="720" fill="#0d141b"/>
+<path d="M0 0H1280V490L640 410 0 490Z" fill="#121b24"/>
+<path d="M80 70H1200V465H80Z" fill="url(#wall)" stroke="#a47748" stroke-width="5"/>
+<path d="M0 490 640 404 1280 490V720H0Z" fill="url(#floor)"/>
+<path d="M0 490 640 404 1280 490V720H0Z" fill="#271d24" opacity=".65"/>
+<path d="M0 490 640 404 1280 490" stroke="#d1a26a" stroke-width="5" fill="none"/>
+</svg>
