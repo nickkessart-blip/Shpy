@@ -196,3 +196,11 @@
 - Attack timing and damage are unchanged. Added deterministic charge-progress tests.
 - Physical Android visual validation remains outstanding.
 
+
+
+## 2026-11-26 — East Express layered carriage art
+
+- Added independent night-city scenery, rainy window reflections and foreground seat/trim layers to the passenger carriage.
+- Enabled the existing parallax renderer for all three layers; retained the original carriage background as fallback.
+- No combat rules, enemy hitboxes, damage or mobile input behaviour changed.
+- PR #33 merged as `88ad60e23c1cccb8b7106011afa7e038550d4362`; PR CI, main CI and GitHub Pages deployment passed.
