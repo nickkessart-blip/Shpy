@@ -44,6 +44,10 @@ jobs:
         uses: actions/upload-pages-artifact@v4
         with:
           path: ./dist
+      # GitHub's artifact metadata can lag behind a successful upload by a few seconds.
+      # Give deploy-pages time to discover the just-uploaded github-pages artifact.
+      - name: Wait for Pages artifact registration
+        run: sleep 8
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
