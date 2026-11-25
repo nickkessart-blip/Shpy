@@ -1,5 +1,11 @@
 # SHPY — Release notes
 
+## 2026-11-25 — Batch operative report collection
+- Added an inbox action to claim all completed operative reports at once.
+- The AgentService snapshots only completed run IDs and processes them through the existing collectMission flow, preserving component rewards, failure results and operative XP.
+- Unfinished assignments are not touched; an empty batch produces a clear message.
+- Added deterministic coverage for multiple completed reports and the not-yet-completed boundary.
+
 ## 2026-11-25 — Assisted operative auto-dispatch
 - Added an explicit auto-dispatch action to the Agency Computer.
 - The dispatcher evaluates unlocked side operations and legal combinations of available operatives, then chooses the assignment with the best expected Components per minute using current intelligence and logistics research.
