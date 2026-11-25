@@ -136,6 +136,16 @@ export function planEnemyWave(
   }
 
   const random = seededRandom(seed);
+  if (enemies.length === 1) {
+    const preferred = authoredSpawns.find((point) => (
+      point.x >= options.minX && point.x <= options.maxX
+      && point.y >= options.minY && point.y <= options.maxY
+      && !insideExpandedCover(point, covers, options.coverPadding)
+    ));
+    if (preferred) {
+      return [{ type: enemies[0], spawn: attachNearestCover(preferred, covers), entryDelayMs: 0 }];
+    }
+  }
   const order = shuffle(enemies, random);
   const candidates = buildCandidates(authoredSpawns, covers, options, random);
   const selected: SpawnPoint[] = [];
