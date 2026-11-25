@@ -8,7 +8,7 @@ import { CASINO_MISSION, getMissionDefinition, type CoverDefinition, type Missio
 import { applyCoverDamage, createCoverDurability, type CoverDurabilityState } from '../systems/combat/coverDurability';
 import { AssetCatalog } from '../assets/AssetCatalog';
 import { getCosmetic } from '../data/cosmetics';
-import { findVisiblePeekX, getAimFeedbackState, isShotBlocked, pointInRect, resolveHit, type AimFeedbackState, type Point } from '../systems/combat/combatMath';
+import { findVisiblePeekX, getAimFeedbackState, isShotBlocked, resolveHit, type AimFeedbackState, type Point } from '../systems/combat/combatMath';
 import { runSession } from '../systems/missions/runSession';
 import { settingsService, type GameSettings } from '../../settings/SettingsService';
 import { followAimWithCamera, moveAimByPointerDelta, moveAimInWorld } from '../systems/input/aimMath';
@@ -1214,6 +1214,8 @@ export class MissionScene extends Phaser.Scene {
     const targetHits = new Map<number, {
       enemy: RuntimeEnemy; headHits: number; bodyHits: number; target: Point;
     }>();
+    const coverHits = new Map<string, { cover: RuntimeCover; pellets: number; point: Point }>();
+    const activeCovers = this.getActiveCovers();
     const spreadPhase = Math.random() * Math.PI * 2;
     const pelletCount = Math.max(1, weapon.pellets);
 
@@ -1222,20 +1224,15 @@ export class MissionScene extends Phaser.Scene {
       if (pelletCount === 1 && weapon.spreadRadius > 0) {
         const angle = Math.random() * Math.PI * 2;
         const radius = Math.random() * weapon.spreadRadius;
-        pelletAim = {
-          x: this.aim.x + Math.cos(angle) * radius,
-          y: this.aim.y + Math.sin(angle) * radius,
-        };
+        pelletAim = { x: this.aim.x + Math.cos(angle) * radius, y: this.aim.y + Math.sin(angle) * radius };
       } else if (pellet > 0) {
         const angle = spreadPhase + ((pellet - 1) / (pelletCount - 1)) * Math.PI * 2;
         const radius = weapon.spreadRadius * (0.72 + Math.random() * 0.28);
-        pelletAim = {
-          x: this.aim.x + Math.cos(angle) * radius,
-          y: this.aim.y + Math.sin(angle) * radius,
-        };
+        pelletAim = { x: this.aim.x + Math.cos(angle) * radius, y: this.aim.y + Math.sin(angle) * radius };
       }
 
       let best: { enemy: RuntimeEnemy; part: 'head' | 'body'; target: Point; distance: number } | null = null;
+      let nearestBlockedCover: { cover: RuntimeCover; coverIndex: number; point: Point; distance: number } | null = null;
       for (const enemy of this.enemies) {
         if (enemy.state === 'Defeated') continue;
         const isBoss = enemy.type === 'boss';
@@ -1244,23 +1241,45 @@ export class MissionScene extends Phaser.Scene {
         const part = resolveHit(pelletAim, head, body, isBoss ? 42 : 32, isBoss ? 66 : 48);
         if (!part) continue;
         const target = part === 'head' ? head : body;
-        if (isShotBlocked(muzzleFxPoint, target, this.getActiveCovers())) continue;
+        const coverImpact = findEnemyProjectileCoverImpact(muzzleFxPoint, target, activeCovers);
+        if (coverImpact) {
+          const cover = activeCovers[coverImpact.coverIndex];
+          if (cover) {
+            const distance = Math.hypot(pelletAim.x - target.x, pelletAim.y - target.y);
+            if (!nearestBlockedCover || distance < nearestBlockedCover.distance) {
+              nearestBlockedCover = { cover, coverIndex: coverImpact.coverIndex, point: coverImpact.point, distance };
+            }
+          }
+          continue;
+        }
         const distance = Math.hypot(pelletAim.x - target.x, pelletAim.y - target.y);
         if (!best || distance < best.distance) best = { enemy, part, target, distance };
       }
 
       if (best) {
-        const record = targetHits.get(best.enemy.uid) ?? {
-          enemy: best.enemy, headHits: 0, bodyHits: 0, target: best.target,
-        };
+        const record = targetHits.get(best.enemy.uid) ?? { enemy: best.enemy, headHits: 0, bodyHits: 0, target: best.target };
         if (best.part === 'head') record.headHits += 1;
         else record.bodyHits += 1;
         targetHits.set(best.enemy.uid, record);
+        continue;
+      }
+
+      const coverImpact = nearestBlockedCover
+        ? { point: nearestBlockedCover.point, coverIndex: nearestBlockedCover.coverIndex }
+        : findEnemyProjectileCoverImpact(muzzleFxPoint, pelletAim, activeCovers);
+      if (coverImpact) {
+        const cover = activeCovers[coverImpact.coverIndex];
+        if (cover) {
+          const previous = coverHits.get(cover.id);
+          if (previous) previous.pellets += 1;
+          else coverHits.set(cover.id, { cover, pellets: 1, point: coverImpact.point });
+        }
       }
     }
-
     let totalDamage = 0;
     let totalPelletsHit = 0;
+    let totalCoverDamage = 0;
+    let destroyedCoverCount = 0;
     let bossPhaseChanged: 0 | 1 | 2 | null = null;
     const headMultiplier = BALANCE.weapon.headMultiplier[save.upgrades.precision];
 
@@ -1325,6 +1344,12 @@ export class MissionScene extends Phaser.Scene {
       }
     }
 
+    for (const hit of coverHits.values()) {
+      const damage = weaponStats.damage * weapon.pelletDamageMultiplier * hit.pellets;
+      totalCoverDamage += damage;
+      if (this.applyCoverHit(hit.cover, damage, hit.point)) destroyedCoverCount += 1;
+    }
+
     if (targetHits.size > 0) {
       this.hits += 1;
       FeedbackService.play(this, 'hit', 0.55);
@@ -1332,16 +1357,16 @@ export class MissionScene extends Phaser.Scene {
       if (bossPhaseChanged === 1) this.showToast('НАЧАЛЬНИК ОХРАНЫ УСКОРЯЕТСЯ • ФАЗА II', 1500);
       else if (bossPhaseChanged === 2) this.showToast('НАЧАЛЬНИК ОХРАНЫ В ЯРОСТИ • ФАЗА III', 1500);
       else this.showToast('ПОПАДАНИЕ • ' + Math.round(totalDamage * 10) / 10
-        + (pelletCount > 1 ? ' УРОНА • ' + totalPelletsHit + '/' + pelletCount + ' ДРОБИН' : ''), 520);
+        + (pelletCount > 1 ? ' УРОНА • ' + totalPelletsHit + '/' + pelletCount + ' ДРОБИН' : '')
+        + (totalCoverDamage > 0 ? ' • УКРЫТИЕ −' + Math.round(totalCoverDamage) + ' HP' : ''), 700);
+    } else if (coverHits.size > 0) {
+      const label = destroyedCoverCount > 0
+        ? 'УКРЫТИЕ РАЗРУШЕНО ×' + destroyedCoverCount
+        : 'УКРЫТИЕ ПОВРЕЖДЕНО • −' + Math.round(totalCoverDamage) + ' HP';
+      this.showToast(label, 850);
     } else {
-      const cover = this.sceneDef.covers.find((item) => pointInRect(this.aim, item));
-      if (cover) {
-        this.impactEffects.push({ x: this.aim.x, y: this.aim.y, life: 380, maxLife: 380, kind: 'cover', damage: 0 });
-        this.showToast('ПОПАДАНИЕ В УКРЫТИЕ', 450);
-      } else {
-        this.impactEffects.push({ x: this.aim.x, y: this.aim.y, life: 280, maxLife: 280, kind: 'miss', damage: 0 });
-        this.showToast('ПРОМАХ', 300);
-      }
+      this.impactEffects.push({ x: this.aim.x, y: this.aim.y, life: 280, maxLife: 280, kind: 'miss', damage: 0 });
+      this.showToast('ПРОМАХ', 300);
     }
     this.drawFrame();
   }
