@@ -1,64 +1,116 @@
-# SHPY — AI handoff (2026-11-25)
+# SHPY — AI handoff
+Updated: 2026-11-25 | Canon rebaseline branch: `docs/shpy-canon-rebaseline-2026-11-25`
 
-> Прочитать `AGENTS.md`, `docs/GIT_WORKFLOW.md`, `.ai/skills/README.md`, релевантные skills, `docs/GAME_BIBLE.md`, `docs/DECISIONS.md`, `docs/ROADMAP.md` и нужные технические/gameplay specs. Это существующий проект; не начинать заново и не менять канон молча.
+## Mandatory reading order
 
-## Активное состояние GitHub
+Before any code or content task:
+1. `README.md`
+2. `AGENTS.md` and `docs/GIT_WORKFLOW.md`
+3. `.ai/skills/README.md`, then the relevant SKILL.md files
+4. `docs/AI_SKILLS_RESEARCH.md` before importing external skills/tools or sourcing new materials; verify engine and license compatibility
+5. `docs/GAME_BIBLE.md` — current approved canon
+6. `docs/DECISIONS.md` — accepted decisions and open questions
+7. `docs/ROADMAP.md` and `docs/MVP_SCOPE.md`
+8. Relevant specs: `GAME_DESIGN.md`, `COMBAT_SPEC.md`, `CAMPAIGN_AND_LOCATIONS.md`, `AUTOMATION_DESIGN.md`, `UI_UX_SPEC.md`, `TECHNICAL_ARCHITECTURE.md`
+9. Asset catalog/research and asset-pipeline skill before asset work.
 
-- Репозиторий: `nickkessart-blip/Shpy`, default branch: `main`.
-- PR #15 (hybrid mobile controls) **слит** в main: `129d701842ed0f773eacad8912736eca4b05390a`.
-- PR #16 (visual polish) **слит** напрямую в main: `120efbddaff7b5b7943b87782ca44ba9d80f5463`.
-- Обе задачи теперь в одной интегрированной версии main. Отдельных source-веток ПК и Android нет.
-- Старые feature branches являются историей изменений; новые задачи начинать от актуального main и направлять одним PR в main. Не создавать stacked PR без реальной зависимости.
-- PR #16 был переподготовлен как один commit поверх нового main, чтобы после squash-интеграции PR #15 не дублировать мобильные изменения в diff.
-- CI на integration head PR #16: workflow run `45520971687`, проверки typecheck, tests, lint, production build завершились успешно.
-- CI для main после PR #15: run `45520916259`, успешно; публикация downloadable `prototype-build` успешно завершена.
-- GitHub Pages после PR #15: run `45520916130`, успешно; после PR #16 проверь новый Pages deployment на актуальном main.
-- Физический Android-плейтест не выполнен и остаётся обязательным. Не выдавать CI за проверку реального сенсорного устройства.
-- Enemy state atlas is integrated in main: AssetCatalog.ensureEnemyAnimationAtlas() builds a deterministic 384×1024 Phaser CanvasTexture from four committed SVGs; MissionScene selects frames 0–11 for aim/fire/hit. This is a state atlas, not hand-drawn frame animation. See docs/ENEMY_ANIMATION_ATLAS.md.
-- Следующая рабочая ветка должна быть создана от актуального main, когда появится новая задача. Перед записью получать свежий HEAD и использовать expected SHA/fast-forward.
+Do not start a new project. Do not silently change canon. Do not generate or edit images without the user's explicit request in the current turn.
 
-## Основные реализованные системы
+## Repository and Git state
 
-- Сглаженный рендеринг, FPS-style отдача и три procedural-плана параллакса для вида из окон «Восточного экспресса».
-- Существующий Kenney CC0 `muzzle-flare.png` подключён к выстрелу; существующий impact smoke используется при попадании.
-- Декоративные SVG-рамки HP/ammo и кодовые сегменты динамических значений.
-- Процедурные реакции врагов (idle bob/breathing, наклон при прицеливании, импульс атаки, hit flash/tint) не меняют боевые координаты и хитбоксы.
-- Подготовленный Library WebP `SHPY_enemy_animation_atlas.webp` не включён в runtime и остаётся необязательным источником для будущей замены; текущая игра использует CanvasTexture из четырёх SVG.
-- Слот, процедурная CanvasTexture 128×256 и переключение кадров по типу/боевому состоянию интегрированы в main. Fallback Kenney CC0/SVG остаётся только для ошибок создания атласа или отсутствующих исходных SVG.
-- `scripts/verify-enemy-atlas.mjs` и `npm run verify:enemy-atlas` проверяют отдельный подготовленный WebP, но не runtime CanvasTexture. Runtime path описан в `docs/ENEMY_ANIMATION_ATLAS.md`.
-- Прежняя проблема передачи Library WebP больше не блокирует разработку: runtime atlas воспроизводимо строится из SVG, без бинарной загрузки, внешних запросов или изменения исходных ассетов.
+- Repository: `nickkessart-blip/Shpy`; default branch: `main`.
+- Latest verified main commit at the start of this task: `0b0fe7ab1946e3e4e788be9f339a3e1a05212a40`.
+- PR #15, #16 and #17 are historical/integrated work; do not recreate their branches or duplicate their changes.
+- Active feature branch and PR: `docs/shpy-canon-rebaseline-2026-11-25` → PR #18 (base `main`). PR #18 includes the approved canon rebaseline, Casino rail-timeline slice, seeded enemy spawn director and first-pass physical cover occlusion; it is still open and must not be assumed merged.
+- Latest branch head at handoff refresh: `41c6064f49309df8525af13fa28b6a291b61ac41`. Latest verified main remains `0b0fe7ab1946e3e4e788be9f339a3e1a05212a40`.
+- Historical branch head before the first handoff refresh in this work session: `5a27635d3661f9887d8b47b61acefbe31171a03d`. Always query the live branch HEAD before editing. Query live branch HEAD before any subsequent edit; documentation commits may have moved it. Always query the live branch/PR head before writing; subsequent commits may move it.
+- Keep one shared game codebase for Web, Android and desktop. Do not create separate PC/mobile gameplay branches.
+- The latest user environment report is Node.js 24.19.0, npm 11.17.0 and Git 2.55.0.windows.3. CI currently uses Node.js 26.
 
-## CI и проверки
+## Approved design rebaseline
 
-- До исправления CI запускался на PR только с target `main`, поэтому PR #16 без PR-triggered run. Глобальный concurrency key мог отменять чужие проверки. Публикация build могла выполняться из same-repo PR и перезаписывать `prototype-build`.
-- PR #15 получил успешный workflow run `CI` на его head. У PR #16 на прежнем head PR workflow run отсутствовал.
-- Branch listing показывает `protected:false` для известных веток, а rulesets endpoint вернул пустой список. Классический protection endpoint connector прочитать не смог (403); не придумывать статусы protection.
-- Результат коммита workflow пока нужно проверить после запуска Actions. Не утверждать успешный CI, типизацию, тесты или production build без результата текущего SHA.
-- Физическая проверка Android не проведена. Проверить touch/drag/multitouch, чувствительность, ориентацию, камеру, HUD и смену поз врагов на реальном устройстве.
+The user's decisions from 2026-11-25 are now recorded in D-009 through D-020:
+- Spy parody/action comedy with black humour. Tonal references: Johnny English, Leslie Nielsen parody films, The Gentlemen, Tropic Thunder, Austin Powers and Inglourious Basterds. Use original characters and writing.
+- Protagonist is an awkward/lucky rookie who gradually becomes genuinely competent and eventually directs the agency.
+- Vulkan is one of several major antagonists.
+- Restore the moving rail-shooter structure; the old static-scenes-only framing is superseded.
+- Five persistent launch locations each have a signature mechanic and compatible optional modifiers.
+- Three resources: Dollars, Reputation and Components. The current persisted `accountXp` field remains the technical representation of Reputation until a tested migration.
+- Full-autonomy endgame: player prepares and launches an operation, then watches the game execute combat through extraction with no required combat input.
+- New sectors are first introduced manually or with assistance; autonomy is unlocked for known/prepared sectors.
+- Player-agent is the directly controlled protagonist; roster members are operatives. An operative supporting a main operation is unavailable for a simultaneous timed assignment.
+- Armory is catalogue/workshop; actual per-operation equipment is selected in Mission Preparation.
+- First operation doubles as prologue/tutorial. Story is delivered through short cinematics, radio, dialogue, documents, messages and debriefs.
 
-## Enemy state atlas resolution (2026-11-25)
+## New/rewritten canonical documents
 
-- Replaced the blocked Library-binary transfer dependency with a reproducible runtime CanvasTexture built from already committed SHPY enemy SVGs. No generated image or third-party asset was introduced.
-- Uses Phaser's documented CanvasTexture API; missing source textures/canvas failure preserve Kenney/SVG fallbacks, and a loaded authored atlas is never overwritten.
-- Geometry: 384×1024, 3×4, 128×256; row-major guard/armored/assault/boss × aim/fire/hit; baseline y=248.
-- docs/ENEMY_ANIMATION_ATLAS.md records implementation, limitations, fallback policy and replacement procedure.
-- GitHub Actions CI run #45523076355 passed on commit 7a80199c2577a3d9e83329e746ff5f08612d2f28: typecheck, tests, lint and production build all succeeded. Physical Android visual validation remains pending.
+- `docs/GAME_BIBLE.md` — version 2.0 product canon.
+- `docs/GAME_DESIGN.md` — loop, screens, mission structure, economy and progression.
+- `docs/COMBAT_SPEC.md` — rail coordinates, combat, cover, spawn, events and controllers.
+- `docs/CAMPAIGN_AND_LOCATIONS.md` — campaign frame, five signature locations and modifier model.
+- `docs/AUTOMATION_DESIGN.md` — manual, assisted and fully autonomous operation design.
+- `docs/UI_UX_SPEC.md` — menu, HQ, map, settings, armory, computer and onboarding UX.
+- `docs/MVP_SCOPE.md` and `docs/ROADMAP.md` — prioritized production scope.
+- `docs/TECHNICAL_ARCHITECTURE.md` — future rail/event/automation service boundaries.
+- `docs/AI_SKILLS_RESEARCH.md` — Phaser 4-compatible external skills, other user repositories, GameDevkit tools, free asset candidates and Library asset provenance.
+- `docs/superpowers/plans/2026-11-25-casino-rail-timeline.md` — scoped implementation plan and acceptance criteria for the first rail slice.
+- `docs/DECISIONS.md` — D-009 through D-020 and remaining open questions.
 
-## Следующие задачи
+## Implementation truth and limitations
 
-1. Провести desktop/browser visual QA текущей main-версии: стартовый экран, штаб, вход в миссию, стрельба, попадания, смена aim/fire/hit кадров, HUD, resize/fullscreen и консоль браузера.
-2. По результатам desktop QA исправить визуальные/функциональные дефекты отдельными логическими PR.
-3. После desktop QA проверить mobile touch/multitouch, ориентацию и чувствительность на физическом Android.
-4. Полноценные циклические анимации героя/врагов остаются отдельной задачей; текущий atlas даёт state-based aim/fire/hit feedback.
+The current prototype already has Start/HQ/Operations/Loadout/Computer/Settings/Mission/Results scenes, Casino and East Express slices, four weapon definitions, personal upgrade tracks, consumables, account progression, timed operative assignments, basic enemy states/cover/telegraphs, mobile input, audio/effects and an enemy state atlas.
 
-## Пользовательские ограничения
+These are prototype implementations, not proof of final quality. The user's 2026-11-25 feedback identifies unresolved issues: weak/inconsistent menu and screen layout, confusing/platform-irrelevant settings, inactive/unclear HQ props, chart-like operations map and missing story/tutorial, weak tab states and shallow armory/progression, overlap/predictable enemy spawns, disappearing cover behaviour, limited enemy attack feedback, incorrect reticle movement, insufficiently layered background/parallax and economy runaway.
 
-- Пользователь преимущественно работает с Android; приоритет mobile-first. Друг может запускать desktop.
-- Не просить подключить Git или вручную делать routine GitHub operations.
-- Не генерировать и не редактировать изображения без прямой просьбы пользователя в текущем запросе. Сначала искать готовые ассеты в репозитории, чатах и Library.
-- Сначала доводить главный deliverable, а не делать серию вспомогательных коммитов, пока главное остаётся заблокированным.
-- Предпочитать завершённые логические блоки длинным дампам и цепочкам мелких исправлений.
+The first deterministic rail timeline and independently moving Casino/Royale Bar SVG planes are now implemented in PR #18. This is a bounded pan of the authored rooms, not the complete rail-shooter route. The complete location event framework, continuous enemy route-lane movement, seeded dynamic role-composition director, full autonomous mission director, fully separated first-person arm/hand/weapon cosmetic layers, and balanced late-game economy remain unimplemented. The current P0 follow-up now has seeded lane assignment/entry staggering and first-pass physical cover occlusion; these are prototype slices requiring browser validation. Do not claim these systems are complete because their specs now exist.
 
+### First Casino rail-timeline implementation slice (PR #18)
 
-## Merge authorization rule
-Do not interpret Draft as an absolute prohibition. A direct instruction from the user to integrate/merge/release authorizes converting the relevant PR to Ready and merging after checks pass and dependency order is satisfied. No repeated confirmation is required.
+- Added `src/game/systems/missions/RailTimeline.ts`, a Phaser-independent deterministic route clock with validated config, distance/progress/completion, reset, wrapped offsets for repeatable layers and bounded travel for non-tileable authored planes.
+- Added seven focused Vitest cases in `RailTimeline.test.ts` for deterministic advance, completion clamp, reset, wrapped offsets, bounded authored-layer travel, invalid deltas and invalid configuration.
+- Split the existing `casino-main.svg` and `casino-bar.svg` into eight transparent 1280×720 base/far/mid/near SVG planes. Registered them in AssetCatalog; MissionScene loads authored planes when the complete set is present and falls back to the original full-scene SVGs otherwise.
+- Integrated the clock into `MissionScene`: reset per mission segment, advance only during active play, move the authored Casino planes at separate factors and draw a route-progress meter in the HUD. East Express retains its window-masked procedural exterior layers.
+- Decorative layer travel does not alter pointer, weapon rig or authoritative enemy hitbox coordinates.
+- The Casino art is now genuinely split into independently moving vector planes, but it is still a bounded pan of one authored room, not an infinite seamless route. Enemy route lanes, seeded spawn composition, physical cover occlusion, projectile feedback and the Casino signature event remain open.
+- The test-only commit was pushed before the implementation to follow a test-first sequence, but intermediate GitHub Actions runs were cancelled by later pushes. Do not claim a confirmed red/green local TDD cycle.
+- The container could not clone GitHub (DNS/network unavailable), so no local npm test/build or browser screenshot was run. GitHub Actions PR run `45674036540` on commit `5a27635d3661f9887d8b47b61acefbe31171a03d` completed successfully: dependency install, TypeScript, Vitest, ESLint and production build all passed. Publish-build was skipped because this is a feature PR, not a main deployment. Physical Android and desktop visual QA remain unperformed.
+- No Library image was committed or edited. The 384×1024 transparent enemy state atlas remains prepared in Library only. The larger East Express art sheets are opaque contact sheets, not ready-to-load sprite atlases.
+
+### Seeded spawn and cover occlusion follow-up (current P0 slice)
+
+- Added `src/game/systems/waves/SpawnDirector.ts`, a Phaser-independent seeded planner. It uses authored spawn points plus bounded lane candidates, filters cover collision margins, enforces 135px preferred separation (105px fallback), and varies enemy order, lane assignment and staggered entry timing by run seed.
+- The director deliberately preserves the authored enemy-role roster for each wave. It does not yet generate dynamic role compositions or difficulty budgets; those remain balance-sensitive follow-up work.
+- Integrated staggered `Entering` state in MissionScene with a fading enemy appearance and pulsing lane marker.
+- Enemies taking cover remain rendered at their cover position behind the cover layer. The muzzle-to-target segment is checked against the same cover rectangles before damage is applied; hidden targets cannot be shot through cover. Enemies sharing a cover use distinct peek offsets to reduce stacking.
+- Added eight SpawnDirector tests (seed determinism, seed variation, bounds, separation/cover clearance, stagger/order with roster preservation, single boss, route-entry interpolation and clamping) and two cover line-of-sight tests.
+- This is a code-level implementation only. Browser screenshots, manual combat QA and physical Android checks have not yet been performed. GitHub Actions run `45677650389` on current head `c7c2b48dbaf9a354fc9a20b5136eda824495e87a` passed dependency install, TypeScript, Vitest, ESLint and production build. Publish-build was skipped because this is a feature PR, not a main deployment.
+
+### Skills and asset research
+
+- Read the project gameplay, asset-pipeline and release/validation skills.
+- Identified Phaser 4.2.1-compatible `phaser-core` plus `create-game-assets`, `game-ai`, `input-systems`, `game-feel`, `level-design`, `audio-design` and `game-ui-ux` in `gamedev-skills/awesome-gamedev-agent-skills`.
+- The `games-workspace` Phaser skill is Phaser 3.80-specific and must not be copied directly into SHPY. GameDevkit sprite/audio/Playwright/visual scripts are useful references; check their dependencies and Phaser 3 atlas output before reuse.
+- Cross-repo audit covered NeoGrad/Riftblade: Zero, Triglav, AshVeil, Chernaya-Flyaga and Rubezh. Reuse their asset-manifest, alpha/pivot inspection, licensing and Playwright QA patterns, not project-specific art/code without compatibility review. Details are in `docs/AI_SKILLS_RESEARCH.md`.
+- Free CC0 candidates and exact Library asset status are recorded in `docs/AI_SKILLS_RESEARCH.md`, `docs/ASSET_CATALOG.md` and `docs/ASSET_RESEARCH.md`. None of the newly researched external packs has been downloaded or integrated.
+
+## Next production work
+
+1. Run desktop/browser visual QA at 1280×720 and a desktop viewport; verify Casino/Bar planes, spawn spacing, route-edge entrance timing and cover occlusion.
+2. Add route exits/despawn and continuous rail movement through the full operation; current movement is an entrance animation into screen lanes.
+3. Add seeded role-composition budgets and wave difficulty constraints without changing balance until simulation tests exist.
+4. Correct the pointer-to-world/reticle mapping before any camera/world transform is introduced.
+5. Validate cover peeking, line-of-sight, visual occlusion and hitboxes in browser; add authored attack launch/projectile/impact effects and stronger archetype differences.
+6. Implement the Casino signature lighting/distraction mechanic with warnings and counterplay.
+7. Perform physical Android touch/orientation testing. CI is not a substitute.
+8. Only after the combat foundation passes, continue P1 UI/HQ, P2 prologue/tutorial, P3 economy, P4 operative department/location framework and P5 autonomy.
+
+The exact first-slice acceptance and deferred work are in `docs/superpowers/plans/2026-11-25-casino-rail-timeline.md` and `docs/ROADMAP.md`.
+
+## Validation and handoff rules
+
+- Run focused tests, then typecheck, lint, tests and production build when code changes.
+- CI is not desktop visual QA and is not physical Android validation.
+- Record exact evidence and unresolved limitations.
+- For mobile work, retain a physical-device checklist.
+- Commit code, tests, assets and relevant docs together for each coherent implementation task.
+- Keep the user out of routine Git operations; do not ask them to connect Git or create commits.

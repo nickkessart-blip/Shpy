@@ -1,154 +1,124 @@
 # SHPY — GAME BIBLE
+Version 2.0 | Approved canon rebaseline: 2026-11-25
 
-## Кампания «Восточный экспресс» — 2026-11-23
+## High concept
 
-- Добавлена отдельная операция, открывающаяся с 4-го уровня аккаунта: шесть волн в пассажирском вагоне, финальный босс.
-- Добавлен собственный векторный фон вагона и укрытия в виде кресел. Это лёгкий оригинальный SVG-ассет, а не готовая покадровая иллюстрация.
-- Операция использует общий цикл миссии, наград и отчёта; название операции берётся из каталога.
+SHPY is an incremental spy-action rail shooter and agency-management comedy. The player begins as a new field agent with a service pistol, personally survives short operations and gradually builds an agency whose weapons, staff, infrastructure and automation can eventually execute entire missions without manual combat input.
 
+The endgame fantasy is not "the player has a very large damage number". It is: the player launches an operation, watches an elite autonomous system clear it, reviews the result and improves the organization for the next assignment.
 
-## Android aiming — SHPY 0.9 (2026-11-25)
+## Genre and platforms
 
-The primary mobile scheme is hybrid tap-and-drag: a tap sets aim and fires; dragging the same pointer continuously moves aim and pans the camera. A separate fire button supports hold-to-fire with a second finger. The virtual aim stick remains an alternative. The screen weapon and HUD stay anchored to the viewport. Camera bounds are widened and layered parallax reacts to camera movement. Physical Android playtesting remains required.
+- Incremental progression + spy-action rail shooter + agency management.
+- Single-player, offline-first.
+- Shared game codebase for Web, Android, iOS and desktop targets.
+- Phaser 4 + TypeScript + Vite remain the current technical foundation.
+- Lightweight 2D/2.5D presentation; maintain performance on modest devices.
 
-Версия 1.0.0 | 2026-11-22 | Базовый канон предпроизводства
+## Approved tone and character direction
 
-## Краткое описание
-Shpy — инкрементальный шпионский шутер с юмором, пародиями и постепенным превращением полевого агента в руководителя шпионского агентства. Игрок начинает стажёром с казённым пистолетом, небольшим боезапасом и без команды. Через операции он получает доллары и опыт аккаунта: деньги тратит на улучшения, а постоянный уровень аккаунта открывает оборудование, новые ветки перков и будущие управленческие системы.
+The primary tone is option A: broad spy parody and comedy, with dark humour. The reference mix includes Johnny English, Leslie Nielsen parody films, The Gentlemen, Tropic Thunder, Austin Powers and Inglourious Basterds. These are tonal references only; SHPY uses original characters, dialogue and set pieces.
 
-Главная фантазия прогрессии: от человека, который лично стреляет в каждом противнике, до босса агентства, который управляет операциями и элитными сотрудниками.
+The protagonist uses the recommended B+C blend: a new agent who is initially awkward and unusually lucky, but gradually becomes genuinely competent. They are increasingly calm and capable while the surrounding agency, criminals and villains remain absurd. Do not keep the protagonist permanently incompetent.
 
-## Жанр и формат
-- Incremental / idle progression + arcade shooter.
-- Боевая часть: статичный 2D-шутер от первого лица с прицеливанием указателем.
-- Тон: шпионский нуар, боевик, самоирония, пародийные названия и ситуации.
-- Одиночная игра, offline-first.
-- Целевые платформы: Web, Android, iOS, Windows Desktop; macOS/Linux — возможное расширение.
-- Единая игровая кодовая база, модульная структура.
+Vulkan is one of several major antagonists. He is a major villain with a dedicated location/arc, not the universal mastermind behind every event. The campaign features a network of competing criminal interests and independent antagonists.
 
-## Центральная фантазия
-Рост должен ощущаться не только числами, но и снижением рутины:
-- начало: ручная стрельба, контроль патронов и перезарядка;
-- середина: более удобное оружие и системы поддержки;
-- поздняя игра: турели, дроны, агенты, параллельные операции;
-- финал: управление агентством и элитными операциями.
-Ручное участие остаётся доступным и выгодным даже после автоматизации.
+## Core progression fantasy
 
-## Два пространства
-### Штаб
-Штаб — отдельная интерактивная игровая локация, а не плоское меню. Игрок взаимодействует с физическими объектами помещения:
-- карта операций — выбор и запуск только основных сюжетных операций;
-- компьютер — постоянные улучшения за доллары и отдельный отдел агентов;
-- оружейный шкаф — просмотр открытого и закрытого арсенала, выбор комплекта, сведения о перках, полевые модификации и косметика;
-- телефон — будущие события и престиж;
-- кот агентства — интерактивный персонаж и источник юмора.
-Визуальная сцена штаба остаётся лёгкой и геометрической, без тяжёлых текстур.
+1. Rookie: manual aim, manual fire, reload, simple equipment and survival.
+2. Field agent: improved weapon handling, expanded loadout and first support tools.
+3. Experienced operative: attachments, deeper perk branches, specialist operatives and tactical support.
+4. Agency leader: turrets, drones, automatic supplies, laser gloves and operation-specific automation.
+5. Director: prepare and launch a fully autonomous operation. From mission entry to extraction, the game plays the battle itself; the player watches the simulation and then evaluates the report. No combat clicks are required in this mode.
 
-### Миссия
-Последовательность самостоятельных статичных боевых сцен. Камера неподвижна внутри сцены, игрок не перемещается, прицеливается и стреляет. После выполнения условий — переход к следующей сцене.
+Autonomous operations are an earned late-game capability, not the default for the first mission. New story sectors are introduced manually or with assistance before automation can be researched/unlocked for routine execution.
 
-## Пространственная модель
-Подтверждено направление: гибрид статичной сцены и кинематографичной последовательности.
-- Основа — статичная сцена.
-- Миссия состоит из самостоятельных сцен.
-- Панорамные эпизоды возможны позднее, но не обязательны для MVP.
-- Переходы могут быть простым fade/сменой состояния.
+## The gameplay loop
 
-## Боевая философия
-Игрок может стрелять в любой момент. Искусственных окон, запрещающих стрельбу, нет. Результат попадания зависит от патронов, состояния оружия, положения прицела и препятствий.
-Враги должны создавать угрозу: открываться, готовить атаку, прятаться, выглядывать и менять позицию. Скрытый за укрытием противник защищён; во время выглядывания и перемещения он уязвим.
+HQ → briefing and operation map → mission preparation → rail-shooter operation → debrief/results → HQ investment and recruitment → new sectors, systems and operations.
 
-## Тон и юмор
-Шпионский боевик с самоиронией: бюрократия агентства, нелепые должности и отчёты, пародийные операции и гаджеты, четвёртая стена, кот в штабе.
-Рабочие примеры исходного концепта: «Казино “Рояль” (Не Тот, Другой)», «Операция: Это Точно Не Ловушка», «Подручный №47», «Бухгалтер Под Прикрытием», «Ваша мышь подала жалобу в профсоюз». Юмор не должен мешать читаемости боя.
+There are two complementary forms of automation:
+- in-operation automation: equipment and AI systems execute combat while the player watches in late game;
+- roster assignments: operatives conduct separate timed intelligence/logistics/supply assignments while the player is elsewhere.
 
-## Художественное направление
-Исходная идея — минималистичный нуар: силуэты, контрастные цветовые поля/градиенты, простые анимации и ограниченный набор ассетов.
-Текущее решение: визуал не приоритет. До подтверждения геймплея используются геометрические заглушки и временные цвета. Финальный арт отложен.
+These systems must share operative availability and agency resources. They must not be isolated reward menus.
 
-## Локации
-Пять стартовых локаций исходного концепта:
-1. Казино «Рояль» (Не Тот, Другой).
-2. Поезд «Восточный Экспресс».
-3. Склад контрабандистов.
-4. Посольство.
-5. Логово Вулкана.
-Антарктическая база и Орбитальная станция — идеи позднего расширения, не MVP.
+## Mission model
 
-## Первый босс: начальник охраны казино
-Финальная волна VIP-зоны завершает стартовую операцию. Босс имеет 42 HP и три фазы. На 66% и 33% здоровья он ускоряет подготовку атак, увеличивает наносимый урон и чаще смещается по арене. Победа приносит 150 XP. Это первый обязательный босс контента, а не поздняя заглушка.
+A mission is a cinematic rail-shooter route composed of linked combat segments, transitions and location events. The environment/camera moves along a authored route; enemies and hazards enter and leave the composition. The player aims and fires during early/mid progression. The rail path, enemy positions, hitboxes and background layers use a consistent world coordinate system.
 
-## Долгосрочная прогрессия
-Ранги: Стажёр → Полевой агент → Оперативник → Ветеран → Руководитель → Заместитель → Директор → Босс агентства.
-Текущая шкала аккаунта — 15 рангов; пороги опыта: 0, 350, 700, 850, 1200, 1400, 1800, 2400, 3200, 4200, 5400, 6800, 8400, 10200, 12200 XP. Пороги являются стартовой балансировочной гипотезой и подлежат плейтесту.
-Долгосрочные системы: новые сегменты миссий, модификаторы, турели, дроны, автоматизация освоенных участков, престиж и финальная операция. Братство агентов, их специализации и отдельные операции уже входят в текущую мета-игру.
+The location's signature mechanic is always present. Optional operation modifiers alter the challenge and reward. Each location grows by adding sectors, routes, enemy types, story reveals and combinations of modifiers. Old sectors remain part of the campaign and can become routine autonomous assignments later.
 
-## Постоянные перки и сохранения
-Доллары — расходуемая валюта. За убийства, волны, босса и успешное завершение операции игрок получает деньги; улучшения штаба покупаются за доллары. Опыт аккаунта — отдельный накопительный показатель, который никогда не тратится. Уровень аккаунта вычисляется из общего XP и открывает слоты оружия, виды оружия, расходники и ветки/уровни перков. Шесть постоянных веток по пять уровней: урон, обойма, перезарядка, здоровье, броня и меткость. Категории и высокие уровни перков открываются по рангу, а каждый уровень покупается за доллары. Стартовое меню содержит «Новую игру» и «Продолжить»; сброс прогресса требует подтверждения. Сохранения v1/v2/v3/v4 мигрируют в v5.
+## HQ
 
-## Экономика: разрешение противоречия
-Противоречие старой экономики устранено разделением ролей. Доллары ($) — только траты и покупки. Опыт аккаунта (XP) — только накопление и повышение ранга. Покупка улучшения уменьшает баланс долларов, но никогда не снижает опыт аккаунта и не закрывает уже открытый контент. Старые сохранения конвертируют прежнюю репутацию одновременно в стартовый баланс долларов и равное количество account XP: так сохраняются и старый денежный прогресс, и прежние разблокировки.
+HQ is a spatial interactive operative's office, not a generic menu:
+- wall map/dossier board: main campaign operations and evidence;
+- desk terminal: personal upgrades, agency research and operative department;
+- armory/cabinet: weapon catalogue, attachments, perks and cosmetics;
+- mission preparation area: final loadout and support selection;
+- telephone: briefing inbox, story messages, event notices and later prestige/special contracts;
+- agency cat: recognizable interactive cat and small source of humour/morale flavour.
 
-## Платформы
-Единое игровое ядро. Desktop: мышь/клавиатура; при удержании ЛКМ автоматические профили продолжают огонь. Android поддерживает две выбираемые схемы. «Гибрид»: тап задаёт прицел и стреляет, перетаскивание того же пальца непрерывно перемещает прицел и панорамирует камеру; отдельная правая кнопка позволяет удерживать огонь вторым пальцем. «Виртуальный джойстик»: нижний левый стик перемещает прицел, правая кнопка удерживает огонь; чувствительность 0.5×–4×. Перезарядка, смена оружия и активные предметы доступны в обоих режимах. Ввод прицела использует полный input delta отдельно от ограниченного шага симуляции AI. Рука непосредственно смещается и поворачивается вслед за прицелом, без tween-запаздывания. Настройки хранятся отдельно от сохранения прогресса. Основной цикл, аудио и локальное сохранение должны работать offline. Вибрация является необязательной функцией браузера/устройства. Облачная синхронизация не входит в MVP.
+The current low-detail geometric HQ is a prototype, not final visual direction.
 
-## Принципы
-1. Сначала fun factor, затем масштабирование.
-2. Не производить финальный арт до проверки ядра.
-3. Вводить и тестировать системы по одной.
-4. Отделять контент и баланс от логики.
-5. Не связывать игровые системы напрямую.
-6. Фиксировать изменения в документах.
-7. Не раздувать MVP поздними функциями.
-8. Поддерживать слабые устройства.
-9. Сохранять ручную игру как полноценный способ участия.
+## Economy
 
-## Штаб и агентское братство (решение 2026-11-23)
+Three resources have distinct roles:
+- Dollars: spendable cash for personal upgrades, recruitment, purchases and selected services.
+- Reputation: persistent agency/agent career progression. Existing save code stores this as `accountXp`; that storage field is retained until a deliberate save migration, while the player-facing concept is Reputation.
+- Components: operational materials used for crafted consumables, attachments, equipment improvements and cosmetics.
 
-Карта операций запускает только основную кампанию. Оружейный шкаф является личной коллекцией агента: четыре вкладки — арсенал, перки, полевые модификации и внешний вид. В арсенале показываются открытые и закрытые виды оружия и снаряжения; выбранный комплект сохраняется между запусками. Компьютер имеет вкладки «Улучшения» и «Агенты». Телефон не дублирует отдел агентов и остаётся под будущие события/престиж.
+Do not add new currencies without an explicit design reason. Avoid rewarding repetitive early-wave farming more than successful mission progress. Exact values remain balance hypotheses until measured through complete run simulations and playtests.
 
-Братство агентов вдохновлено системой рекрутов Assassin’s Creed: Revelations, но оформлено как автономная мета-игра. Игрок нанимает уникальных оперативников с ролями «разведчик», «техник», «диверсант» и «штурмовик». Каждый агент получает собственный XP и уровень. Игрок собирает отряд и отправляет его на отдельную таймерную операцию. Вероятность успеха рассчитывается по уровню, специализации и размеру отряда. Таймер хранится в локальном сохранении и учитывает время, прошедшее при закрытой игре. Успех выдаёт комплектующие; агенты получают личный XP и при успехе, и при провале. В прототипе провал не приводит к гибели агента.
+## Weapons, perks and equipment
 
-Комплектующие используются в оружейном шкафу для полевых модификаций (запас гранат и эффективность аптечки) и открытия косметики героя/оружия. Эти операции не начисляют основную валюту или account XP, не открывают сюжет и не изменяют прогресс основной кампании. Новые поля сохраняются в схеме v5; v1–v4 мигрируют без потери старых данных.
+Weapon identity is defined by role, feel, handling, attachments and trade-offs, not only damage. The armory is a catalogue/workshop; equipped weapon slots, grenades, medkits, gadgets and support packages are selected in Mission Preparation.
 
-## Канон MVP
-Одна миссия «Казино», одна или несколько простых статичных сцен, стрельба/попадания/перезарядка/здоровье, три архетипа противников, укрытия и состояния поведения, волны, победа/поражение, штаб, доллары, account XP, уровень аккаунта, покупки улучшений, локальное сохранение и геометрические заглушки.
+Perks must become meaningful connected branches with explicit effects and synergies, not a small collection of vague linear stat upgrades. Agency research unlocks new operational systems and automation capacity; it is separate from personal combat perks.
 
-## Термины
-Штаб/HQ — мета-экран агентства. Операция/миссия — набор боевых сцен. Сцена — отдельная неподвижная боевая композиция. Сегмент — постоянная часть миссии, открываемая прогрессией. Волна — группа противников/событий. Укрытие — объект, блокирующий попадания по скрытой цели. Доллары — расходуемая валюта; опыт аккаунта — накопительный прогресс; уровень аккаунта — ранг, открывающий контент. Автоматизация — делегирование или автоматическое прохождение освоенного контента.
+The first-person presentation must separate agent arms/sleeves, hands and weapon so uniforms, weapon finishes and attachments can render independently.
 
+## Operatives
 
-## Экономика и метапрогрессия (SHPY 0.5)
+Terminology:
+- Player-agent: the character directly controlled in manual/assisted operations.
+- Operative: a recruited roster member, used for separate assignments or assigned as direct mission support.
 
-Перед каждой операцией агент выбирает комплект в отдельном экране подготовки. Выбранные предметы сохраняются локально и восстанавливаются при следующем запуске.
+Operatives have individual roles, progression and availability. An operative assigned to a main-operation support slot cannot simultaneously run a timed roster assignment. Specialist roles affect mission outcomes, reconnaissance, hazards, logistics or direct support.
 
-Уровни аккаунта и основные разблокировки:
-- уровень 1 — пистолет, один слот и базовые улучшения;
-- уровень 2 — второй слот и ПП;
-- уровень 3 — гранаты и ветка выживания;
-- уровень 4 — дробовик и броня;
-- уровень 5 — третий слот и меткость;
-- уровень 6 — штурмовая винтовка;
-- уровень 7 — аптечка;
-- уровни 8–12 — продвинутые уровни перков;
-- уровни 13–15 — старшие ранги агентства.
+## Narrative delivery
 
-Арсенал:
-- Служебный пистолет — доступен сразу;
-- Компактный ПП — уровень аккаунта 2;
-- Тактический дробовик — уровень 4;
-- Штурмовая винтовка — уровень 6.
+The first mission includes the prologue and contextual tutorial. Campaign story is delivered through short cinematic introductions/outros, radio chatter, dialogue, documents, messages and mission events. Each main operation should reveal a concrete piece of the larger criminal network while providing a self-contained local objective.
 
-Каждое оружие имеет собственные урон, темп стрельбы, размер магазина, запас патронов и время перезарядки. Постоянные улучшения урона, обоймы и перезарядки применяются к любому выбранному оружию. Переключение в бою: 1–3 на клавиатуре или отдельная мобильная кнопка.
+The first campaign's five locations and provisional signature mechanics are documented in [CAMPAIGN_AND_LOCATIONS.md](CAMPAIGN_AND_LOCATIONS.md). The working story premise is an investigation into a network moving weapons, surveillance and experimental technology. Specific villain relationships and twists remain expandable content work.
 
-Тактический слот с двумя осколочными гранатами открывается на уровне 3. Активный слот с одной аптечкой — на уровне 7. Граната наносит ограниченный урон по области вокруг прицела; аптечка восстанавливает 40% максимального здоровья. Предметы расходуются на миссию и выдаются заново в начале следующего выезда.
+## Location and modifier principles
 
-Разблокировки зависят от уровня аккаунта, не тратят XP и не сбрасываются при смене комплекта. Улучшения оплачиваются долларами. При миграции старых сохранений прежняя репутация сохраняется как account XP и конвертируется в равный стартовый баланс долларов; существующие перки и комплект сохраняются, если соответствуют достигнутому рангу. Схема сохранения — v5; миграция поддерживает v1–v4.
+The initial five destinations are Casino «Рояль», Восточный экспресс, Склад контрабандистов, Посольство and Логово Вулкана. Each has a permanent signature gameplay mechanic and a pool of compatible modifiers. See [CAMPAIGN_AND_LOCATIONS.md](CAMPAIGN_AND_LOCATIONS.md).
 
+## Automation canon
 
-## Настройки и аудио (решение 2026-11-23)
-Параметры игрока хранятся в отдельном ключе `shpy_settings_v1`, не затрагивая схему прогресса v5. Настраиваются качество графики, уровни музыки/эффектов, мобильная схема управления, чувствительность прицела, вибрация, параллакс и тряска камеры. Внешние аудиофайлы допускаются в проект только с проверенной лицензией и локальным хранением; runtime-загрузка с сайтов не используется. Фактически интегрированные аудиофайлы и лицензии отмечаются в `src/assets/audio/LICENSES.md`.
+The endgame includes fully autonomous missions. The player configures the loadout, available operatives, support modules, target priority and automation doctrine before launch. Once launched in full-autonomy mode, aim, firing, reloads, healing, turret/drone/rocket deployment and operative support are all executed by the simulation. The player watches the operation; pause and playback speed are presentation controls, not combat commands.
 
+Autonomy must use the same combat rules as manual play: hitboxes, cover, ammunition, cooldowns, hazards, enemy behaviour and mission objectives still apply. Underprepared configurations can fail. Full details: [AUTOMATION_DESIGN.md](AUTOMATION_DESIGN.md).
 
-## Боевой профиль оружия и графический HUD (решение 2026-11-23)
-Четыре вида оружия должны отличаться не только множителем урона: пистолет — одиночный точный выстрел; ПП — автоматический огонь с более широким разбросом; дробовик — помповый выстрел из семи дробин; винтовка — автоматический огонь с малым разбросом. Профили имеют разный темп, отдачу, ёмкость магазина и урон. Арсенал показывает узнаваемый силуэт и графические шкалы характеристик. Боевой HUD показывает здоровье и магазин индикаторами/иконками, а не длинной строкой чисел.
+## UI/UX canon
+
+The visual and interaction rules for menus, tabs, HQ, map, settings, armory, preparation, agency computer and onboarding are in [UI_UX_SPEC.md](UI_UX_SPEC.md). The current prototype screens are not accepted as final UX.
+
+## Visual direction
+
+Spy-noir with deliberate parody. A restrained palette, editorial display typography, strong silhouettes and light 2D/2.5D depth. Interfaces should feel like an agency dossier/operations room, not anonymous generic dashboard panels. Use scalable/vector art and restrained effects where possible. Keep backgrounds separated into layers for motion. Do not sacrifice readability for decoration or use heavy textures by default.
+
+## Production principles
+
+1. Preserve the approved core fantasy: rookie field agent → competent operator → agency director.
+2. Make the world funny, but play combat and consequences clearly.
+3. Build the rail-shooter foundation before multiplying mission content.
+4. Each location needs a gameplay signature, not just a different backdrop.
+5. A modifier must be telegraphed and offer readable counterplay.
+6. Manual, assisted and autonomous controllers use the same combat rules.
+7. Economy must reward progress and preparation, not repeated low-risk farming.
+8. New systems are taught when unlocked.
+9. Do not claim visual assets or platform tests are integrated unless verified.
+10. Preserve the shared Web/mobile/desktop codebase.

@@ -1,154 +1,113 @@
 # SHPY — ROADMAP
+Rebased 2026-11-25 | Approved product direction: see [GAME_BIBLE.md](GAME_BIBLE.md).
 
-## Кампания «Восточный экспресс» — 2026-11-23
+## Current source-of-truth order
 
-- Добавлена отдельная операция, открывающаяся с 4-го уровня аккаунта: шесть волн в пассажирском вагоне, финальный босс.
-- Добавлен собственный векторный фон вагона и укрытия в виде кресел. Это лёгкий оригинальный SVG-ассет, а не готовая покадровая иллюстрация.
-- Операция использует общий цикл миссии, наград и отчёта; название операции берётся из каталога.
+1. `GAME_BIBLE.md` — approved identity and canon.
+2. `DECISIONS.md` — accepted decisions versus open questions.
+3. `GAME_DESIGN.md`, `COMBAT_SPEC.md`, `CAMPAIGN_AND_LOCATIONS.md`, `AUTOMATION_DESIGN.md`, `UI_UX_SPEC.md` — system specifications.
+4. This file — production order and status.
+5. `AI_HANDOFF.md` — exact current branch, PR, implementation evidence and next action.
 
+Older roadmap sections and numeric SHPY prototype phase labels are historical implementation records only; where they conflict with the 2026-11-25 canon rebaseline, the new specifications take precedence.
 
-## SHPY 0.8 — Mobile controls and combat feel (in progress)
+## Rebaseline accepted
 
-- [x] Restore direct tap-to-aim-and-fire as a selectable mobile control profile.
-- [x] Keep swipe camera and aim-stick profiles available alongside tap.
-- [x] Increase weapon kick, muzzle flash and tracer readability without camera shake on mobile.
-- [x] Wire the existing first-person weapon atlas and CC0 muzzle/impact effects into runtime scenes (first-person atlas for the weapon rig, impact smoke on hit, muzzle-flare sprite on shot).
-- [x] Run unit tests, typecheck, lint and production build in GitHub Actions; physical Android test remains required.
+- [x] Spy parody/comedy with black humour; original characters and story.
+- [x] Awkward/lucky rookie becomes genuinely competent and ultimately an agency director.
+- [x] Vulkan is one of several major antagonists.
+- [x] Restore a moving rail-shooter mission structure.
+- [x] Five persistent launch locations, each with a signature gameplay mechanic and compatible operation modifiers.
+- [x] Three resources: Dollars, Reputation and Components (`accountXp` remains the current persisted Reputation field).
+- [x] Manual → assisted → fully autonomous mission progression.
+- [x] Full-autonomy endgame: after preparation and launch, the game executes the operation and the player watches.
+- [x] Player-agent and recruited operatives are separate roles; direct support reserves an operative.
+- [x] Armory is catalogue/workshop; the actual kit is selected in Mission Preparation.
+- [x] Prologue/tutorial in the first operation; story delivered through short cinematic and in-world channels.
+- [x] UI/UX design requirements and platform-aware settings documented.
 
-## SHPY 0.5.1 — Android camera pass (2026-11-23)
+## Implemented in the current prototype (quality still requires review)
 
-- [x] Add fixed-centre mobile reticle and swipe-to-pan camera mode.
-- [x] Keep fire/reload/weapon controls separate from look input.
-- [x] Keep mobile weapon rig and HUD screen-anchored.
-- [ ] Verify portrait/landscape, touch capture and camera bounds on physical Android.
-- [ ] Integrate first-person weapon atlas and weapon-specific animation states.
-- [ ] Add and validate the next campaign operation.
+- [x] Phaser 4 + TypeScript + Vite shared game codebase.
+- [x] Start, HQ, Operations, Loadout, Computer, Settings, Mission and Results scenes.
+- [x] Casino operation slice and East Express passenger-carriage slice.
+- [x] Four weapon definitions, six personal upgrade tracks, grenades and medkit.
+- [x] Account progression, Dollars and local save migration through schema v5.
+- [x] Operative roster with timed assignments and component rewards.
+- [x] Basic enemy archetypes, state machine, wave flow, cover states and attack telegraphs.
+- [x] Mobile hybrid tap/drag and virtual aim-stick profiles.
+- [x] Local audio, HUD feedback, muzzle/impact effects and enemy state atlas.
+- [ ] Do not treat the above as proof that the current visual design, balance, cover visuals, rail movement, enemy spacing, UX or mobile experience meet the new specification.
 
-Версия 1.0.0 | План без календарных обещаний
+## Production order
 
-## Фаза 0 — Документация
-- [x] Концепция и исходный дизайн зафиксированы.
-- [x] Выбран гибрид статичных и кинематографичных сцен.
-- [x] Зафиксированы свободная стрельба и укрытия.
-- [x] Выбран кроссплатформенный подход.
-- [x] Созданы базовые документы.
-- [x] Проверить состояние репозитория и подготовить каркас проекта.
+### P0 — Rebuild and validate combat foundation
 
-## Фаза 1 — Технический каркас
-- [ ] Phaser + TypeScript + Vite.
-- [ ] Типизация, линтер, форматтер, тесты.
-- [ ] Базовая сцена и штаб.
-- [ ] Платформенные адаптеры и сохранение.
-- [ ] GitHub Actions.
-- [ ] Production build.
+Implementation status (2026-11-25): PR #18 adds a deterministic route clock, route progress HUD and eight transparent 1280×720 SVG planes extracted from the existing Casino/Bar source art. The follow-up P0 slice adds a seeded SpawnDirector: wave enemy roles remain authored, while lane assignments, entrance order and stagger timing vary per run; placements enforce 135px target separation and cover clearance. Enemies now enter from alternating route edges into assigned lanes with archetype-specific travel durations. Hidden enemies remain rendered behind cover, and cover geometry blocks shots along the muzzle-to-hitbox segment. This is still a prototype: no continuous rail travel during the whole operation, route exits, dynamic role-composition budgets, full cover destruction/peek validation, attack projectiles or Casino signature event yet.
+- [~] Add deterministic route timeline and independent authored far/mid/near SVG planes to the Casino prototype (first code slice; enemy lanes, spawn director and cover remain open). See [implementation plan](superpowers/plans/2026-11-25-casino-rail-timeline.md).
+- [ ] Use genuinely independent background layers and separate foreground/environment set pieces.
+- [ ] Fix pointer-to-world mapping; remove the reported curved reticle response.
+- [~] Make cover render as physical occlusion; hidden enemies remain drawn behind the cover and line-of-sight shots are blocked. Validate in browser; add physical cover-state polish.
+- [~] Seeded SpawnDirector varies lane assignment, enemy entry order and stagger timing, enforcing minimum spacing. Authored enemy role composition remains fixed per wave; seeded composition variants and route-lane entry/exit remain open.
+- [ ] Differentiate enemy behaviour, attack patterns and counters beyond HP.
+- [ ] Add readable enemy attack launch/effects and restore a clear lower-screen arms/hands/weapon presentation.
+- [ ] Rebalance music and combat SFX.
+- [ ] Acceptance: the Casino route is playable from entry to extraction with consistent aim/hitboxes, readable cover, distinct enemies and fair hazards.
 
-## Фаза 2 — Боевое ядро
-- [ ] Прицеливание, стрельба, магазин, перезарядка.
-- [ ] Хитбоксы головы/тела.
-- [ ] Укрытия и блокирование выстрелов.
-- [ ] Guard, Armored, Assault.
-- [ ] Телеграфируемые атаки и HP игрока.
-- [ ] Волны и завершение сцены.
+### P1 — Shared UI system and agency HQ
+- [ ] Create reusable typography, spacing, button, tab, card, tooltip, meter and modal components.
+- [ ] Rebuild Start with consistent button geometry and a distinctive spy-agency identity.
+- [ ] Make Settings platform-aware; add desktop key rebinding and clear quality/vibration explanations; remove the normal parallax toggle.
+- [ ] Redesign HQ as an operative's workstation, including useful phone interactions and a recognizable cat.
+- [ ] Replace the chart-like Operations screen with a geographic/dossier map.
+- [ ] Fix persistent active-tab states in Armory and Agency Computer.
+- [ ] Ensure all controls and physical objects have clear interaction affordances and descriptions.
 
-## Фаза 3 — Вертикальный срез «Казино»
-- [ ] Цикл штаб → миссия → результаты → штаб.
-- [ ] Одна законченная сцена.
-- [ ] Вторая сцена и переход, если первая интересна.
-- [x] Раздельная экономика: доллары на покупки и account XP для уровня/разблокировок.
-- [ ] Плейтест и баланс.
+### P2 — Prologue, campaign writing and onboarding
+- [ ] Write the first campaign's actual narrative beats and antagonist cast; retain Vulkan as one major villain.
+- [ ] Build the first-operation tutorial for aim, fire, reload, enemy telegraphs, cover and the Casino signature mechanic.
+- [ ] Add short operation intros/outros, radio dialogue, messages and evidence/debrief delivery.
+- [ ] Introduce player-agent/operative terminology consistently.
 
-## Фаза 4 — Кроссплатформенная проверка
-- [ ] Desktop browser.
-- [ ] Capacitor и Android debug APK.
-- [ ] Сенсорное управление на телефоне.
-- [ ] Tauri и Windows installer.
-- [ ] Требования iOS-сборки через macOS/Xcode.
+### P3 — Economy, armory and meaningful progression
+- [ ] Simulate first failure, first clear, repeated early farming, new-sector unlock and boss clear.
+- [ ] Rebalance kill/wave/completion rewards and escalating costs; prevent early-wave/death farming.
+- [ ] Separate personal upgrades from agency infrastructure/research.
+- [ ] Expand perks into concrete branches with readable effects and selected synergies.
+- [ ] Add a meaningful attachment pool and real weapon/agent visual layer separation.
+- [ ] Move actual kit confirmation to Mission Preparation.
+- [ ] Acceptance: the first failed attempt cannot buy a large share of the arsenal; normal successful progress stays satisfying.
 
-## Текущее состояние вертикального среза SHPY
-- [x] Стартовое меню «Новая игра» / «Продолжить» с подтверждением сброса прогресса.
-- [x] Миграция сохранений v1–v4 → v5 с конвертацией старой репутации в доллары и account XP.
-- [x] Шесть веток перков: урон, обойма, перезарядка, здоровье, броня и точность; пять уровней каждая, тиры открываются по рангу.
-- [x] Две зоны казино: пять волн в главном зале, пять волн в VIP-зоне и отдельная финальная волна-босс.
-- [x] Переход между зонами внутри одной Phaser Scene с короткой анимацией ходьбы.
-- [x] Android: tap-and-drag aim или aim-stick + отдельный fire hold; независимые pointerId и настраиваемая чувствительность 0.5×–4×.
-- [x] Скорость прицела отделена от ограниченного шага симуляции; вход не теряет половину времени на низком FPS.
-- [x] Рука/оружие не запаздывают за прицелом: прямой поворот и смещение опорной точки без tween-задержки.
-- [x] Оружие получило разные semi/auto/pump-профили, разброс, дробь/пеллеты и отдачу.
-- [x] Четыре модели оружия перерисованы с различимыми силуэтами; в оружейном шкафу добавлены графические шкалы характеристик.
-- [x] HUD переработан в два графических блока: здоровье, миссия, силуэт оружия и индикатор магазина.
-- [x] Экран настроек: графика, музыка/SFX, схема управления, чувствительность, вибрация, параллакс и тряска камеры; отдельное сохранение настроек.
-- [x] Локальные CC0 аудиоресурсы: варианты пистолетного выстрела, tail, UI, перезарядка, попадание, взрыв и музыка; источники/лицензии сохранены.
-- [x] Процедурные планы глубины, параллакс, улучшенный HUD/полоса HP и лёгкая idle-анимация противников.
-- [ ] Физически проверить оба Android-режима, громкость, вибрацию и multi-touch на телефоне (CI не заменяет плейтест на устройстве).
-- [x] Очистка спрайтов завершённых волн и проверка целостности данных миссии.
-- [ ] Реальные 2.5D-перемещения камеры по рельсам во время сцен.
-- [ ] Полноценные циклические спрайтовые анимации героя/врагов, перезарядки и смерти; сейчас atlas обеспечивает только state-based aim/fire/hit pose switching.
-- [x] Локальные SVG-модели четырёх видов оружия в единой перспективе, с различимыми силуэтами и анимационным follow-offset.
-- [x] Production build отключает source maps; добавлено уведомление об авторских правах и различение лицензий собственных/сторонних ассетов.
-- [ ] Миграция исходников в private source-репозиторий с отдельной публичной веткой/репозиторием Web-дистрибутива; публичные исторические копии нельзя отозвать задним числом.
-- [ ] Загрузка и интеграция проверенных внешних CC0-спрайтов/анимаций после получения архивов и проверки содержимого.
+### P4 — Operative department and location framework
+- [ ] Give roster assignments clear stages, visible progress and useful reports.
+- [ ] Expand assignment rewards to components, supplies and intelligence without making them mandatory chores.
+- [ ] Add main-operation support assignment and operative availability rules.
+- [ ] Implement the shared location-event contract and modifier compatibility rules.
+- [ ] Prove the Casino signature mechanic and one modifier before scaling the framework to all five locations.
+- [ ] Add each location's signature mechanic one location at a time.
 
-## Фаза 5 — Расширение геймплея
-- [ ] Новые сегменты казино.
-- [x] Первый босс казино: три фазы, ускорение атак и смена позиции.
-- [x] Четыре типа оружия: пистолет, ПП, дробовик и штурмовая винтовка.
-- [x] Выбор комплекта перед операцией, развитие оружейных слотов и сохранение выбора.
-- [x] Тактический слот гранаты и активный предмет аптечка с порогами разблокировки.
-- [ ] Новые миссии.
-- [ ] Модификаторы.
-- [ ] Проверка автоматизации освоенных сегментов.
+### P5 — Assisted and autonomous combat
+- [ ] Auto-supplies and configurable medkit threshold.
+- [ ] Deployable turrets with target selection, cooldown and limited capacity.
+- [ ] Direct operative call-in and specialist behaviour.
+- [ ] Recon/attack drones and advanced support.
+- [ ] Late-game laser gloves and automated targeting/fire.
+- [ ] Agency research for automation policies and capacity.
+- [ ] Full autonomous mission director, setup screen, spectator presentation and detailed debrief.
+- [ ] Acceptance: a known prepared operation runs from entry through extraction with zero combat input, obeys combat rules and can fail if its loadout/doctrine is insufficient.
 
-- [x] Доллары за миссии/убийства/волны/боссов и покупка улучшений.
-- [x] 15 рангов аккаунта с отдельными порогами account XP.
-- [x] Уровневые разблокировки оружия, слотов, гранат, аптечки и веток/тиров перков.
+### P6 — Campaign expansion and release polish
+- [ ] Extend the Casino and East Express with further sectors and story reveals.
+- [ ] Build Warehouse, Embassy and Vulkan's Lair around their signature mechanics.
+- [ ] Add compatible operation modifier pools, elite encounters and distinct bosses.
+- [ ] Expand weapon/attachment, operative, gadget and cosmetic content.
+- [ ] Add full animation cycles and high-quality visual/audio treatment when approved assets are available.
+- [ ] Profile low-end desktop and mobile; validate actual Android controls and rendering.
+- [ ] Review save migration, persistence and release packaging.
 
-## Фаза 6 — Инкрементальная мета-игра
-- [ ] Турели и дроны.
-- [x] Система вербовки и развития агентов.
-- [x] Отдельные таймерные операции братства с риском, составом отряда и наградами-комплектующими.
-- [x] Параллельные слоты агентских заданий, открываемые по рангу.
-- [ ] Престиж.
-- [ ] Поздние ранги и финальная операция.
+## Validation policy
 
-## Фаза 7 — Контент и релиз
-- [ ] Утвердить визуальный стиль после проверки прототипа.
-- [ ] Финальные ассеты и звук.
-- [ ] UI/UX desktop и mobile.
-- [ ] Оптимизация, профилирование.
-- [ ] Проверка сохранений и миграций.
-- [ ] Подготовка магазинов и установщиков.
-- [ ] Релизная проверка.
-
-Фаза завершена только при работающей сборке, проверяемом результате и зафиксированных тестах.
-
-
-## Следующий производственный этап — SHPY 0.8
-
-1. Проверка обоих мобильных профилей на реальном Android: отзывчивость, multi-touch, автоповтор, перезарядка и переключение оружия. CI не заменяет это испытание.
-2. 2.5D-камера по рельсам и параллакс, который реагирует на прицел, но не смещает хитбоксы относительно видимого мира.
-3. Покадровые состояния героя и противников: idle, aim, fire, hit, reload, death; отдельные анимации затвора/помпы/отдачи оружия.
-4. Следующая сюжетная операция — «Восточный экспресс»: новый фон, укрытия, противники, собственный босс и уникальные звуковые слои.
-5. Баланс оружия по DPS, точности, расходу патронов и цене улучшений после плейтеста.
-
-Не начинать новые крупные системы (престиж/турели/дроны) до проверки отзывчивости и прохождения первой миссии на Android.
-
-
-## SHPY 0.9 — visual polish follow-up (2026-11-25)
-> Current implementation and validation handoff: [docs/AI_HANDOFF.md](AI_HANDOFF.md).
-- [x] Добавить оригинальные SVG-рамки HUD для HP и боезапаса.
-- [x] Перевести здоровье на 12 кодовых сегментов с частичным заполнением.
-- [x] Перевести боезапас на кодовые сегменты, учитывающие размер магазина.
-- [x] Добавить устойчивые визуальные состояния врагов: дыхание/idle, подготовка атаки, импульс выстрела и реакция на попадание; визуальная анимация не меняет хитбоксы.
-- [x] Добавить AGENTS.md и `.ai/skills/` с обязательными правилами для следующих AI-агентов.
-- [x] Подключить воспроизводимый 3×4 state atlas врагов: Phaser CanvasTexture строится из четырёх SVG, frame IDs 0–11 выбираются по aim/fire/hit; authored WebP из Library остаётся необязательной будущей заменой.
-- [ ] Добавить полноценные idle/death/reload циклы и дополнительные кадры только после проверки текущих поз и при наличии утверждённых исходных материалов.
-- [ ] Проверить HUD на мобильном разрешении и физическом Android.
-
-## SHPY 0.9 — гибридное мобильное управление (2026-11-25)
-- [x] Объединить tap и swipe в единый режим tap-and-drag.
-- [x] Оставить отдельную кнопку удержания огня для второго пальца.
-- [x] Сохранить виртуальный стик как альтернативную схему.
-- [x] Мигрировать старые настройки tap/swipe без потери пользовательских настроек.
-- [x] Расширить границы камеры и включить параллакс на мобильных устройствах.
-- [x] Проверить typecheck, тесты, lint и production build в CI (успешно, workflow run #45503170112).
-- [ ] Проверить управление и края камеры на физическом Android.
+- Run focused tests first, then typecheck, lint, tests and production build.
+- Add deterministic tests for rail events, spawn spacing, cover/line-of-sight, modifier compatibility, reward pacing and automation decisions.
+- Desktop/browser visual review and physical Android testing are manual checks; a green CI run does not replace them.
+- Never mark a backlog item complete because its UI exists. Verify the mechanic in the running game.

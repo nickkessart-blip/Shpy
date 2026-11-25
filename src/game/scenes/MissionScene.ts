@@ -4,19 +4,23 @@ import { saveService } from '../../persistence/SaveService';
 import { BALANCE } from '../data/balance';
 import { getWeapon, getWeaponStats, LOADOUT_UNLOCKS, type WeaponId } from '../data/arsenal';
 import { ENEMIES, type EnemyType } from '../data/enemies';
-import { CASINO_MISSION, getMissionDefinition, type MissionSceneDefinition, type SpawnPoint } from '../data/missions';
+import { CASINO_MISSION, getMissionDefinition, type MissionSceneDefinition } from '../data/missions';
 import { AssetCatalog } from '../assets/AssetCatalog';
 import { getCosmetic } from '../data/cosmetics';
-import { findVisiblePeekX, pointInRect, resolveHit, type Point } from '../systems/combat/combatMath';
+import { findVisiblePeekX, isShotBlocked, pointInRect, resolveHit, type Point } from '../systems/combat/combatMath';
 import { runSession } from '../systems/missions/runSession';
 import { settingsService, type GameSettings } from '../../settings/SettingsService';
 import { moveAim } from '../systems/input/aimMath';
 import { FeedbackService, triggerHaptic } from '../systems/feedback/FeedbackService';
+import { RailTimeline } from '../systems/missions/RailTimeline';
+import { planEnemyWave, sampleSpawnEntryX } from '../systems/waves/SpawnDirector';
 
-type EnemyState = 'Exposed' | 'Aiming' | 'Attacking' | 'SeekingCover' | 'Hidden' | 'Peeking' | 'Repositioning' | 'Defeated';
+type EnemyState = 'Entering' | 'Exposed' | 'Aiming' | 'Attacking' | 'SeekingCover' | 'Hidden' | 'Peeking' | 'Repositioning' | 'Defeated';
 interface RuntimeEnemy {
   uid: number; type: EnemyType; x: number; baseX: number; y: number; originY: number; hp: number; maxHp: number;
-  coverId?: string; state: EnemyState; timer: number; phase: number; bossPhase: 0 | 1 | 2; hitFlash: number;
+  coverId?: string; state: EnemyState; timer: number;
+  entryStartX: number; entryTargetX: number; entryElapsedMs: number; entryDurationMs: number;
+  phase: number; bossPhase: 0 | 1 | 2; hitFlash: number;
 }
 
 const MUZZLE: Point = { x: GAME_WIDTH / 2, y: 662 };
@@ -52,6 +56,10 @@ export class MissionScene extends Phaser.Scene {
   private parallaxFar?: Phaser.GameObjects.Graphics;
   private parallaxMid?: Phaser.GameObjects.Graphics;
   private parallaxNear?: Phaser.GameObjects.Graphics;
+  private casinoFarArt?: Phaser.GameObjects.Image;
+  private casinoMidArt?: Phaser.GameObjects.Image;
+  private casinoNearArt?: Phaser.GameObjects.Image;
+  private readonly railTimeline = new RailTimeline({ routeLength: 1280, speedPxPerSecond: 60 });
   private currentSettings: GameSettings = settingsService.load();
   private message!: Phaser.GameObjects.Text;
   private reloadHint!: Phaser.GameObjects.Text;
@@ -362,6 +370,7 @@ export class MissionScene extends Phaser.Scene {
     if (this.phase === 'paused' || this.phase === 'finished') return;
     const dt = Math.min(delta, 50);
     const inputDelta = Math.min(Math.max(0, delta), 120);
+    if (this.phase === 'active') this.railTimeline.advance(dt);
     this.shotCooldown = Math.max(0, this.shotCooldown - inputDelta);
     this.weaponRecoil = Math.max(0, this.weaponRecoil - inputDelta * 0.16);
     this.weaponRecoilAngle = Math.max(0, this.weaponRecoilAngle - inputDelta * 0.00038);
@@ -375,11 +384,26 @@ export class MissionScene extends Phaser.Scene {
     const lookY = this.isMobileControls
       ? Phaser.Math.Clamp(this.cameras.main.scrollY / 180, -1, 1)
       : this.aim.y / GAME_HEIGHT - 0.5;
-    const parallaxEnabled = this.currentSettings.parallaxEnabled && this.currentSettings.graphicsQuality !== 'low';
-    this.parallaxFar?.setPosition(parallaxEnabled ? -lookX * 4 : 0, parallaxEnabled ? -lookY * 2 : 0);
-    this.parallaxMid?.setPosition(parallaxEnabled ? -lookX * 9 : 0, parallaxEnabled ? -lookY * 4 : 0);
-    this.parallaxNear?.setPosition(parallaxEnabled ? lookX * 13 : 0, parallaxEnabled ? lookY * 6 : 0);
-    if (this.parallaxFar) this.parallaxFar.setAlpha(parallaxEnabled ? 0.84 + Math.sin(this.time.now / 900) * 0.025 : 0);
+    const isTrainScene = this.sceneDef?.id.startsWith('east-express') ?? false;
+    const farPeriod = isTrainScene ? 92 : 108;
+    const midPeriod = isTrainScene ? 86 : 188;
+    const nearPeriod = isTrainScene ? 170 : 320;
+    this.parallaxFar?.setPosition(
+      this.railTimeline.layerOffset(farPeriod, 0.12) - lookX * 4,
+      -lookY * 2,
+    );
+    this.parallaxMid?.setPosition(
+      this.railTimeline.layerOffset(midPeriod, 0.32) - lookX * 9,
+      -lookY * 4,
+    );
+    this.parallaxNear?.setPosition(
+      this.railTimeline.layerOffset(nearPeriod, 0.7) + lookX * 13,
+      lookY * 6,
+    );
+    if (this.parallaxFar) this.parallaxFar.setAlpha(0.84 + Math.sin(this.time.now / 900) * 0.025);
+    this.casinoFarArt?.setPosition(GAME_WIDTH / 2 + this.railTimeline.layerTravel(44, 0.6), GAME_HEIGHT / 2);
+    this.casinoMidArt?.setPosition(GAME_WIDTH / 2 + this.railTimeline.layerTravel(86, 0.9), GAME_HEIGHT / 2);
+    this.casinoNearArt?.setPosition(GAME_WIDTH / 2 + this.railTimeline.layerTravel(142, 1.2), GAME_HEIGHT / 2);
     if ((this.mobileFireHeld || this.desktopFireHeld) && this.phase === 'active'
       && getWeapon(this.currentWeaponId).fireMode !== 'semi') this.shoot();
     this.shotFlash = Math.max(0, this.shotFlash - inputDelta);
@@ -410,13 +434,34 @@ export class MissionScene extends Phaser.Scene {
     if (index >= this.missionScenes.length) { this.finishMission(true); return; }
     this.sceneIndex = index;
     this.sceneDef = this.missionScenes[index];
+    this.railTimeline.reset(Math.max(GAME_WIDTH, this.sceneDef.waves.length * 1000));
     this.backgroundArt?.destroy();
     this.backgroundArt = undefined;
+    this.casinoFarArt?.destroy(); this.casinoFarArt = undefined;
+    this.casinoMidArt?.destroy(); this.casinoMidArt = undefined;
+    this.casinoNearArt?.destroy(); this.casinoNearArt = undefined;
     this.children.getAll().forEach((child) => {
       if (child.name.startsWith('enemy-image-') || child.name.startsWith('boss-name-') || child.name.startsWith('cover-image-')) child.destroy();
     });
     const bgKey = AssetCatalog.imageKeyFor(this.sceneDef.backgroundSlot);
-    if (AssetCatalog.hasTexture(this, bgKey)) {
+    const layerPrefix = this.sceneDef.backgroundSlot === 'backgrounds/casino-main' ? 'casino-main'
+      : this.sceneDef.backgroundSlot === 'backgrounds/casino-bar' ? 'casino-bar' : null;
+    const layerKeys = layerPrefix ? {
+      base: layerPrefix + '-base', far: layerPrefix + '-far',
+      mid: layerPrefix + '-mid', near: layerPrefix + '-near',
+    } : null;
+    const hasLayerSet = layerKeys !== null
+      && Object.values(layerKeys).every((key) => AssetCatalog.hasTexture(this, key));
+    if (hasLayerSet && layerKeys) {
+      this.backgroundArt = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, layerKeys.base)
+        .setDisplaySize(GAME_WIDTH, GAME_HEIGHT).setDepth(-10);
+      this.casinoFarArt = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, layerKeys.far)
+        .setDisplaySize(GAME_WIDTH, GAME_HEIGHT).setDepth(-9).setScrollFactor(0.16);
+      this.casinoMidArt = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, layerKeys.mid)
+        .setDisplaySize(GAME_WIDTH, GAME_HEIGHT).setDepth(-7).setScrollFactor(0.42);
+      this.casinoNearArt = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, layerKeys.near)
+        .setDisplaySize(GAME_WIDTH, GAME_HEIGHT).setDepth(-4).setScrollFactor(0.74);
+    } else if (AssetCatalog.hasTexture(this, bgKey)) {
       this.backgroundArt = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, bgKey)
         .setDisplaySize(GAME_WIDTH, GAME_HEIGHT).setDepth(-10);
     }
@@ -453,14 +498,7 @@ export class MissionScene extends Phaser.Scene {
     const near = this.parallaxNear;
     if (!far || !mid || !near) return;
     far.clear(); mid.clear(); near.clear();
-    if (this.currentSettings.graphicsQuality === 'low') {
-      far.clearMask(false); mid.clearMask(false); near.clearMask(false);
-      this.parallaxMaskGraphics?.destroy();
-      this.parallaxMaskGraphics = undefined;
-      this.parallaxWindowMask = undefined;
-      return;
-    }
-
+    if (this.casinoFarArt) return;
     if (this.sceneDef?.id.startsWith('east-express')) {
       const mask = this.add.graphics();
       mask.fillStyle(0xffffff, 1);
@@ -534,11 +572,12 @@ export class MissionScene extends Phaser.Scene {
     }
 
     near.fillStyle(0x080e15, 0.18);
-    near.fillRoundedRect(-40, 476, 250, 118, 22);
-    near.fillRoundedRect(GAME_WIDTH - 230, 462, 270, 132, 22);
-    near.lineStyle(2, 0xd4ad72, 0.17);
-    near.lineBetween(0, 520, 214, 520);
-    near.lineBetween(GAME_WIDTH - 210, 510, GAME_WIDTH, 510);
+    for (let i = -1; i < 6; i += 1) {
+      const x = i * 320;
+      near.fillRoundedRect(x + 20, 476, 250, 118, 22);
+      near.lineStyle(2, 0xd4ad72, 0.17);
+      near.lineBetween(x + 30, 520, x + 240, 520);
+    }
     if (this.currentSettings.graphicsQuality === 'high') {
       near.fillStyle(0xf0c16d, 0.11);
       for (let i = 0; i < 24; i += 1) {
@@ -552,12 +591,24 @@ export class MissionScene extends Phaser.Scene {
   private spawnWave(): void {
     const wave = this.sceneDef.waves[this.waveIndex];
     if (!wave) return;
-    this.enemies = wave.enemies.map((type, index) => {
-      const spawn: SpawnPoint = wave.spawnPoints[index] ?? { x: 300 + index * 190, y: 350 };
+    const seed = (this.startedAt ^ Math.imul(this.sceneIndex + 1, 0x9e3779b1)
+      ^ Math.imul(this.waveIndex + 1, 0x85ebca6b)) >>> 0;
+    const spawnPlan = planEnemyWave(wave.enemies, wave.spawnPoints, this.sceneDef.covers, seed);
+    this.enemies = spawnPlan.map((entry) => {
+      const def = ENEMIES[entry.type];
+      const entryDurationMs = entry.type === 'boss' ? 0
+        : entry.type === 'assault' ? 320 : entry.type === 'armored' ? 520 : 420;
+      const entering = entryDurationMs > 0;
+      const entryStartX = entry.spawn.x < GAME_WIDTH / 2 ? -110 : GAME_WIDTH + 110;
+      const state: EnemyState = entering ? 'Entering' : 'Exposed';
       return {
-        uid: this.uniqueId++, type, x: spawn.x, baseX: spawn.x, y: spawn.y, originY: spawn.y,
-        hp: ENEMIES[type].hp, maxHp: ENEMIES[type].hp, coverId: spawn.coverId,
-        state: 'Exposed', timer: ENEMIES[type].exposeMs * (0.4 + index * 0.22), phase: 0, bossPhase: 0, hitFlash: 0,
+        uid: this.uniqueId++, type: entry.type,
+        x: entering ? entryStartX : entry.spawn.x,
+        baseX: entry.spawn.x, y: entry.spawn.y, originY: entry.spawn.y,
+        hp: def.hp, maxHp: def.hp, coverId: entry.spawn.coverId,
+        state, timer: entering ? entry.entryDelayMs : Math.round(def.exposeMs * 0.4),
+        entryStartX, entryTargetX: entry.spawn.x, entryElapsedMs: 0, entryDurationMs,
+        phase: 0, bossPhase: 0, hitFlash: 0,
       };
     });
     this.waveAwarded = false;
@@ -740,9 +791,24 @@ export class MissionScene extends Phaser.Scene {
     for (const enemy of this.enemies) {
       enemy.hitFlash = Math.max(0, enemy.hitFlash - dt);
       if (enemy.state === 'Defeated') continue;
+      const def = ENEMIES[enemy.type];
+      if (enemy.state === 'Entering') {
+        const travelDelta = Math.max(0, dt - Math.max(0, enemy.timer));
+        enemy.timer = Math.max(0, enemy.timer - dt);
+        if (enemy.timer > 0) continue;
+        enemy.entryElapsedMs = Math.min(enemy.entryDurationMs, enemy.entryElapsedMs + travelDelta);
+        enemy.x = sampleSpawnEntryX(
+          enemy.entryStartX, enemy.entryTargetX, enemy.entryElapsedMs, enemy.entryDurationMs,
+        );
+        if (enemy.entryElapsedMs >= enemy.entryDurationMs) {
+          enemy.x = enemy.entryTargetX;
+          enemy.state = 'Exposed';
+          enemy.timer = Math.round(def.exposeMs * 0.4);
+        }
+        continue;
+      }
       enemy.timer -= dt;
       if (enemy.timer > 0) continue;
-      const def = ENEMIES[enemy.type];
       switch (enemy.state) {
         case 'Exposed': {
           const bossAimScale = enemy.type === 'boss' ? [1, 0.8, 0.62][enemy.bossPhase] : 1;
@@ -774,7 +840,7 @@ export class MissionScene extends Phaser.Scene {
           enemy.timer = def.peekMs;
           enemy.phase += 1;
           const cover = this.sceneDef.covers.find((item) => item.id === enemy.coverId);
-          if (cover) enemy.x = findVisiblePeekX(MUZZLE, cover);
+          if (cover) enemy.x = findVisiblePeekX(MUZZLE, cover, 58 + (enemy.uid % 4) * 96);
           enemy.y = enemy.originY;
           break;
         }
@@ -784,7 +850,7 @@ export class MissionScene extends Phaser.Scene {
           const cover = this.sceneDef.covers.find((item) => item.id === enemy.coverId);
           if (cover) {
             // Move to the side of the cover facing the player so the enemy can be hit while peeking.
-            enemy.x = findVisiblePeekX(MUZZLE, cover);
+            enemy.x = findVisiblePeekX(MUZZLE, cover, 58 + (enemy.uid % 4) * 96);
           } else {
             enemy.x = enemy.baseX + (enemy.phase % 2 === 0 ? -52 : 52);
           }
@@ -852,13 +918,14 @@ export class MissionScene extends Phaser.Scene {
 
       let best: { enemy: RuntimeEnemy; part: 'head' | 'body'; target: Point; distance: number } | null = null;
       for (const enemy of this.enemies) {
-        if (enemy.state === 'Defeated' || enemy.state === 'Hidden') continue;
+        if (enemy.state === 'Defeated') continue;
         const isBoss = enemy.type === 'boss';
         const head = { x: enemy.x, y: enemy.y - (isBoss ? 72 : 48) };
         const body = { x: enemy.x, y: enemy.y - 5 };
         const part = resolveHit(pelletAim, head, body, isBoss ? 42 : 32, isBoss ? 66 : 48);
         if (!part) continue;
         const target = part === 'head' ? head : body;
+        if (isShotBlocked(muzzleFxPoint, target, this.sceneDef.covers)) continue;
         const distance = Math.hypot(pelletAim.x - target.x, pelletAim.y - target.y);
         if (!best || distance < best.distance) best = { enemy, part, target, distance };
       }
@@ -1452,6 +1519,10 @@ export class MissionScene extends Phaser.Scene {
         this.hudBars.fillRoundedRect(x, 43, healthSegmentWidth * segmentFill, 13, 3);
       }
     }
+    this.hudBars.fillStyle(0x293744, 0.98);
+    this.hudBars.fillRoundedRect(76, 84, 270, 4, 2);
+    this.hudBars.fillStyle(0xd5a65e, 0.95);
+    this.hudBars.fillRoundedRect(76, 84, 270 * this.railTimeline.progress, 4, 2);
     this.hudAmmoText.setText(ammoLabel);
 
     // Right weapon panel: recognizable weapon silhouette and magazine meter.
@@ -1499,9 +1570,10 @@ export class MissionScene extends Phaser.Scene {
       const sprite = this.children.getByName(spriteKey) as Phaser.GameObjects.Image | null;
       const bossLabelKey = 'boss-name-' + enemy.uid;
       const bossLabel = this.children.getByName(bossLabelKey) as Phaser.GameObjects.Text | null;
-      if (enemy.state === 'Defeated' || enemy.state === 'Hidden') {
+      if (enemy.state === 'Defeated') {
         sprite?.setVisible(false); bossLabel?.setVisible(false); continue;
       }
+      if (enemy.state === 'Hidden') bossLabel?.setVisible(false);
       const def = ENEMIES[enemy.type];
       const hitOffset = enemy.hitFlash > 0 ? Math.sin(this.time.now / 24) * 5 * (enemy.hitFlash / 230) : 0;
       const idleBob = Math.sin((this.time.now + enemy.uid * 97) / 270) * 2.2;
@@ -1551,7 +1623,11 @@ export class MissionScene extends Phaser.Scene {
         const displayWidth = generatedAtlas ? displayHeight * 0.5 : hasAnimationFrame ? baseHeight * 0.5 : baseWidth;
         image.setPosition(drawX, drawY + (aiming ? -2 : 0) + (attacking ? recoilKick * 3 : 0))
           .setDisplaySize(displayWidth * poseScaleX, displayHeight * poseScaleY).setVisible(true);
-        image.setAlpha(enemy.hitFlash > 0 ? 0.72 + Math.abs(hitPulse) * 0.28 : 1);
+        const entryProgress = enemy.entryDurationMs > 0
+          ? enemy.entryElapsedMs / enemy.entryDurationMs : 1;
+        const entryAlpha = enemy.state === 'Entering' ? 0.2 + 0.8 * entryProgress : 1;
+        image.setAlpha(enemy.state === 'Entering' ? entryAlpha
+          : enemy.hitFlash > 0 ? 0.72 + Math.abs(hitPulse) * 0.28 : 1);
         image.setAngle(poseLean + Math.sin(phaseTime * 1.7) * (aiming ? 0.25 : 0.7));
         image.setTint(enemy.hitFlash > 0 ? 0xffd5d5 : (attacking ? 0xffe3c2 : 0xffffff));
       } else {
@@ -1573,7 +1649,8 @@ export class MissionScene extends Phaser.Scene {
         if (!label) label = this.add.text(enemy.x, enemy.y - 164, 'НАЧАЛЬНИК ОХРАНЫ • ФАЗА I', {
           fontSize: '15px', color: '#f2d49a', fontStyle: 'bold', stroke: '#10161d', strokeThickness: 5,
         }).setOrigin(0.5).setName(bossLabelKey).setDepth(23);
-        label.setPosition(enemy.x, enemy.y - 164).setText('НАЧАЛЬНИК ОХРАНЫ • ФАЗА ' + (enemy.bossPhase + 1)).setVisible(true);
+        label.setPosition(enemy.x, enemy.y - 164).setText('НАЧАЛЬНИК ОХРАНЫ • ФАЗА ' + (enemy.bossPhase + 1))
+          .setVisible(enemy.state !== 'Hidden');
       }
       if (enemy.state === 'Aiming') {
         this.fx.lineStyle(2, 0xe25c54, 0.9); this.fx.strokeCircle(enemy.x, enemy.y - 70, 25 + Math.sin(this.time.now / 90) * 3);
@@ -1695,6 +1772,12 @@ export class MissionScene extends Phaser.Scene {
   private drawEnemyOverlays(): void {
     for (const enemy of this.enemies) {
       if (enemy.state === 'Defeated' || enemy.state === 'Hidden') continue;
+      if (enemy.state === 'Entering') {
+        const pulse = 1 + Math.sin(this.time.now / 85 + enemy.uid) * 0.12;
+        this.fx.lineStyle(2, 0xe0b66f, 0.72);
+        this.fx.strokeCircle(enemy.entryTargetX, enemy.y + 4, 28 * pulse);
+        continue;
+      }
       const def = ENEMIES[enemy.type];
       const barWidth = enemy.type === 'boss' ? 150 : 58;
       const barY = enemy.y - (enemy.type === 'boss' ? 140 : 88);

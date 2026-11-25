@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
+<defs>
+ <linearGradient id="wall" x2="0" y2="1"><stop stop-color="#17232c"/><stop offset="1" stop-color="#422d2d"/></linearGradient>
+ <linearGradient id="floor" x2="0" y2="1"><stop stop-color="#5c3c3b"/><stop offset="1" stop-color="#101820"/></linearGradient>
+ <linearGradient id="brass" x2="0" y2="1"><stop stop-color="#f1d28d"/><stop offset=".5" stop-color="#a66d36"/><stop offset="1" stop-color="#52351f"/></linearGradient>
+ <linearGradient id="bottle" x2="0" y2="1"><stop stop-color="#8dbb9b" stop-opacity=".8"/><stop offset="1" stop-color="#234c47"/></linearGradient>
+ <radialGradient id="glow"><stop stop-color="#e99c58" stop-opacity=".65"/><stop offset="1" stop-color="#e99c58" stop-opacity="0"/></radialGradient>
+</defs>
+<g>
+ <path d="M135 110H390V405H135Z" fill="#111b24" stroke="url(#brass)" stroke-width="7"/>
+ <path d="M155 130H370V384H155Z" fill="#263b45"/>
+ <path d="M890 110H1145V405H890Z" fill="#111b24" stroke="url(#brass)" stroke-width="7"/>
+ <path d="M910 130H1125V384H910Z" fill="#263b45"/>
+ <path d="M170 150H355V365H170ZM925 150H1110V365H925Z" fill="#182933" stroke="#89623c" stroke-width="3"/>
+</g>
+<g>
+ <rect x="198" y="150" width="12" height="210" rx="5" fill="#c79b5b"/>
+ <rect x="245" y="145" width="12" height="215" rx="5" fill="#c79b5b"/>
+ <rect x="292" y="155" width="12" height="205" rx="5" fill="#c79b5b"/>
+ <rect x="955" y="150" width="12" height="210" rx="5" fill="#c79b5b"/>
+ <rect x="1002" y="145" width="12" height="215" rx="5" fill="#c79b5b"/>
+ <rect x="1049" y="155" width="12" height="205" rx="5" fill="#c79b5b"/>
+</g>
+<g fill="#c58f50">
+ <path d="M160 185H365V198H160ZM160 245H365V257H160ZM160 305H365V317H160Z"/>
+ <path d="M915 185H1120V198H915ZM915 245H1120V257H915ZM915 305H1120V317H915Z"/>
+</g>
+</svg>

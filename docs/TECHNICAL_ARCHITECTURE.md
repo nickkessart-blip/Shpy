@@ -93,3 +93,42 @@ CombatService — выстрел, трассировка, урон. WeaponServic
 
 ## Риски
 Phaser, Capacitor и Tauri имеют разные циклы обновления: фиксировать версии. WebView на iOS/Android отличается от desktop browser. Сенсорное управление тестировать рано. Для iOS локальная сборка/подпись требуют macOS/Xcode.
+
+
+## Rebaseline runtime domains (2026-11-25)
+
+The product canon now uses a moving rail-shooter mission model and three combat controllers. These are new logical boundaries, not a request to replace Phaser or the existing shared codebase.
+
+### Rail and mission timeline
+- `RailTimeline` owns route distance/time, segment transitions, camera travel, spawn windows and scripted event scheduling.
+- `BackgroundLayerController` scrolls authored far/mid/near/foreground layers independently. Decorative motion never owns combat coordinates.
+- `MissionDirector` consumes timeline events and owns objectives, segment completion and extraction.
+- `SpawnDirector` chooses seeded valid spawn lanes while enforcing separation, visibility and screen-safe constraints.
+
+### Location mechanics and modifiers
+- `LocationMechanicController` runs permanent location signatures (Casino lighting, train tunnel/steam/shake, warehouse machinery, Embassy security network, Vulkan infrastructure).
+- `ModifierResolver` validates compatible operation modifiers and creates a seeded event schedule.
+- Both emit typed events to combat/rendering/audio systems. A visual event may affect visibility or an object state, but must not silently change hitbox coordinates.
+
+### Combat controllers and automation
+- `CombatController` is the shared action contract.
+- `ManualCombatController` translates player input into aim/fire/reload/item actions.
+- `AssistedCombatController` delegates only unlocked actions to equipment (for example automatic supplies or a commanded turret).
+- `AutonomousMissionDirector` runs all combat actions after preparation in a full-autonomy operation.
+- All controllers call the same weapon, damage, cover, enemy and mission services. Automation must never bypass gameplay rules.
+
+### Agency and resources
+- Keep Dollars, Reputation and Components separate in the domain model.
+- Existing persisted `accountXp` is currently the storage representation for Reputation; any rename requires an explicit save migration.
+- `OperativeAvailabilityService` arbitrates between main-operation support and timed roster assignments so one operative cannot occupy two assignments.
+- Agency research unlocks capabilities/capacity; personal perks modify player-agent performance.
+
+### Mission preparation and debrief
+- Mission Preparation resolves the actual loadout, support roster, gadgets, operation modifiers and automation doctrine before launch.
+- Armory owns catalogue/upgrade/equip data, not the final per-operation deployment choice.
+- Debrief records actions/rewards by source (player, operative, turret, drone, autonomous weapon) for balance and progression analysis.
+
+### Determinism and saves
+- Route events, modifier rolls, spawn selection and autonomous decisions must accept a seed.
+- Keep simulation state separate from presentation state (camera shake, parallax, hit flashes and animation offsets).
+- Save any new mission knowledge, automation unlocks, research and operative assignments through versioned migrations and tests.

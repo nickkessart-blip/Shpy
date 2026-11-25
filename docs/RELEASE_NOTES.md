@@ -1,5 +1,20 @@
 # SHPY — Release Notes
 
+## 2026-11-25 — First Casino rail timeline slice
+- Added a renderer-independent deterministic route clock with bounded distance/progress, reset and independent wrapped layer offsets.
+- Split the original Casino and Royale Bar SVGs into eight transparent, same-canvas base/far/mid/near planes and registered them in AssetCatalog.
+- Wired the route clock into MissionScene; the route advances only during active play, resets per mission segment, scrolls authored Casino planes independently and displays route progress. The original full-scene SVGs remain as fallback.
+- Kept reticle, weapon rig, HUD and authoritative enemy hit coordinates independent from decorative layer offsets.
+- This is the first bounded route-motion slice, not the completed rail-shooter. Enemy route lanes, spawn director, physical cover occlusion, projectile feedback and the Casino signature event remain open.
+
+## 2026-11-25 — Approved game design rebaseline
+- Re-centered SHPY on its approved spy-parody rail-shooter identity and protagonist progression.
+- Defined the first campaign's narrative frame, five location signature mechanics and the layered operation-modifier model.
+- Defined mission-bound manual, assisted and fully autonomous combat; endgame autonomous missions are watched after preparation and launch.
+- Specified the distinction between player-agent and recruited operatives, including support availability.
+- Documented the UI/HQ/Settings/Armory/Mission Preparation expectations and contextual prologue/tutorial.
+- Rebased MVP scope and roadmap. This was a documentation-only change: no gameplay behaviour, numeric balance, save schema or assets were changed.
+
 ## 2026-11-25 — Reuse existing muzzle-flare artwork
 - Connected the existing Kenney CC0 muzzle-flare texture to the mission firing effect. The sprite follows the weapon muzzle and aim direction, uses additive blending and fades with the shot flash.
 - Scale is uniform and derived from the source frame bounds to preserve the artwork's aspect ratio; the procedural tracer/flash remains as fallback.
@@ -113,3 +128,15 @@
 
 ## Ограничения
 Сборка остаётся Web-игрой. Проверки CI не заменяют физический плейтест на Android. Полные спрайтовые анимации героя и врагов, 2.5D-камера по рельсам и следующая сюжетная операция остаются следующим этапом.
+
+## 2026-11-25 — Seeded enemy spawn and physical cover slice
+- Added a Phaser-independent seeded SpawnDirector with authored-lane candidates, bounded lane generation, cover clearance, minimum separation and reproducible entrance ordering.
+- Preserved each wave's authored enemy-role roster; only lane assignment, order and entrance timing vary by run. This avoids silently changing combat balance while removing identical spawn silhouettes.
+- Added staggered enemy entry cues with a visible, fading lane marker.
+- Enemies taking cover are now rendered behind the cover layer instead of being hidden by a state toggle. Shot resolution checks the muzzle-to-hitbox segment against the same cover rectangles, so covered targets cannot be hit through the prop.
+- Enemies assigned to the same cover use different peek offsets to reduce stacked silhouettes.
+- Added focused SpawnDirector determinism, spacing, bounds, cover-clearance and composition tests, plus cover line-of-sight tests.
+- Continuous route-lane movement, dynamic role composition, full cover destruction and browser/Android visual validation remain open.
+
+- Extended the spawn plan into visible route-lane entrances: guards, assault units and armored enemies enter from alternating route edges with different travel durations, while stagger timing remains seed-driven. A pulsing marker previews each assigned lane before arrival.
+- Added a pure eased-entry sampler and tests for start/end positions, clamping and invalid duration. Bosses preserve their authored entrance point.
