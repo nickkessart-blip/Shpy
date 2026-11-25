@@ -375,3 +375,12 @@ The user reports a complete failure in graphics quality and mobile shooting and 
 - Unblocked shots retain their original recorded player endpoint and existing dodge behavior. Already launched projectile state is independent of later enemy death/wave changes.
 - This is static solid cover interception, not cover destruction or crouching behind every cover. Player hitboxes and cover coordinates are unchanged.
 - Tests cover clear line, first of multiple covers, exact edge contact, start-inside, invalid coordinate and invalid rectangle.
+## Destructible physical cover — 2026-11-26
+
+- Pure durability model: `src/game/systems/combat/coverDurability.ts`. Runtime values are `{ hp, maxHp, stage }` with `intact | damaged | destroyed`. HP: table-left 260, table-right 240, bar-counter 360, seats 190, unknown 220. Damaged stage begins at 55% remaining; destroyed at 0.
+- `MissionScene.coverStates` is reinitialized per authored room. `getActiveCovers()` returns non-destroyed rectangles; spawn planning, player LOS/aim feedback, roulette LOS and enemy projectile cover intersection use this live set.
+- Player shots test the nearest cover intersection for each pellet ray. If the best candidate is behind cover, or no enemy is targeted but the ray reaches a cover, that cover receives the hit. Shotguns apply damage per intercepted pellet. Cover hits do not grant enemy hit/XP/kill credit.
+- Destroyed covers disappear from physical LOS immediately and render as low rubble; damaged cover remains blocking and has a tint plus crack lines. `coverDamageLayer` is depth 10 above cover sprites (depth 9).
+- When a cover is destroyed, enemies assigned to it lose `coverId`; any in SeekingCover/Hidden/Peeking exit to Exposed after their active tweens are killed. Future waves omit destroyed cover from SpawnDirector clearance.
+- Enemy projectile interception consults active cover, so newly destroyed cover opens the firing lane; already launched rounds retain their recorded endpoint.
+- Durability tests cover cover-specific initial HP, damage threshold, lethal clamp, already destroyed and invalid values. Physical Android readability/balance remains unverified.

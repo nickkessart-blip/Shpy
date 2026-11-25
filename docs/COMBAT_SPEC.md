@@ -213,3 +213,11 @@ Current numeric values in `balance.ts` and `enemies.ts` are prototype values, no
 - When no cover blocks the line, existing dodge/impact resolution remains unchanged. Cover collision is decided at launch; an already-launched round retains its recorded path even if the room changes state.
 - The collision does not destroy cover or move enemies/player. It models solid tabletop/partition interception. The player duck remains a separate countermeasure for rounds with a clear line.
 - Deterministic tests cover no-hit, single cover, nearest of multiple covers, boundary contact, starting inside a rectangle and invalid geometry.
+## Destructible cover — 2026-11-26
+
+- Authored cover now has per-room durability. Casino tables: 260/240 HP, bar counter: 360 HP, train seats: 190 HP; unknown cover defaults to 220 HP.
+- A shot aimed at cover, or a shot whose nearest enemy target is behind cover, damages the first solid cover intersected by the muzzle-to-target ray. Shotguns apply damage per pellet that intersects the cover.
+- At or below 55% durability, cover enters a visibly cracked/damaged stage and remains fully blocking. At 0 HP it becomes low rubble and is removed from all collision/LOS checks.
+- Enemy rounds use only non-destroyed cover. Guards assigned to destroyed cover lose that assignment, exit Hidden/SeekingCover/Peeking and return to exposed combat. Future waves ignore destroyed cover for spawn clearance.
+- Cover damage does not add enemy hit/kill credit and does not grant XP. It consumes regular ammo. Cover state resets on entering a new authored room, not on each wave.
+- Deterministic tests cover type-specific HP, damage threshold, lethal clamp and invalid inputs.
