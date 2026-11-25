@@ -70,6 +70,7 @@ export class AssetCatalog {
   }
 
 
+
   /**
    * Compose a deterministic Phaser CanvasTexture from the four committed enemy
    * SVGs. This is a state atlas, not a hand-drawn animation sheet.
@@ -80,7 +81,6 @@ export class AssetCatalog {
       const authored = scene.textures.get(key);
       return authored.has('0') && authored.has('11');
     }
-
     const types = ['guard', 'armored', 'assault', 'boss'] as const;
     const poses = ['aim', 'fire', 'hit'] as const;
     const frameWidth = 128;
@@ -95,12 +95,10 @@ export class AssetCatalog {
       return width > 0 && height > 0 ? { source, width, height } : null;
     });
     if (sources.some((source) => source === null)) return false;
-
     const atlas = scene.textures.createCanvas(key, frameWidth * 3, frameHeight * 4);
     if (!atlas) return false;
     const context = atlas.getContext();
     context.clearRect(0, 0, frameWidth * 3, frameHeight * 4);
-
     sources.forEach((entry, row) => {
       if (!entry) return;
       poses.forEach((pose, column) => {
@@ -116,7 +114,6 @@ export class AssetCatalog {
         if (pose === 'hit') context.translate(-2, 0);
         context.drawImage(entry.source, drawX, drawY, width, height);
         context.restore();
-
         if (pose === 'fire') {
           const flashX = x + frameWidth - 8;
           const flashY = y + baseline - height * 0.55;
@@ -140,7 +137,6 @@ export class AssetCatalog {
         }
       });
     });
-
     atlas.refresh();
     types.forEach((_type, row) => {
       poses.forEach((_pose, column) => {
