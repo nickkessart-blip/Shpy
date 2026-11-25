@@ -62,7 +62,7 @@ export class HQInboxScene extends Phaser.Scene {
       save.agentMissions.forEach((run, index) => {
         const mission = getAgentMission(run.missionId);
         if (!mission) return;
-        const y = 220 + index * 116;
+        const y = 220 + index * 104;
         const completed = run.completesAt <= now;
         const remaining = Math.max(0, run.completesAt - now);
         const seconds = Math.ceil(remaining / 1000);
