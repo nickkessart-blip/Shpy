@@ -123,3 +123,10 @@ Balance must be tested across:
 Metrics include time to kill by enemy type, player time-to-failure, ammo consumed, hit/miss ratio, damage received, support contribution, clear time, reward per minute and failure cause. A stronger system should reduce repetitive input while preserving investment, preparation and encounter readability.
 
 Current numeric values in `balance.ts` and `enemies.ts` are prototype values, not approved final balance.
+
+
+## Visual asset contract — 2026-11-25
+
+- Casino main/bar use independent base/far/mid/near layers, all authored at 1280×720 and loaded locally. Keep background parallax layers behind gameplay hitboxes.
+- First-person weapon artwork is a separate transparent viewmodel layer, rasterized at 2× from 360×620 SVG source. Mobile viewmodel rotates toward the world-space reticle; muzzle position must be derived from the same rig transform used to draw it.
+- Enemy source SVGs are rasterized at 2× and composed into a 3×4 atlas with 192×384 cells. Current aim/fire/hit variants are still derived from one source pose; do not describe them as full frame animation.
