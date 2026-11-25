@@ -130,3 +130,11 @@ Current numeric values in `balance.ts` and `enemies.ts` are prototype values, no
 - Casino main/bar use independent base/far/mid/near layers, all authored at 1280×720 and loaded locally. Keep background parallax layers behind gameplay hitboxes.
 - First-person weapon artwork is a separate transparent viewmodel layer, rasterized at 2× from 360×620 SVG source. Mobile viewmodel rotates toward the world-space reticle; muzzle position must be derived from the same rig transform used to draw it.
 - Enemy source SVGs are rasterized at 2× and composed into a 3×4 atlas with 192×384 cells. Current aim/fire/hit variants are still derived from one source pose; do not describe them as full frame animation.
+
+
+## Mobile control sizing and fire lifecycle — 2026-11-25
+
+- Previous overlay scaling followed the Phaser logical-to-physical canvas ratio. On a 640×360 landscape phone, this reduced the 96px fire button to roughly 48px and the 154px aim stick to roughly 77px.
+- New layout scaling targets usable physical touch controls: scale is clamped to 0.8–1.15 using a 800×450 reference viewport, while the overlay remains aligned to the actual FIT canvas.
+- Fire now captures its active pointer where supported, releases on pointerup/pointercancel/lostpointercapture, and clears held-fire state on window blur. Window-level release remains a fallback.
+- This is a code-level fix with deterministic sizing tests. It is not a substitute for physical Android verification.

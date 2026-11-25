@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { followAimWithCamera, getAimVelocity, moveAim, moveAimByPointerDelta, moveAimInWorld } from './aimMath';
+import { getMobileControlScale } from './mobileControlLayout';
 
 describe('mobile aim response', () => {
   it('ignores only the tiny radial dead zone', () => {
@@ -90,5 +91,21 @@ describe('world-space mobile aim and camera follow', () => {
   it('applies drag sensitivity to world-space reticle travel', () => {
     expect(moveAimByPointerDelta({ x: 500, y: 300 }, { x: 20, y: -10 }, 2, worldBounds))
       .toEqual({ x: 540, y: 280 });
+  });
+});
+
+describe('mobile control physical sizing', () => {
+  it('keeps controls large enough on compact landscape phones', () => {
+    expect(getMobileControlScale(640, 360)).toBe(0.8);
+    expect(96 * getMobileControlScale(640, 360)).toBeGreaterThanOrEqual(76);
+  });
+
+  it('scales controls up on larger phones without making them oversized', () => {
+    expect(getMobileControlScale(854, 480)).toBeCloseTo(1.0667, 4);
+    expect(getMobileControlScale(1280, 720)).toBe(1.15);
+  });
+
+  it('never shrinks touch targets below the minimum scale', () => {
+    expect(getMobileControlScale(480, 270)).toBe(0.8);
   });
 });
