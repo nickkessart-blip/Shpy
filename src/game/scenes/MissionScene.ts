@@ -821,7 +821,7 @@ export class MissionScene extends Phaser.Scene {
           enemy.timer = def.peekMs;
           enemy.phase += 1;
           const cover = this.sceneDef.covers.find((item) => item.id === enemy.coverId);
-          if (cover) enemy.x = findVisiblePeekX(MUZZLE, cover, 58 + (enemy.uid % 4) * 30);
+          if (cover) enemy.x = findVisiblePeekX(MUZZLE, cover, 58 + (enemy.uid % 4) * 96);
           enemy.y = enemy.originY;
           break;
         }
@@ -831,7 +831,7 @@ export class MissionScene extends Phaser.Scene {
           const cover = this.sceneDef.covers.find((item) => item.id === enemy.coverId);
           if (cover) {
             // Move to the side of the cover facing the player so the enemy can be hit while peeking.
-            enemy.x = findVisiblePeekX(MUZZLE, cover, 58 + (enemy.uid % 4) * 30);
+            enemy.x = findVisiblePeekX(MUZZLE, cover, 58 + (enemy.uid % 4) * 96);
           } else {
             enemy.x = enemy.baseX + (enemy.phase % 2 === 0 ? -52 : 52);
           }
