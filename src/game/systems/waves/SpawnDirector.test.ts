@@ -44,7 +44,7 @@ describe('SpawnDirector', () => {
           .toBeGreaterThanOrEqual(135);
       }
       for (const cover of covers) {
-        const expanded = { x: cover.x - 24, y: cover.y - 24, width: cover.width + 48, height: cover.height + 48 };
+        const expanded = { x: cover.x - 64, y: cover.y - 64, width: cover.width + 128, height: cover.height + 128 };
         const point = plan[i].spawn;
         const inside = point.x >= expanded.x && point.x <= expanded.x + expanded.width
           && point.y >= expanded.y && point.y <= expanded.y + expanded.height;
