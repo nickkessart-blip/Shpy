@@ -68,10 +68,14 @@ describe('agent operations', () => {
     expect(agents.getAvailableAgents().map((agent) => agent.id)).toEqual(['shade', 'hammer']);
   });
 
-  it('does not auto-dispatch when the agency has no available operative team', () => {
+  it('does not auto-dispatch when every operative is already assigned', () => {
+    const save = saves.load();
+    save.accountXp = 1_800;
+    saves.save(save);
     agents.recruit('fox');
-    expect(agents.dispatchRecommended(1_000, 0)).toEqual({ success: false, reason: 'team-size' });
-    expect(saves.load().agentMissions).toHaveLength(0);
+    expect(agents.dispatch('recon', ['fox'], 1_000, 0).success).toBe(true);
+    expect(agents.dispatchRecommended(2_000, 0)).toEqual({ success: false, reason: 'team-size' });
+    expect(saves.load().agentMissions).toHaveLength(1);
   });
 
 });
