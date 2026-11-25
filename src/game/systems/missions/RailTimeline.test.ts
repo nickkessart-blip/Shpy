@@ -37,6 +37,15 @@ describe('RailTimeline', () => {
     expect(rail.layerOffset(200, 0.5)).toBe(-125);
   });
 
+  it('moves non-tileable art by bounded progress without wrapping', () => {
+    const rail = new RailTimeline({ routeLength: 1000, speedPxPerSecond: 100 });
+    rail.advance(2500);
+    expect(rail.layerTravel(80, 0.5)).toBe(-10);
+    expect(rail.layerTravel(80, 2)).toBe(-40);
+    rail.advance(10000);
+    expect(rail.layerTravel(80, 2)).toBe(-80);
+  });
+
   it('ignores invalid or non-positive frame deltas', () => {
     const rail = new RailTimeline({ routeLength: 1000, speedPxPerSecond: 100 });
     rail.advance(0);
