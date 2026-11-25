@@ -169,3 +169,10 @@
 
 - Extended the spawn plan into visible route-lane entrances: guards, assault units and armored enemies enter from alternating route edges with different travel durations, while stagger timing remains seed-driven. A pulsing marker previews each assigned lane before arrival.
 - Added a pure eased-entry sampler and tests for start/end positions, clamping and invalid duration. Bosses preserve their authored entrance point.
+
+
+## 2026-11-25 — Mobile target feedback (in progress)
+- Reticle turns green when a valid enemy hit is under it, amber when cover blocks the shot, and remains white when no target overlaps.
+- Mobile fire button rim mirrors the same state, making it easier to tell whether a shot should connect.
+- Feedback uses existing hit radii and cover geometry and does not alter aim, damage or hitboxes.
+- Deterministic geometry tests cover clear, blocked, neutral and overlapping target cases.

@@ -39,7 +39,7 @@ export function findVisiblePeekX(muzzle: Point, cover: Rect, padding = 70): numb
   return muzzle.x < cover.x ? cover.x - padding : cover.x + cover.width + padding;
 }
 
-export function isShotBlocked(muzzle: Point, target: Point, covers: Rect[]): boolean {
+export function isShotBlocked(muzzle: Point, target: Point, covers: readonly Rect[]): boolean {
   return covers.some((cover) => segmentIntersectsRect(muzzle, target, cover));
 }
 
@@ -53,4 +53,28 @@ export function resolveHit(
   if (distance(aim, head) <= headRadius) return 'head';
   if (distance(aim, body) <= bodyRadius) return 'body';
   return null;
+}
+
+
+export type AimFeedbackState = 'none' | 'clear' | 'blocked';
+export interface AimFeedbackTarget {
+  head: Point;
+  body: Point;
+  headRadius: number;
+  bodyRadius: number;
+}
+
+/** Reports whether the current reticle is over a target and whether cover blocks the shot. */
+export function getAimFeedbackState(aim: Point, muzzle: Point,
+  targets: readonly AimFeedbackTarget[], covers: readonly Rect[]): AimFeedbackState {
+  let clearTarget = false;
+  let blockedTarget = false;
+  for (const target of targets) {
+    const part = resolveHit(aim, target.head, target.body, target.headRadius, target.bodyRadius);
+    if (!part) continue;
+    const point = part === 'head' ? target.head : target.body;
+    if (isShotBlocked(muzzle, point, covers)) blockedTarget = true;
+    else clearTarget = true;
+  }
+  return clearTarget ? 'clear' : blockedTarget ? 'blocked' : 'none';
 }

@@ -217,3 +217,12 @@ The user reports a complete failure in graphics quality and mobile shooting and 
 - The follow-up introduces a physical control scale based on an 800×450 reference viewport, clamped to 0.8–1.15, with deterministic sizing tests.
 - Fire now captures its pointer when supported, handles pointerup/pointercancel/lostpointercapture, and releases on window blur. Window-level release remains as fallback.
 - CI/Pages publication pending. Physical Android QA still required.
+
+
+## Mobile controls publication and aim feedback — 2026-11-25
+
+- PR #28 merged: https://github.com/nickkessart-blip/Shpy/pull/28, merge commit 7f0ebecb15350462b85e511cc21999e754c0acd3.
+- Main CI run 45696323499 passed typecheck, Vitest, lint and production build. Pages run 45696323494 succeeded for the same commit; prototype-build advanced to 27c085ff604a141ca0d56b81677e88d8f8e806ba.
+- Correct touch scale measurements: at 640×360, the old 0.65 floor rendered the 96px fire button at ~62px and 154px stick at ~100px. New 0.8 floor renders them at ~77px and ~123px.
+- Follow-up branch feat/mobile-target-feedback-2026-11-25 adds target-aware feedback: green reticle/fire rim for a clear hit, amber for cover-blocked, white when no target overlaps. It reuses the same head/body radii and cover geometry as actual shots; no aim assist or hitbox changes. Unit tests added.
+- Follow-up CI/Pages pending. Physical Android QA remains outstanding.
