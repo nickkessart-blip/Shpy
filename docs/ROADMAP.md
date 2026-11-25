@@ -43,12 +43,12 @@ Older roadmap sections and numeric SHPY prototype phase labels are historical im
 
 ### P0 — Rebuild and validate combat foundation
 
-Implementation status (2026-11-25): PR #18 adds a deterministic route clock, route progress HUD and eight transparent 1280×720 SVG planes extracted from the existing Casino/Bar source art. MissionScene moves base/far/mid/near layers independently with bounded travel and keeps the original full-scene SVG as fallback. This is a finite pan of one room, not an endless rail route. Enemy route lanes, seeded spawn director, physical cover occlusion and attack projectiles remain open; do not mark P0 complete.
+Implementation status (2026-11-25): PR #18 adds a deterministic route clock, route progress HUD and eight transparent 1280×720 SVG planes extracted from the existing Casino/Bar source art. The follow-up P0 slice adds a seeded SpawnDirector: wave enemy roles remain authored, while lane assignments, entrance order and stagger timing vary per run; placements enforce 135px target separation and cover clearance. Hidden enemies now remain rendered behind cover, and cover geometry blocks shots along the muzzle-to-hitbox segment. This is still a prototype: no continuous route-lane movement, authored spawn/exit animation, full cover destruction/peek cover validation, attack projectiles or Casino signature event yet.
 - [~] Add deterministic route timeline and independent authored far/mid/near SVG planes to the Casino prototype (first code slice; enemy lanes, spawn director and cover remain open). See [implementation plan](superpowers/plans/2026-11-25-casino-rail-timeline.md).
 - [ ] Use genuinely independent background layers and separate foreground/environment set pieces.
 - [ ] Fix pointer-to-world mapping; remove the reported curved reticle response.
-- [ ] Make cover render as physical occlusion; hidden enemies must not disappear.
-- [ ] Fix enemy overlap and repeated/predictable spawn compositions.
+- [~] Make cover render as physical occlusion; hidden enemies remain drawn behind the cover and line-of-sight shots are blocked. Validate in browser; add physical cover-state polish.
+- [~] Seeded SpawnDirector varies lane assignment, enemy entry order and stagger timing, enforcing minimum spacing. Authored enemy role composition remains fixed per wave; seeded composition variants and route-lane entry/exit remain open.
 - [ ] Differentiate enemy behaviour, attack patterns and counters beyond HP.
 - [ ] Add readable enemy attack launch/effects and restore a clear lower-screen arms/hands/weapon presentation.
 - [ ] Rebalance music and combat SFX.
