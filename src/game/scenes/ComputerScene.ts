@@ -2,11 +2,12 @@ import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH } from '../../app/GameConfig';
 import { AGENT_CANDIDATES, AGENT_MISSIONS, calculateAgentMissionChance, getAgentLevel, getAgentMissionSlots, type AgentMissionId } from '../data/agents';
 import { BALANCE } from '../data/balance';
+import { AGENCY_RESEARCH, type AgencyResearchId } from '../data/agencyResearch';
 import { getAccountLevel } from '../data/progression';
 import { agentService } from '../systems/agents/AgentService';
 import { saveService, type UpgradeKind } from '../../persistence/SaveService';
 
-type ComputerTab = 'upgrades' | 'agents';
+type ComputerTab = 'upgrades' | 'agents' | 'research';
 
 const UPGRADE_ROWS: Array<{ kind: UpgradeKind; label: string; description: string }> = [
   { kind: 'damage', label: 'УРОН', description: 'Повышает урон каждого попадания.' },
@@ -105,6 +106,54 @@ export class ComputerScene extends Phaser.Scene {
     this.addText(this.content!, 64, 650,
       'ДОЛЛАРЫ РАСХОДУЮТСЯ • ОПЫТ АККАУНТА НЕ ТРАТИТСЯ И ПРОДОЛЖАЕТ ОТКРЫВАТЬ РАНГИ',
       12, '#718091');
+  }
+
+  private renderResearch(save: ReturnType<typeof saveService.load>): void {
+    const level = getAccountLevel(save.accountXp);
+    this.addText(this.content!, 64, 164, 'ИНФРАСТРУКТУРА И ДОКТРИНЫ • ОПЛАТА КОМПОНЕНТАМИ', 14, '#aebdca', true);
+    this.addText(this.content!, 930, 164, 'КОМПОНЕНТЫ  ' + save.components.toLocaleString('ru-RU'), 17, '#86d2a2', true);
+    if (level < 3) {
+      this.drawPanel(this.content!, 64, 210, 1150, 380, 'ИССЛЕДОВАТЕЛЬСКИЙ ОТДЕЛ НЕ АКТИВИРОВАН');
+      this.addText(this.content!, 100, 290, 'Исследования откроются на 3-м уровне агентства.\nСначала заслужите доступ к оперативному отделу.', 20, '#c2ccd6');
+      this.addText(this.content!, 100, 390, 'ТРЕБУЕТСЯ: УРОВЕНЬ 3', 14, '#f0c16d', true);
+      return;
+    }
+    AGENCY_RESEARCH.forEach((item, index) => {
+      const x = 64 + index * 390;
+      const y = 218;
+      const current = save.agencyResearch[item.id];
+      const max = item.costs.length - 1;
+      const next = current + 1;
+      const cost = item.costs[next] ?? 0;
+      const maxed = current >= max;
+      const canBuy = !maxed && save.components >= cost;
+      const panel = this.add.graphics();
+      panel.fillStyle(0x192633, 0.98);
+      panel.fillRoundedRect(x, y, 360, 360, 10);
+      panel.lineStyle(1, 0x8b704b, 0.75);
+      panel.strokeRoundedRect(x, y, 360, 360, 10);
+      this.content!.add(panel);
+      this.addText(this.content!, x + 20, y + 24, item.title, 16, '#f0c16d', true);
+      this.addText(this.content!, x + 20, y + 78, item.description, 13, '#c2ccd6');
+      this.addText(this.content!, x + 20, y + 166, 'УРОВЕНЬ ' + current + '/' + max, 18, '#ffffff', true);
+      this.addText(this.content!, x + 20, y + 204, 'ТЕКУЩИЙ ЭФФЕКТ', 10, '#8799a8', true);
+      this.addText(this.content!, x + 20, y + 228, item.effect(current), 14, '#86d2a2', true);
+      this.addText(this.content!, x + 20, y + 266, maxed ? 'ВСЕ ЭТАПЫ ЗАВЕРШЕНЫ' : 'СЛЕДУЮЩИЙ ЭТАП: ' + cost + ' КОМП.', 11, '#d5bd91', true);
+      this.drawButton(this.content!, x + 20, y + 306, 320, 38,
+        maxed ? 'ИССЛЕДОВАНИЕ ЗАВЕРШЕНО' : canBuy ? 'ЗАПУСТИТЬ ИССЛЕДОВАНИЕ' : 'НЕДОСТАТОЧНО КОМПОНЕНТОВ',
+        canBuy ? 0x397d60 : 0x394552, () => this.buyResearch(item.id));
+    });
+    this.addText(this.content!, 64, 626,
+      'ЭФФЕКТЫ ПРИМЕНЯЮТСЯ К НОВЫМ ОПЕРАЦИЯМ • УЖЕ ОТПРАВЛЕННЫЕ ОТРЯДЫ НЕ ПЕРЕСЧИТЫВАЮТСЯ',
+      11, '#718091');
+  }
+
+  private buyResearch(id: AgencyResearchId): void {
+    const result = saveService.purchaseAgencyResearch(id);
+    this.notice = result.success ? 'ИССЛЕДОВАНИЕ ЗАВЕРШЕНО • ЭФФЕКТ АКТИВИРОВАН'
+      : result.reason === 'components' ? 'НЕДОСТАТОЧНО КОМПОНЕНТОВ'
+        : result.reason === 'locked' ? 'ТРЕБУЕТСЯ 3-Й УРОВЕНЬ АГЕНТСТВА' : 'ИССЛЕДОВАНИЕ УЖЕ ЗАВЕРШЕНО';
+    this.render();
   }
 
   private renderAgents(save: ReturnType<typeof saveService.load>): void {
