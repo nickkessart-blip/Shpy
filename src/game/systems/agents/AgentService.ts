@@ -89,7 +89,7 @@ export class AgentService {
 
     const busyIds = new Set(save.agentMissions.flatMap((run) => run.agentIds));
     const available = save.agents.filter((agent) => !busyIds.has(agent.id));
-    let best: { missionId: AgentMissionId; agentIds: string[]; score: number; chance: number } | undefined;
+    const options: Array<{ missionId: AgentMissionId; agentIds: string[]; score: number; chance: number }> = [];
 
     const evaluate = (missionId: AgentMissionId, team: typeof available): void => {
       const mission = getAgentMission(missionId);
@@ -97,10 +97,7 @@ export class AgentService {
       const chance = Math.min(95, calculateAgentMissionChance(mission, team) + save.agencyResearch.intelNetwork * 5);
       const duration = mission.durationMs * (1 - save.agencyResearch.logistics * 0.1);
       const expectedComponentsPerMinute = mission.componentReward * (chance / 100) / (duration / 60_000);
-      if (!best || expectedComponentsPerMinute > best.score
-        || (expectedComponentsPerMinute === best.score && chance > best.chance)) {
-        best = { missionId, agentIds: team.map((agent) => agent.id), score: expectedComponentsPerMinute, chance };
-      }
+      options.push({ missionId, agentIds: team.map((agent) => agent.id), score: expectedComponentsPerMinute, chance });
     };
 
     const enumerate = (missionId: AgentMissionId, minimum: number, maximum: number): void => {
@@ -124,6 +121,9 @@ export class AgentService {
         enumerate(mission.id, mission.minimumAgents, mission.maximumAgents);
       }
     }
+    options.sort((left, right) => right.score - left.score || right.chance - left.chance
+      || left.agentIds.length - right.agentIds.length);
+    const best = options[0];
     if (!best) return { success: false, reason: 'team-size' };
     return this.dispatch(best.missionId, best.agentIds, now, randomValue);
   }
