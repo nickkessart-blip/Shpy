@@ -29,9 +29,6 @@ const DEFAULT_OPTIONS: SpawnDirectorOptions = {
   entranceStaggerMs: 220,
 };
 
-interface Candidate extends SpawnPoint {
-  tieBreak: number;
-}
 
 function seededRandom(seed: number): () => number {
   let state = seed >>> 0;
@@ -82,7 +79,7 @@ function buildCandidates(
   covers: CoverDefinition[],
   options: SpawnDirectorOptions,
   random: () => number,
-): Candidate[] {
+): SpawnPoint[] {
   const points: SpawnPoint[] = [...authored];
   const laneXs = [150, 300, 450, 640, 830, 980, 1130];
   const laneYs = [315, 350, 385];
@@ -110,7 +107,7 @@ function buildCandidates(
     if (!unique.has(key)) unique.set(key, point);
   }
 
-  return shuffle([...unique.values()], random).map((point) => ({ ...point, tieBreak: random() }));
+  return shuffle([...unique.values()], random);
 }
 
 function distance(a: SpawnPoint, b: SpawnPoint): number {
