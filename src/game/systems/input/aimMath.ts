@@ -4,7 +4,7 @@ export interface AimVector {
 }
 
 const DEAD_ZONE = 0.05;
-const BASE_SPEED_PER_MS = 1.35;
+const BASE_SPEED_PER_MS = 0.24;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));

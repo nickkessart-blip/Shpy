@@ -177,3 +177,15 @@ User explicitly asked to continue development after reporting that the prior rel
 - Live GitHub Pages: https://nickkessart-blip.github.io/Shpy/ . Physical Android QA has not been performed.
 - Current gameplay progression: manual dispatch/claim remains available; assisted one-click best-value dispatch and batch report collection are now functional. Persistent dispatch doctrine, opt-in auto-claim/auto-dispatch, assignment history and app-lifecycle background processing remain unimplemented.
 - Next recommended slice: implement persistent, opt-in agency assignment policy with a tested save migration and a lifecycle-safe processor. Avoid calling it autonomous until it actually runs while the player is in other scenes and obeys operative availability, mission slots, research effects and failure/reward rules.
+
+
+## User-reported blocker — 2026-11-25
+
+The user reports a complete failure in graphics quality and mobile shooting and refuses to test other systems until these are fixed. Pause agency/economy feature work. Prioritize a graphics and mobile-combat recovery pass. Physical Android testing has not been performed; do not claim the fix is verified on-device.
+
+### Mobile combat diagnosis and patch in progress
+- Main at task start: 77939fc86d5da2ead1e91e0b9abd12999eab1a87.
+- Code review found the mobile DOM control overlay was anchored to the full-size #game host, while Phaser Scale.FIT can center a smaller 16:9 canvas inside that host (especially portrait orientation). This can place touch controls outside the actual gameplay canvas.
+- Code review found the virtual aim stick's base speed was 1.35 px/ms; at default sensitivity 1.8 that is ~2,430 px/s at full deflection, far too fast for precise thumb aiming.
+- Patch branch fix/mobile-combat-controls-and-aim-2026-11-25 aligns overlay to canvas bounds on resize/orientation changes, tracks the aim pointer globally so a second finger on fire cannot break it, and reduces stick speed to a controllable range. CI and manual Android QA pending.
+- Visual assets are also still weak: Casino backgrounds are sparse flat SVG geometry, enemy runtime atlas is synthesized from static SVG poses rather than true animation, and first-person weapon atlas is only 192x144 per frame while displayed enlarged. User-facing art upgrade is required, not optional cosmetic polish.

@@ -10,8 +10,9 @@ describe('mobile aim response', () => {
   it('keeps small, intentional thumb movements responsive', () => {
     const small = getAimVelocity({ x: 0.25, y: 0 }, 1.8);
     const full = getAimVelocity({ x: 1, y: 0 }, 1.8);
-    expect(small.x).toBeGreaterThan(0.8);
+    expect(small.x).toBeGreaterThan(0.1);
     expect(full.x).toBeGreaterThan(small.x * 1.5);
+    expect(full.x).toBeLessThan(0.5);
     expect(full.y).toBe(0);
   });
 
@@ -33,6 +34,7 @@ describe('mobile aim response', () => {
     const step50 = moveAim(start, { x: 1, y: 0 }, 1.8, 50, 1280, 720);
     const step100 = moveAim(start, { x: 1, y: 0 }, 1.8, 100, 1280, 720);
     expect(step50.x - start.x).toBeCloseTo(velocity * 50, 8);
+    expect(velocity).toBeLessThan(0.5);
     expect(step100.x - start.x).toBeCloseTo(velocity * 100, 8);
   });
 
@@ -75,6 +77,14 @@ describe('world-space mobile aim and camera follow', () => {
   it('keeps camera movement inside authored limits when aim exceeds them', () => {
     expect(followAimWithCamera({ x: 2200, y: 1200 }, { x: 0, y: 0 }, viewport, scrollBounds))
       .toEqual({ x: 420, y: 180 });
+  });
+
+  it('keeps full-stick movement controllable at maximum sensitivity', () => {
+    const velocity = getAimVelocity({ x: 1, y: 0 }, 4);
+    expect(velocity.x).toBeLessThanOrEqual(1);
+    const moved = moveAimInWorld({ x: 640, y: 360 }, { x: 1, y: 0 }, 1.8, 100,
+      { minX: -420, maxX: 1700, minY: -180, maxY: 900 });
+    expect(moved.x - 640).toBeLessThan(50);
   });
 
   it('applies drag sensitivity to world-space reticle travel', () => {

@@ -110,6 +110,9 @@ export class MissionScene extends Phaser.Scene {
   private mobileGrenadeButton?: HTMLButtonElement;
   private mobileMedkitButton?: HTMLButtonElement;
   private mobileReleaseHandler?: (event: PointerEvent) => void;
+  private mobileAimMoveHandler?: (event: PointerEvent) => void;
+  private mobileAimEndHandler?: (event: PointerEvent) => void;
+  private mobileControlsLayoutHandler?: () => void;
   private mobileFirePointerId: number | null = null;
   private aimStickVector: Point = { x: 0, y: 0 };
   private aimStickActive = false;
@@ -1233,7 +1236,10 @@ export class MissionScene extends Phaser.Scene {
     overlay.dataset.shpyMobileControls = 'true';
     Object.assign(overlay.style, {
       position: 'absolute',
-      inset: '0',
+      left: '0',
+      top: '0',
+      width: '100%',
+      height: '100%',
       zIndex: '10000',
       pointerEvents: 'none',
       touchAction: 'none',
@@ -1380,15 +1386,18 @@ export class MissionScene extends Phaser.Scene {
       consume(event);
       if (this.aimStickPointerId !== null || this.currentSettings.mobileControlMode !== 'stick') return;
       this.aimStickPointerId = event.pointerId;
-      stick.setPointerCapture(event.pointerId);
       updateStick(event);
     });
-    stick.addEventListener('pointermove', (event) => {
-      if (event.pointerId === this.aimStickPointerId && stick.hasPointerCapture(event.pointerId)) updateStick(event);
-    });
-    stick.addEventListener('pointerup', (event) => { consume(event); resetStick(event); });
-    stick.addEventListener('pointercancel', (event) => resetStick(event));
-    stick.addEventListener('lostpointercapture', (event) => resetStick(event));
+    // Track the active thumb globally instead of relying on pointer capture.
+    // Several Android browsers cancel/loss pointer capture when a second finger
+    // presses the fire button, which silently freezes the aim stick.
+    this.mobileAimMoveHandler = (event: PointerEvent): void => {
+      if (event.pointerId === this.aimStickPointerId) updateStick(event);
+    };
+    this.mobileAimEndHandler = (event: PointerEvent): void => resetStick(event);
+    window.addEventListener('pointermove', this.mobileAimMoveHandler);
+    window.addEventListener('pointerup', this.mobileAimEndHandler);
+    window.addEventListener('pointercancel', this.mobileAimEndHandler);
 
     const utilityRow = document.createElement('div');
     Object.assign(utilityRow.style, {
@@ -1411,7 +1420,29 @@ export class MissionScene extends Phaser.Scene {
     overlay.append(stack, pause, utilityRow, stick);
     host.append(overlay);
     this.mobileControlsElement = overlay;
+    this.mobileControlsLayoutHandler = (): void => this.layoutMobileControls();
+    window.addEventListener('resize', this.mobileControlsLayoutHandler);
+    window.addEventListener('orientationchange', this.mobileControlsLayoutHandler);
+    this.layoutMobileControls();
     this.refreshMobileControls();
+  }
+
+  private layoutMobileControls(): void {
+    const overlay = this.mobileControlsElement;
+    const canvas = this.game.canvas;
+    const host = canvas.parentElement;
+    if (!overlay || !host) return;
+    const hostRect = host.getBoundingClientRect();
+    const canvasRect = canvas.getBoundingClientRect();
+    const controlScale = Math.max(0.65, Math.min(1, canvasRect.width / GAME_WIDTH, canvasRect.height / GAME_HEIGHT));
+    overlay.style.left = Math.round(canvasRect.left - hostRect.left) + 'px';
+    overlay.style.top = Math.round(canvasRect.top - hostRect.top) + 'px';
+    overlay.style.width = Math.round(canvasRect.width / controlScale) + 'px';
+    overlay.style.height = Math.round(canvasRect.height / controlScale) + 'px';
+    overlay.style.transform = 'scale(' + controlScale + ')';
+    overlay.style.transformOrigin = 'top left';
+    overlay.style.right = 'auto';
+    overlay.style.bottom = 'auto';
   }
 
   private disposeMobileControls(): void {
@@ -1422,11 +1453,25 @@ export class MissionScene extends Phaser.Scene {
     this.aimStickActive = false;
     this.aimStickPointerId = null;
     this.aimStickVector = { x: 0, y: 0 };
-    if (this.mobileReleaseHandler && typeof window !== 'undefined') {
-      window.removeEventListener('pointerup', this.mobileReleaseHandler);
-      window.removeEventListener('pointercancel', this.mobileReleaseHandler);
+    if (typeof window !== 'undefined') {
+      if (this.mobileReleaseHandler) {
+        window.removeEventListener('pointerup', this.mobileReleaseHandler);
+        window.removeEventListener('pointercancel', this.mobileReleaseHandler);
+      }
+      if (this.mobileAimMoveHandler) window.removeEventListener('pointermove', this.mobileAimMoveHandler);
+      if (this.mobileAimEndHandler) {
+        window.removeEventListener('pointerup', this.mobileAimEndHandler);
+        window.removeEventListener('pointercancel', this.mobileAimEndHandler);
+      }
+      if (this.mobileControlsLayoutHandler) {
+        window.removeEventListener('resize', this.mobileControlsLayoutHandler);
+        window.removeEventListener('orientationchange', this.mobileControlsLayoutHandler);
+      }
     }
     this.mobileReleaseHandler = undefined;
+    this.mobileAimMoveHandler = undefined;
+    this.mobileAimEndHandler = undefined;
+    this.mobileControlsLayoutHandler = undefined;
     this.mobileControlsElement?.remove();
     this.mobileControlsElement = undefined;
     this.mobileSwitchButton = undefined;
