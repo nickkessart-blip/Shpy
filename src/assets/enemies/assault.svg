@@ -14,6 +14,11 @@
 <path d="M90 91Q120 103 151 91L147 116Q134 134 119 135Q98 131 91 114Z" fill="#17212b" opacity=".95"/>
 <path d="M98 87H111M130 87H143" stroke="#0b1117" stroke-width="6" stroke-linecap="round"/>
 <path d="M112 113H130" stroke="#3b2520" stroke-width="4" stroke-linecap="round"/>
+<!-- full balaclava, goggles and red assault markers -->
+<path d="M82 86Q78 25 120 19Q163 24 162 87L151 119Q140 145 120 146Q97 143 87 118Z" fill="#151a20" stroke="#070b10" stroke-width="8"/>
+<path d="M91 88Q120 76 149 88L145 104Q120 111 95 104Z" fill="#080d12" stroke="#df7a70" stroke-width="4"/>
+<path d="M98 92H112M128 92H142" stroke="#a9b4bb" stroke-width="4" stroke-linecap="round"/>
+<path d="M100 116Q120 123 140 116" fill="none" stroke="#7b3335" stroke-width="6"/>
 <!-- head protection --><path d="M79 82Q72 23 119 19Q164 23 161 82L148 91Q120 74 91 92Z" fill="#42353c" stroke="#080e14" stroke-width="7"/>
 <path d="M82 63Q120 43 158 64" fill="none" stroke="#df7a70" stroke-width="7"/>
 <path d="M82 80 157 80" stroke="#111a22" stroke-width="8"/>
@@ -24,6 +29,9 @@
 <!-- weapon aimed toward viewer --><path d="M194 211 223 194 234 203 226 230 201 241Z" fill="#151d26" stroke="#05090e" stroke-width="5"/>
 <path d="M215 202 232 185 240 189 231 215" fill="#283744" stroke="#070c11" stroke-width="4"/>
 <path d="M220 229 237 224 235 248 220 249Z" fill="#161c23"/>
+<!-- red assault equipment markers -->
+<path d="M68 184 80 176 89 214 76 222Z M151 174 164 180 158 220 145 214Z" fill="#a33e43" stroke="#111820" stroke-width="3"/>
+<path d="M91 252 114 257 111 282 88 278Z M128 257 151 252 154 278 131 282Z" fill="#242a30" stroke="#df7a70" stroke-width="3"/>
 <!-- insignia and gear --><path d="M91 177H109V200H91ZM132 177H151V200H132Z" fill="#8e9aa1" opacity=".5"/>
 <path d="M70 250 105 257 100 278 67 274ZM139 257 174 248 180 273 145 280Z" fill="#131d27" stroke="#697783" stroke-width="3"/>
 <text x="120" y="296" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" letter-spacing="2" fill="#df7a70">ASSAULT</text>
