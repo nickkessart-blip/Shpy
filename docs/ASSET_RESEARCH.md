@@ -144,3 +144,24 @@
 - Do not use nearest-neighbour sampling or roundPixels for the project's semi-realistic painted style. antialias stays enabled and roundPixels disabled.
 - The current first-person weapon atlas has 192×144 frames displayed larger than native size. This is a known source of softness/pixelation. Replacing it with high-resolution transparent viewmodel artwork is preferable to sharpening or repeatedly re-encoding the same low-resolution source.
 - KTX2/Basis GPU-compressed textures are not enabled yet. They require a tested transcoder/runtime path and format fallback support across Android browsers; enabling them without device testing could produce missing textures. This remains a separate optimization task, not something to fake with a WebP conversion.
+
+
+## Поиск и проверка материалов — 2026-11-25
+
+### Материалы из Library
+
+Найден и осмотрен прозрачный `SHPY_enemy_animation_atlas.webp` (384×1024 RGBA, сетка 3×4, ячейка 128×256). Он соответствует существующему контракту authored atlas, но бинарный файл пока не находится в репозитории и не загружается runtime. Другие найденные листы оперативников и Восточного экспресса являются исходными контактными листами/артбуками: перед интеграцией требуется отдельная нарезка, проверка alpha, baseline и границ кадров. См. `docs/ASSET_CATALOG.md`.
+
+### Дополнительные CC0-кандидаты
+
+- [Kenney UI Pack](https://kenney.nl/assets/ui-pack) — CC0, большой набор UI-элементов; подходит для быстрого прототипирования, но финальный шпионский интерфейс должен сохранить единый арт-дирекшн.
+- [Kenney UI Audio](https://kenney.nl/assets/ui-audio) — CC0, UI-клики и подтверждения.
+- [Kenney Casino Audio](https://kenney.nl/assets/casino-audio) — CC0, кандидат на казино-атмосферу; точное содержимое пакета нужно проверить после загрузки.
+- [OpenGameArt Interface Sounds](https://opengameart.org/content/interface-sounds) — CC0, 100 отдельных OGG от Kenney.
+- [OpenGameArt Sci-Fi Sounds](https://opengameart.org/content/sci-fi-sounds) — CC0, около 70 OGG для будущих лазерных перчаток, дронов и устройств.
+
+Эти наборы **не скачаны и не интегрированы**. Сначала загрузить архив, проверить состав/лицензию, выбрать только нужные файлы и добавить копию лицензии/атрибуции в репозиторий.
+
+### Phaser 4 background implementation reference
+
+Официальный [Phaser 4 TileSprite API](https://docs.phaser.io/api-documentation/class/gameobjects-tilesprite) и [Tile Sprite concept](https://docs.phaser.io/phaser/concepts/gameobjects/tile-sprite) подтверждают использование viewport-sized TileSprite и независимого `tilePosition` для бесшовного скролла. Для SHPY это целевой способ прокрутки настоящих seamless texture layers; контактные листы и неповторяющиеся иллюстрации нельзя автоматически считать tileable.
