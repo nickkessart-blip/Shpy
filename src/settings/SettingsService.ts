@@ -95,7 +95,10 @@ export class SettingsService {
   reset(): GameSettings {
     this.volatileSettings = { ...DEFAULT_SETTINGS };
     try {
-      if (typeof localStorage !== 'undefined') localStorage.removeItem(SETTINGS_STORAGE_KEY);
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem(SETTINGS_STORAGE_KEY);
+        localStorage.removeItem(LEGACY_SETTINGS_STORAGE_KEY);
+      }
     } catch {
       // Defaults remain available in memory.
     }

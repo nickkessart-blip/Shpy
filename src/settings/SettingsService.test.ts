@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { DEFAULT_SETTINGS, migrateLegacySettings, normalizeSettings } from './SettingsService';
+import { describe, expect, it, vi } from 'vitest';
+import { DEFAULT_SETTINGS, migrateLegacySettings, normalizeSettings, SettingsService, SETTINGS_STORAGE_KEY } from './SettingsService';
 
 describe('game settings', () => {
   it('provides safe defaults for missing or malformed data', () => {
@@ -47,3 +47,23 @@ describe('game settings', () => {
     expect(result.parallaxEnabled).toBe(false);
   });
 });
+
+
+  it('reset clears both current and legacy persisted settings', () => {
+    const values = new Map<string, string>([
+      ['shpy_settings_v1', JSON.stringify({ musicVolume: 0.9 })],
+      [SETTINGS_STORAGE_KEY, JSON.stringify({ musicVolume: 0.3 })],
+    ]);
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => values.set(key, value),
+      removeItem: (key: string) => values.delete(key),
+    });
+    try {
+      new SettingsService().reset();
+      expect(values.has('shpy_settings_v1')).toBe(false);
+      expect(values.has(SETTINGS_STORAGE_KEY)).toBe(false);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
