@@ -7,11 +7,12 @@ Before any code or content task:
 1. `README.md`
 2. `AGENTS.md` and `docs/GIT_WORKFLOW.md`
 3. `.ai/skills/README.md`, then the relevant SKILL.md files
-4. `docs/GAME_BIBLE.md` — current approved canon
-5. `docs/DECISIONS.md` — accepted decisions and open questions
-6. `docs/ROADMAP.md` and `docs/MVP_SCOPE.md`
-7. Relevant specs: `GAME_DESIGN.md`, `COMBAT_SPEC.md`, `CAMPAIGN_AND_LOCATIONS.md`, `AUTOMATION_DESIGN.md`, `UI_UX_SPEC.md`, `TECHNICAL_ARCHITECTURE.md`
-8. Asset catalog/research and asset-pipeline skill before asset work.
+4. `docs/AI_SKILLS_RESEARCH.md` before importing external skills/tools or sourcing new materials; verify engine and license compatibility
+5. `docs/GAME_BIBLE.md` — current approved canon
+6. `docs/DECISIONS.md` — accepted decisions and open questions
+7. `docs/ROADMAP.md` and `docs/MVP_SCOPE.md`
+8. Relevant specs: `GAME_DESIGN.md`, `COMBAT_SPEC.md`, `CAMPAIGN_AND_LOCATIONS.md`, `AUTOMATION_DESIGN.md`, `UI_UX_SPEC.md`, `TECHNICAL_ARCHITECTURE.md`
+9. Asset catalog/research and asset-pipeline skill before asset work.
 
 Do not start a new project. Do not silently change canon. Do not generate or edit images without the user's explicit request in the current turn.
 
@@ -60,7 +61,7 @@ The current prototype already has Start/HQ/Operations/Loadout/Computer/Settings/
 
 These are prototype implementations, not proof of final quality. The user's 2026-11-25 feedback identifies unresolved issues: weak/inconsistent menu and screen layout, confusing/platform-irrelevant settings, inactive/unclear HQ props, chart-like operations map and missing story/tutorial, weak tab states and shallow armory/progression, overlap/predictable enemy spawns, disappearing cover behaviour, limited enemy attack feedback, incorrect reticle movement, insufficiently layered background/parallax and economy runaway.
 
-The current implementation does not yet have the approved moving rail timeline, complete location event framework, full autonomous mission director, fully separated first-person arm/hand/weapon cosmetic layers, or balanced late-game economy. Do not claim these systems are implemented because their specs now exist.
+The first deterministic rail timeline and independently moving Casino/Royale Bar SVG planes are now implemented in PR #18. This is a bounded pan of the authored rooms, not the complete rail-shooter route. The complete location event framework, enemy route-lane/spawn director, physical cover occlusion, full autonomous mission director, fully separated first-person arm/hand/weapon cosmetic layers, and balanced late-game economy remain unimplemented. Do not claim these systems are complete because their specs now exist.
 
 ### First Casino rail-timeline implementation slice (PR #18)
 
