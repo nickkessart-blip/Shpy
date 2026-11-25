@@ -5,6 +5,7 @@
 ## Документы
 ## Инструкции для AI-агентов
 - [docs/AI_HANDOFF.md](docs/AI_HANDOFF.md) — актуальная точка входа: ветка, PR, проверенные статусы, ограничения и следующий шаг.
+- [docs/AI_SKILLS_RESEARCH.md](docs/AI_SKILLS_RESEARCH.md) — совместимые игровые skills, инструменты GameDevkit и проверенные источники ассетов.
 - [AGENTS.md](AGENTS.md) — обязательный порядок работы, проверки и handoff.
 - [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md) — политика веток, PR, CI, бинарных ассетов и публикации.
 - [.ai/skills/README.md](.ai/skills/README.md) — индекс проектных skills и базовый промпт; перед задачей агент обязан прочитать релевантные SKILL.md.
