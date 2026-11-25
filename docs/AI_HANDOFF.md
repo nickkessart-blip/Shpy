@@ -1,5 +1,5 @@
 # SHPY — AI handoff
-Updated: 2026-11-25 | Active task: bulk operative report collection
+Updated: 2026-11-26 | Active task: East Express layered art integration
 
 ## Mandatory reading order
 
@@ -16,7 +16,7 @@ Before any code or content task:
 
 Do not start a new project. Do not silently change canon. Do not generate or edit images without the user's explicit request in the current turn.
 
-## Repository and Git state
+## Latest completed visual slice — East Express layered carriage (2026-11-26)\n\n- Branch: `art/east-express-layered-recovery` (PR pending at handoff update).\n- Added three transparent 1280×720 SVG overlays aligned to the committed carriage base: distant night city through windows, rain/reflections on glass, and foreground seat backs/trim.\n- Registered the three layers and enabled the same independent parallax path already used by Casino. Existing single-background fallback remains.\n- External research checked SpriteCanvas CC0, the Tiddybub CC0 2D collection and OpenGameArt CC0 background elements. No unsuitable fantasy/top-down pack was forced into the realistic rail-shooter art style.\n- No image-generation credits were used.\n- CI/browser/Android validation is pending; do not claim visual QA until completed.\n\n## Repository and Git state
 
 - Repository: `nickkessart-blip/Shpy`; default branch: `main`.
 - Latest verified main commit at the start of this task: `a99476fe254e3c235dad5bb12de02fd0f2c0d56c`.
