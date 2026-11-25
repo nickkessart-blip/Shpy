@@ -53,7 +53,8 @@ Implementation status (2026-11-25): PR #18 adds a deterministic route clock, rou
 - [~] Make cover render as physical occlusion; hidden enemies remain drawn behind the cover and line-of-sight shots are blocked. Validate in browser; add physical cover-state polish.
 - [~] Seeded SpawnDirector varies lane assignment, enemy entry order and stagger timing, enforcing minimum spacing. Authored enemy role composition remains fixed per wave; seeded composition variants and route-lane entry/exit remain open.
 - [x] Differentiate Guard, Armored and Assault combat loops beyond HP: predictable cover cycle, armored head weak point/body resistance, and alternating assault flanks; retain the separate multi-phase boss pattern.
-- [ ] Add readable enemy attack launch/effects and restore a clear lower-screen arms/hands/weapon presentation.
+- [x] Add readable enemy attack launch/effects: per-archetype projectiles travel toward the player and apply damage on impact; muzzle/tracer/impact feedback is visible and wave transitions wait for fired rounds.
+- [ ] Restore a clear lower-screen arms/hands/weapon presentation.
 - [ ] Rebalance music and combat SFX.
 - [ ] Acceptance: the Casino route is playable from entry to extraction with consistent aim/hitboxes, readable cover, distinct enemies and fair hazards.
 
@@ -156,3 +157,11 @@ Every completed, CI-validated implementation slice must be integrated into `main
 - [x] Guard cover loop and the existing multi-phase boss behaviour remain distinct.
 - [x] Added deterministic unit tests for multipliers, timings, alternating flank direction, bounds and invalid inputs.
 - [ ] Attack launch/projectile travel, specialist enemy mechanics and full visual Android validation remain separate work.
+
+
+### Enemy projectile attacks — 2026-11-26
+- [x] Replace immediate enemy attack damage with a launched projectile and archetype-specific travel time.
+- [x] Render muzzle flash, coloured tracer and chest-level impact confirmation; play a quieter enemy-fire sound.
+- [x] Keep fired shots active after the source enemy is defeated and wait for all rounds before wave rewards or location transitions.
+- [x] Add deterministic trajectory tests for intermediate positions, progress clamping, exact arrival and invalid values.
+- [ ] Add player dodge/cover/interception counterplay and validate readability/latency on physical Android.
