@@ -13,7 +13,7 @@
 - [x] Keep swipe camera and aim-stick profiles available alongside tap.
 - [x] Increase weapon kick, muzzle flash and tracer readability without camera shake on mobile.
 - [x] Wire the existing first-person weapon atlas and CC0 muzzle/impact effects into runtime scenes (first-person atlas for the weapon rig, impact smoke on hit, muzzle-flare sprite on shot).
-- [ ] Run unit tests and production build; physical Android test remains required.
+- [x] Run unit tests, typecheck, lint and production build in GitHub Actions; physical Android test remains required.
 
 ## SHPY 0.5.1 — Android camera pass (2026-11-23)
 
@@ -32,7 +32,7 @@
 - [x] Зафиксированы свободная стрельба и укрытия.
 - [x] Выбран кроссплатформенный подход.
 - [x] Созданы базовые документы.
-- [ ] Проверить состояние репозитория и подготовить каркас проекта.
+- [x] Проверить состояние репозитория и подготовить каркас проекта.
 
 ## Фаза 1 — Технический каркас
 - [ ] Phaser + TypeScript + Vite.
