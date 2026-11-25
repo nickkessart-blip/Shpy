@@ -1,3 +1,28 @@
+# SHPY — Release Notes
+
+## 2026-11-25 — Reuse existing muzzle-flare artwork
+- Connected the existing Kenney CC0 muzzle-flare texture to the mission firing effect. The sprite follows the weapon muzzle and aim direction, uses additive blending and fades with the shot flash.
+- Scale is uniform and derived from the source frame bounds to preserve the artwork's aspect ratio; the procedural tracer/flash remains as fallback.
+
+## 2026-11-25 — Enemy atlas reuse and loader preparation
+- Located and inspected the existing 384×1024 RGBA WebP atlas in the user's Library; no image generation was performed.
+- Added the spritesheet asset slot, 128×256 Phaser loader path and combat-state frame selection scaffolding. The binary atlas itself is not yet in the branch, so the runtime continues using Kenney CC0/SVG fallbacks.
+- Clarified the AI rule: never generate or edit images without an explicit user request; search existing repo/chat/Library materials first.
+- Binary repository integration, runtime visual checks on desktop/Android and current CI results remain pending.
+
+## 2026-11-25 — Agent handoff audit
+- Added `docs/AI_HANDOFF.md` with the exact active branch/PR/head, implemented systems, asset integration truth, validation evidence and ordered next steps.
+- Audited enemy state timing: `updateEnemies(dt)` decrements `enemy.timer`; `Attacking` transitions through the existing state machine. Tint/pose feedback is visual-only.
+- Confirmed that PR #16 head had no workflow run or combined status entries at audit time; this is pending, not a pass. Physical Android validation remains pending.
+
+
+## 2026-11-25 — Visual polish follow-up
+- Added original SVG decorative frames for health and ammunition HUD panels.
+- Replaced continuous health and ammo fills with segmented code-rendered meters.
+- Added restrained state-based enemy pose feedback (idle breathing, aim lean, attack kick and hit flash) without moving combat hitboxes.
+- Added `AGENTS.md` and `.ai/skills/` to make future AI handoffs follow the project canon, asset pipeline and release checks.
+- Generated enemy animation atlas remains a prepared, not yet runtime-integrated asset; see `docs/ENEMY_ANIMATION_ATLAS.md`.
+
 # SHPY 0.6 — Управление, настройки и аудиовизуальная полировка
 
 ## Основные изменения

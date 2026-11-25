@@ -7,6 +7,7 @@ export const ASSET_SLOTS = {
   'effects/muzzle-flare': 'effect-muzzle-flare',
   'effects/impact-smoke': 'effect-impact-smoke',
   'enemies/kenney-atlas': 'enemy-kenney-atlas',
+  'enemies/animation-atlas': 'enemy-animation-atlas',
   'enemies/guard': 'enemy-guard',
   'enemies/armored': 'enemy-armored',
   'enemies/assault': 'enemy-assault',
@@ -17,6 +18,8 @@ export const ASSET_SLOTS = {
   'weapons/rifle': 'weapon-rifle',
   'props/cover-crate': 'cover-crate',
   'props/bar-counter': 'cover-bar',
+  'ui/hud-health-frame': 'hud-health-frame',
+  'ui/hud-ammo-frame': 'hud-ammo-frame',
   'ui/logo': 'ui-logo',
   'ui/cursor': 'ui-cursor',
 } as const;
