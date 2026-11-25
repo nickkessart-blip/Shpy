@@ -21,7 +21,7 @@ interface RuntimeEnemy {
   uid: number; type: EnemyType; x: number; baseX: number; y: number; originY: number; hp: number; maxHp: number;
   coverId?: string; state: EnemyState; timer: number;
   entryStartX: number; entryTargetX: number; entryElapsedMs: number; entryDurationMs: number;
-  phase: number; bossPhase: 0 | 1 | 2; hitFlash: number;
+  phase: number; bossPhase: 0 | 1 | 2; hitFlash: number; deathElapsedMs: number;
 }
 
 const MUZZLE: Point = { x: GAME_WIDTH / 2, y: 662 };
@@ -652,7 +652,7 @@ export class MissionScene extends Phaser.Scene {
         hp: def.hp, maxHp: def.hp, coverId: entry.spawn.coverId,
         state, timer: entering ? entry.entryDelayMs : Math.round(def.exposeMs * 0.4),
         entryStartX, entryTargetX: entry.spawn.x, entryElapsedMs: 0, entryDurationMs,
-        phase: 0, bossPhase: 0, hitFlash: 0,
+        phase: 0, bossPhase: 0, hitFlash: 0, deathElapsedMs: 0,
       };
     });
     this.waveAwarded = false;
@@ -667,7 +667,7 @@ export class MissionScene extends Phaser.Scene {
       return;
     }
     const living = this.enemies.filter((enemy) => enemy.state !== 'Defeated');
-    if (living.length !== 0 || this.waveAwarded) return;
+    if (living.length !== 0 || this.waveAwarded || this.enemies.some((enemy) => enemy.deathElapsedMs < 520)) return;
     this.waveAwarded = true;
     this.award(BALANCE.rewards.xp.wave, BALANCE.rewards.dollars.wave);
     this.clearEnemySprites();
@@ -834,7 +834,7 @@ export class MissionScene extends Phaser.Scene {
   private updateEnemies(dt: number): void {
     for (const enemy of this.enemies) {
       enemy.hitFlash = Math.max(0, enemy.hitFlash - dt);
-      if (enemy.state === 'Defeated') continue;
+      if (enemy.state === 'Defeated') { enemy.deathElapsedMs = Math.min(520, enemy.deathElapsedMs + dt); continue; }
       const def = ENEMIES[enemy.type];
       if (enemy.state === 'Entering') {
         const travelDelta = Math.max(0, dt - Math.max(0, enemy.timer));
@@ -1034,6 +1034,7 @@ export class MissionScene extends Phaser.Scene {
       if (result.enemy.hp <= 0) {
         this.tweens.killTweensOf(result.enemy);
         result.enemy.state = 'Defeated';
+        result.enemy.deathElapsedMs = 0;
         this.kills += 1;
         const xp = result.enemy.type === 'boss' ? BALANCE.rewards.xp.boss : BALANCE.rewards.xp.kill;
         const dollars = result.enemy.type === 'boss' ? BALANCE.rewards.dollars.boss : BALANCE.rewards.dollars.kill;
@@ -1139,6 +1140,7 @@ export class MissionScene extends Phaser.Scene {
       }
       if (enemy.hp <= 0) {
         enemy.state = 'Defeated';
+        enemy.deathElapsedMs = 0;
         this.tweens.killTweensOf(enemy);
         this.kills += 1;
         this.award(
@@ -1674,7 +1676,18 @@ export class MissionScene extends Phaser.Scene {
       const bossLabelKey = 'boss-name-' + enemy.uid;
       const bossLabel = this.children.getByName(bossLabelKey) as Phaser.GameObjects.Text | null;
       if (enemy.state === 'Defeated') {
-        sprite?.setVisible(false); bossLabel?.setVisible(false); continue;
+        bossLabel?.setVisible(false);
+        if (sprite) {
+          const progress = Phaser.Math.Clamp(enemy.deathElapsedMs / 520, 0, 1);
+          const fall = progress * progress;
+          sprite.setVisible(true)
+            .setPosition(enemy.x + Math.sin(progress * Math.PI) * 8, enemy.y - 20 + fall * 30)
+            .setAngle((enemy.type === 'assault' ? 1 : -1) * 78 * fall)
+            .setScale(1 - progress * 0.18, 1 - progress * 0.42)
+            .setAlpha(1 - progress)
+            .setTint(0xffd8c4);
+        }
+        continue;
       }
       if (enemy.state === 'Hidden') bossLabel?.setVisible(false);
       const def = ENEMIES[enemy.type];
