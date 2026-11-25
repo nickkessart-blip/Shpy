@@ -234,25 +234,6 @@ export class AssetCatalog {
     }
   }
 
-  static enemyAnimationFrame(
-    type: 'guard' | 'armored' | 'assault' | 'boss',
-    pose: 'aim' | 'fire' | 'hit',
-  ): number {
-    const row = type === 'guard' ? 0 : type === 'armored' ? 1 : type === 'assault' ? 2 : 3;
-    const column = pose === 'aim' ? 0 : pose === 'fire' ? 1 : 2;
-    return row * 3 + column;
-  }
-
-  static hasEnemyAnimationFrame(
-    scene: Phaser.Scene,
-    type: 'guard' | 'armored' | 'assault' | 'boss',
-    pose: 'aim' | 'fire' | 'hit',
-  ): boolean {
-    const key = ASSET_SLOTS['enemies/animation-atlas'];
-    return scene.textures.exists(key)
-      && scene.textures.get(key).has(String(this.enemyAnimationFrame(type, pose)));
-  }
-
   static hasTexture(scene: Phaser.Scene, key: string): boolean {
     return scene.textures.exists(key);
   }
