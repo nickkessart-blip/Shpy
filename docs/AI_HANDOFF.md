@@ -14,7 +14,7 @@
 - CI для main после PR #15: run `45520916259`, успешно; публикация downloadable `prototype-build` успешно завершена.
 - GitHub Pages после PR #15: run `45520916130`, успешно; после PR #16 проверь новый Pages deployment на актуальном main.
 - Физический Android-плейтест не выполнен и остаётся обязательным. Не выдавать CI за проверку реального сенсорного устройства.
-- Атлас врагов всё ещё не находится в `src/assets/enemies/`; fallback Kenney CC0/SVG активен. Не считать atlas integrated до коммита бинарника и runtime-проверки.
+- Enemy state atlas: AssetCatalog.ensureEnemyAnimationAtlas() builds a 384×1024 Phaser CanvasTexture from four committed enemy SVGs after Boot preload; MissionScene selects frames 0–11 for aim/fire/hit. This deterministic state atlas is integrated in code, not a hand-drawn frame animation. The prepared Library WebP remains uncommitted and is not the runtime source. See docs/ENEMY_ANIMATION_ATLAS.md.
 - Следующая рабочая ветка должна быть создана от актуального main, когда появится новая задача. Перед записью получать свежий HEAD и использовать expected SHA/fast-forward.
 
 ## Основные реализованные системы
@@ -36,11 +36,19 @@
 - Результат коммита workflow пока нужно проверить после запуска Actions. Не утверждать успешный CI, типизацию, тесты или production build без результата текущего SHA.
 - Физическая проверка Android не проведена. Проверить touch/drag/multitouch, чувствительность, ориентацию, камеру, HUD и смену поз врагов на реальном устройстве.
 
+## Enemy state atlas resolution (2026-11-25)
+
+- Replaced the blocked Library-binary transfer dependency with a reproducible runtime CanvasTexture built from already committed SHPY enemy SVGs. No generated image or third-party asset was introduced.
+- Uses Phaser's documented CanvasTexture API; missing source textures/canvas failure preserve Kenney/SVG fallbacks, and a loaded authored atlas is never overwritten.
+- Geometry: 384×1024, 3×4, 128×256; row-major guard/armored/assault/boss × aim/fire/hit; baseline y=248.
+- docs/ENEMY_ANIMATION_ATLAS.md records implementation, limitations, fallback policy and replacement procedure.
+- GitHub Actions CI run #45523076355 passed on commit 7a80199c2577a3d9e83329e746ff5f08612d2f28: typecheck, tests, lint and production build all succeeded. Physical Android visual validation remains pending.
+
 ## Следующие задачи
 
 1. Проверить, что CI реально запустился для PR #16 после изменения trigger/concurrency. При ошибке диагностировать и исправить, не оставлять Draft вместо расследования.
-2. Довести бинарный atlas upload через документированную Git Data API цепочку; после загрузки проверить размер и SHA Git blob, затем `npm run verify:enemy-atlas` и Phaser loader.
-3. После интеграции #15 в `main` перенаправить/перебазировать visual work на `main`, проверить diff и затем интегрировать #16. Не сохранять ненужную stacked topology.
+2. После CI проверить atlas state switching и внешний вид на desktop/Android; prepared Library WebP остаётся необязательной заменой, а не блокером.
+3. Не возвращаться к прежней блокировке binary transfer: текущий runtime path строится из SVG и описан в docs/ENEMY_ANIMATION_ATLAS.md.
 4. Продолжить mobile-first проверку HUD и управления; друг может проверить desktop. Не заявлять физический тест без фактического запуска.
 
 ## Пользовательские ограничения

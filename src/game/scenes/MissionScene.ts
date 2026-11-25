@@ -113,6 +113,8 @@ export class MissionScene extends Phaser.Scene {
     // Phaser reuses Scene instances. Reset every run-scoped value before building the scene again.
     const initialSave = saveService.load();
     this.currentSettings = settingsService.load();
+    // BootScene has completed the shared asset preload before Mission starts.
+    AssetCatalog.ensureEnemyAnimationAtlas(this);
     this.appliedMobileControlMode = this.currentSettings.mobileControlMode;
     FeedbackService.ensureMusic(this);
     this.startedAt = Date.now();
@@ -1544,9 +1546,11 @@ export class MissionScene extends Phaser.Scene {
         const poseScaleY = 1 + (aiming ? 0.025 : 0) - breathing * 0.006;
         const poseLean = (aiming ? -1.8 : 0) + (attacking ? recoilKick * 2.2 : 0);
         // Keep the atlas's 1:2 cell aspect ratio instead of stretching its characters.
-        const displayWidth = hasAnimationFrame ? baseHeight * 0.5 : baseWidth;
+        const generatedAtlas = hasAnimationFrame && AssetCatalog.usesGeneratedEnemyAnimationAtlas(this);
+        const displayHeight = generatedAtlas ? baseHeight * (256 / 216) : baseHeight;
+        const displayWidth = generatedAtlas ? displayHeight * 0.5 : hasAnimationFrame ? baseHeight * 0.5 : baseWidth;
         image.setPosition(drawX, drawY + (aiming ? -2 : 0) + (attacking ? recoilKick * 3 : 0))
-          .setDisplaySize(displayWidth * poseScaleX, baseHeight * poseScaleY).setVisible(true);
+          .setDisplaySize(displayWidth * poseScaleX, displayHeight * poseScaleY).setVisible(true);
         image.setAlpha(enemy.hitFlash > 0 ? 0.72 + Math.abs(hitPulse) * 0.28 : 1);
         image.setAngle(poseLean + Math.sin(phaseTime * 1.7) * (aiming ? 0.25 : 0.7));
         image.setTint(enemy.hitFlash > 0 ? 0xffd5d5 : (attacking ? 0xffe3c2 : 0xffffff));
