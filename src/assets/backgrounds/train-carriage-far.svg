@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+<defs>
+ <linearGradient id="night" x2="0" y2="1"><stop stop-color="#101b2b"/><stop offset=".55" stop-color="#23394a"/><stop offset="1" stop-color="#526575"/></linearGradient>
+ <linearGradient id="haze" x2="0" y2="1"><stop stop-color="#d5dbe0" stop-opacity="0"/><stop offset="1" stop-color="#b7c7d0" stop-opacity=".28"/></linearGradient>
+ <clipPath id="windows"><rect x="75" y="115" width="250" height="210" rx="10"/><rect x="365" y="115" width="250" height="210" rx="10"/><rect x="665" y="115" width="250" height="210" rx="10"/><rect x="955" y="115" width="250" height="210" rx="10"/></clipPath>
+</defs>
+<g clip-path="url(#windows)">
+ <rect x="60" y="105" width="1160" height="230" fill="url(#night)"/>
+ <path d="M60 265L180 185 260 240 360 165 460 248 570 175 670 246 780 170 875 250 990 175 1080 236 1218 164V335H60Z" fill="#101d29"/>
+ <path d="M60 285L180 245 260 270 360 220 460 274 570 230 670 278 780 220 875 274 990 230 1080 265 1218 220V335H60Z" fill="#172b38"/>
+ <g fill="#f2c47b" opacity=".76">
+  <path d="M130 255h8v12h-8zM154 248h6v10h-6zM408 256h9v13h-9zM445 247h7v11h-7zM705 255h8v12h-8zM744 242h6v10h-6zM1000 254h8v12h-8zM1055 246h7v10h-7z"/>
+ </g>
+ <path d="M60 298H1220V335H60Z" fill="#718594" opacity=".22"/>
+ <rect x="60" y="105" width="1160" height="230" fill="url(#haze)"/>
+</g>
+</svg>
