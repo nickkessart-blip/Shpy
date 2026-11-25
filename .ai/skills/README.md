@@ -25,3 +25,10 @@ Every completed task must leave a durable handoff in the repository. The next ag
 
 ### Draft PR handling
 Treat Draft as review status, not an absolute prohibition. A direct user instruction to merge/integrate/release authorizes marking the PR ready and merging after required checks and dependency order are satisfied. Never ask the user to repeat that authorization.
+
+
+## External skills and engine compatibility
+
+Before Phaser work, read the Phaser 4.2.1-compatible [phaser-core skill](https://github.com/gamedev-skills/awesome-gamedev-agent-skills/tree/main/skills/web-engines/phaser-core). For asset work, also read [create-game-assets](https://github.com/gamedev-skills/awesome-gamedev-agent-skills/tree/main/skills/disciplines/create-game-assets); for enemy/automation work use [game-ai](https://github.com/gamedev-skills/awesome-gamedev-agent-skills/tree/main/skills/disciplines/game-ai); for controls use [input-systems](https://github.com/gamedev-skills/awesome-gamedev-agent-skills/tree/main/skills/disciplines/input-systems); for feedback, level pacing, audio and UI use [game-feel](https://github.com/gamedev-skills/awesome-gamedev-agent-skills/tree/main/skills/disciplines/game-feel), [level-design](https://github.com/gamedev-skills/awesome-gamedev-agent-skills/tree/main/skills/disciplines/level-design), [audio-design](https://github.com/gamedev-skills/awesome-gamedev-agent-skills/tree/main/skills/disciplines/audio-design) and [game-ui-ux](https://github.com/gamedev-skills/awesome-gamedev-agent-skills/tree/main/skills/disciplines/game-ui-ux).
+
+The Phaser guide in `games-workspace/.opencode/skills/game-2d-phaser` targets Phaser 3.80 and must not be copied directly into this Phaser 4.2.1 project. See [AI_SKILLS_RESEARCH.md](../../docs/AI_SKILLS_RESEARCH.md) for compatibility notes, GameDevkit tooling and asset provenance.
