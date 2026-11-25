@@ -79,6 +79,55 @@ export class AgentService {
     return { success: true, runId, successChance };
   }
 
+  /** Selects the best unlocked side operation and the strongest available legal team. */
+  dispatchRecommended(now = Date.now(), randomValue = Math.random()): DispatchResult {
+    const save = this.saves.load();
+    const accountLevel = getAccountLevel(save.accountXp);
+    if (save.agentMissions.length >= getAgentMissionSlots(accountLevel)) {
+      return { success: false, reason: 'slots' };
+    }
+
+    const busyIds = new Set(save.agentMissions.flatMap((run) => run.agentIds));
+    const available = save.agents.filter((agent) => !busyIds.has(agent.id));
+    const options: Array<{ missionId: AgentMissionId; agentIds: string[]; score: number; chance: number }> = [];
+
+    const evaluate = (missionId: AgentMissionId, team: typeof available): void => {
+      const mission = getAgentMission(missionId);
+      if (!mission || accountLevel < mission.unlockLevel) return;
+      const chance = Math.min(95, calculateAgentMissionChance(mission, team) + save.agencyResearch.intelNetwork * 5);
+      const duration = mission.durationMs * (1 - save.agencyResearch.logistics * 0.1);
+      const expectedComponentsPerMinute = mission.componentReward * (chance / 100) / (duration / 60_000);
+      options.push({ missionId, agentIds: team.map((agent) => agent.id), score: expectedComponentsPerMinute, chance });
+    };
+
+    const enumerate = (missionId: AgentMissionId, minimum: number, maximum: number): void => {
+      const chosen: typeof available = [];
+      const visit = (start: number): void => {
+        if (chosen.length >= minimum) evaluate(missionId, chosen);
+        if (chosen.length >= maximum) return;
+        for (let index = start; index < available.length; index += 1) {
+          const agent = available[index];
+          if (!agent) continue;
+          chosen.push(agent);
+          visit(index + 1);
+          chosen.pop();
+        }
+      };
+      visit(0);
+    };
+
+    for (const mission of this.getMissionList()) {
+      if (accountLevel >= mission.unlockLevel) {
+        enumerate(mission.id, mission.minimumAgents, mission.maximumAgents);
+      }
+    }
+    options.sort((left, right) => right.score - left.score || right.chance - left.chance
+      || left.agentIds.length - right.agentIds.length);
+    const best = options[0];
+    if (!best) return { success: false, reason: 'team-size' };
+    return this.dispatch(best.missionId, best.agentIds, now, randomValue);
+  }
+
   collectMission(runId: string, now = Date.now()): AgentMissionReport | null {
     const save = this.saves.load();
     const index = save.agentMissions.findIndex((run) => run.id === runId);

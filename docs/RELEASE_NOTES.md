@@ -1,3 +1,12 @@
+# SHPY — Release notes
+
+## 2026-11-25 — Assisted operative auto-dispatch
+- Added an explicit auto-dispatch action to the Agency Computer.
+- The dispatcher evaluates unlocked side operations and legal combinations of available operatives, then chooses the assignment with the best expected Components per minute using current intelligence and logistics research.
+- Dispatch still uses the existing AgentService validation, chance calculation, assignment timers and save flow; no combat or reward rules are bypassed.
+- Added deterministic tests for recommendation and the no-eligible-team case.
+- This is a first assisted-automation step, not persistent background autonomy. Automatic report collection, configurable doctrine and autonomous main operations remain future work.
+
 # SHPY — Release Notes
 
 ## 2026-11-25 — First Casino rail timeline slice

@@ -218,6 +218,7 @@ export class ComputerScene extends Phaser.Scene {
     this.addText(this.content!, 462, 238,
       'Выберите оперативников слева, затем отправьте их на отдельное задание. Сюжет не затрагивается.',
       11, '#98a7b4');
+    this.drawButton(this.content!, 1000, 226, 194, 30, 'АВТОПОДБОР + ОТПРАВКА', 0x7b6040, () => this.dispatchRecommended());
 
     const runs = save.agentMissions;
     if (runs.length > 0) {
@@ -360,6 +361,16 @@ export class ComputerScene extends Phaser.Scene {
           : result.reason === 'team-size' ? 'НЕВЕРНЫЙ СОСТАВ ОТРЯДА'
             : result.reason === 'locked' ? 'ОПЕРАЦИЯ ПОКА ЗАБЛОКИРОВАНА' : 'НЕ УДАЛОСЬ ОТПРАВИТЬ ОТРЯД';
     }
+    this.render();
+  }
+
+  private dispatchRecommended(): void {
+    const result = agentService.dispatchRecommended();
+    this.notice = result.success
+      ? 'АВТОДИСПЕТЧЕР ОТПРАВИЛ ОТРЯД • ШАНС ' + result.successChance + '%'
+      : result.reason === 'slots' ? 'НЕТ СВОБОДНЫХ СЛОТОВ ОПЕРАЦИЙ'
+        : 'НЕТ ДОСТУПНОГО СОСТАВА ДЛЯ ОТКРЫТЫХ ЗАДАНИЙ';
+    this.selectedAgentIds = [];
     this.render();
   }
 

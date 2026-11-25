@@ -92,7 +92,7 @@ Implementation status (2026-11-25): PR #18 adds a deterministic route clock, rou
 - [ ] Direct operative call-in and specialist behaviour.
 - [ ] Recon/attack drones and advanced support.
 - [ ] Late-game laser gloves and automated targeting/fire.
-- [ ] Agency research for automation policies and capacity.
+- [~] Agency research for automation policies and capacity: first functional assisted-automation slice auto-selects an unlocked assignment and strongest legal team by expected Components per minute; persistent doctrine policies and autonomous combat remain open.
 - [ ] Full autonomous mission director, setup screen, spectator presentation and detailed debrief.
 - [ ] Acceptance: a known prepared operation runs from entry through extraction with zero combat input, obeys combat rules and can fail if its loadout/doctrine is insufficient.
 

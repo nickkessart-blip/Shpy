@@ -54,4 +54,28 @@ describe('agent operations', () => {
     expect(saves.load().components).toBe(0);
     expect(saves.load().agents[0]?.xp).toBe(25);
   });
+  it('automatically assigns the strongest available team to the best expected component rate', () => {
+    const save = saves.load();
+    save.accountXp = 2_400;
+    save.dollars = 3_000;
+    saves.save(save);
+    for (const id of ['fox', 'cipher', 'shade', 'hammer']) expect(agents.recruit(id)).toEqual({ success: true });
+
+    const dispatch = agents.dispatchRecommended(5_000, 0);
+    expect(dispatch.success).toBe(true);
+    const run = saves.load().agentMissions[0];
+    expect(run).toMatchObject({ missionId: 'recon', agentIds: ['fox', 'cipher'] });
+    expect(agents.getAvailableAgents().map((agent) => agent.id)).toEqual(['shade', 'hammer']);
+  });
+
+  it('does not auto-dispatch when every operative is already assigned', () => {
+    const save = saves.load();
+    save.accountXp = 1_800;
+    saves.save(save);
+    agents.recruit('fox');
+    expect(agents.dispatch('recon', ['fox'], 1_000, 0).success).toBe(true);
+    expect(agents.dispatchRecommended(2_000, 0)).toEqual({ success: false, reason: 'team-size' });
+    expect(saves.load().agentMissions).toHaveLength(1);
+  });
+
 });
