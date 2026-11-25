@@ -121,3 +121,7 @@ Every completed, CI-validated implementation slice must be integrated into `main
 
 ### Mobile touch target recovery — 2026-11-25
 - [~] Increase physical mobile control hit-area size on compact landscape screens and harden fire press/release lifecycle. CI and Pages publication pending; physical Android QA remains required.
+
+
+### Combat target feedback — 2026-11-25
+- [~] Reticle changes color for a clear enemy hit, a shot blocked by cover, or no target; mobile fire button mirrors the same feedback. Deterministic geometry tests added. CI/Pages publication pending; physical Android QA remains required.
