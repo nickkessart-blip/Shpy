@@ -7,7 +7,7 @@ import { ENEMIES, type EnemyType } from '../data/enemies';
 import { CASINO_MISSION, getMissionDefinition, type MissionSceneDefinition } from '../data/missions';
 import { AssetCatalog } from '../assets/AssetCatalog';
 import { getCosmetic } from '../data/cosmetics';
-import { findVisiblePeekX, isShotBlocked, pointInRect, resolveHit, type Point } from '../systems/combat/combatMath';
+import { findVisiblePeekX, getAimFeedbackState, isShotBlocked, pointInRect, resolveHit, type AimFeedbackState, type Point } from '../systems/combat/combatMath';
 import { runSession } from '../systems/missions/runSession';
 import { settingsService, type GameSettings } from '../../settings/SettingsService';
 import { followAimWithCamera, moveAimByPointerDelta, moveAimInWorld } from '../systems/input/aimMath';
@@ -115,6 +115,7 @@ export class MissionScene extends Phaser.Scene {
   private mobileAimEndHandler?: (event: PointerEvent) => void;
   private mobileControlsLayoutHandler?: () => void;
   private mobileFirePointerId: number | null = null;
+  private mobileFireFeedback?: AimFeedbackState;
   private mobileFireBlurHandler?: () => void;
   private aimStickVector: Point = { x: 0, y: 0 };
   private aimStickActive = false;
@@ -189,6 +190,7 @@ export class MissionScene extends Phaser.Scene {
     this.mobileLookPointerId = null;
     this.mobileLookLastPointer = null;
     this.mobileFireButton = undefined;
+    this.mobileFireFeedback = undefined;
     this.mobileAimStick = undefined;
     this.mobileControlsElement?.remove();
     this.mobileControlsElement = undefined;
@@ -1783,6 +1785,32 @@ export class MissionScene extends Phaser.Scene {
     }
   }
 
+  private getAimFeedback(): AimFeedbackState {
+    const targets = this.enemies
+      .filter((enemy) => enemy.state !== 'Defeated' && enemy.state !== 'Hidden')
+      .map((enemy) => {
+        const isBoss = enemy.type === 'boss';
+        return {
+          head: { x: enemy.x, y: enemy.y - (isBoss ? 72 : 48) },
+          body: { x: enemy.x, y: enemy.y - 5 },
+          headRadius: isBoss ? 42 : 32,
+          bodyRadius: isBoss ? 66 : 48,
+        };
+      });
+    return getAimFeedbackState(this.aim, this.getWeaponMuzzle(), targets, this.sceneDef.covers);
+  }
+
+  private updateMobileFireFeedback(state: AimFeedbackState): void {
+    const button = this.mobileFireButton;
+    if (!button || this.mobileFireFeedback === state) return;
+    this.mobileFireFeedback = state;
+    const border = state === 'clear' ? '#83f0ad' : state === 'blocked' ? '#ffc46a' : '#f0d4a4b8';
+    const glow = state === 'clear' ? '0 0 0 3px #83f0ad35, 0 5px 18px #000a'
+      : state === 'blocked' ? '0 0 0 3px #ffc46a35, 0 5px 18px #000a' : '0 5px 18px #000a';
+    button.style.borderColor = border;
+    button.style.boxShadow = glow;
+  }
+
   private drawEffects(): void {
     this.fx.clear();
     if (this.playerHitFlash > 0) {
@@ -1855,19 +1883,25 @@ export class MissionScene extends Phaser.Scene {
       }
     }
 
+    const aimFeedback = this.getAimFeedback();
+    const reticleColor = aimFeedback === 'clear' ? 0x83f0ad
+      : aimFeedback === 'blocked' ? 0xffc46a : 0xf5f7fa;
+    this.updateMobileFireFeedback(aimFeedback);
     if (AssetCatalog.hasTexture(this, 'ui-cursor')) {
       let cursor = this.children.getByName('cursor-image') as Phaser.GameObjects.Image | null;
       if (!cursor) cursor = this.add.image(this.aim.x, this.aim.y, 'ui-cursor').setName('cursor-image').setDepth(25);
-      cursor.setPosition(this.aim.x, this.aim.y).setDisplaySize(48, 48).setVisible(true);
+      cursor.setPosition(this.aim.x, this.aim.y)
+        .setDisplaySize(this.isMobileControls ? 56 : 48, this.isMobileControls ? 56 : 48)
+        .setTint(reticleColor).setVisible(true);
     } else {
-      this.fx.lineStyle(3, 0xf5f7fa, 0.96);
-      this.fx.strokeCircle(this.aim.x, this.aim.y, 13);
-      this.fx.lineBetween(this.aim.x - 25, this.aim.y, this.aim.x - 7, this.aim.y);
-      this.fx.lineBetween(this.aim.x + 7, this.aim.y, this.aim.x + 25, this.aim.y);
-      this.fx.lineBetween(this.aim.x, this.aim.y - 25, this.aim.x, this.aim.y - 7);
-      this.fx.lineBetween(this.aim.x, this.aim.y + 7, this.aim.x, this.aim.y + 25);
-      this.fx.fillStyle(0xffffff, 1);
-      this.fx.fillCircle(this.aim.x, this.aim.y, 2);
+      this.fx.lineStyle(3, reticleColor, 0.96);
+      this.fx.strokeCircle(this.aim.x, this.aim.y, this.isMobileControls ? 16 : 13);
+      this.fx.lineBetween(this.aim.x - 29, this.aim.y, this.aim.x - 8, this.aim.y);
+      this.fx.lineBetween(this.aim.x + 8, this.aim.y, this.aim.x + 29, this.aim.y);
+      this.fx.lineBetween(this.aim.x, this.aim.y - 29, this.aim.x, this.aim.y - 8);
+      this.fx.lineBetween(this.aim.x, this.aim.y + 8, this.aim.x, this.aim.y + 29);
+      this.fx.fillStyle(reticleColor, 1);
+      this.fx.fillCircle(this.aim.x, this.aim.y, 2.5);
     }
   }
 
