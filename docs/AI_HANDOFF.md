@@ -83,7 +83,7 @@ The first deterministic rail timeline and independently moving Casino/Royale Bar
 - Integrated staggered `Entering` state in MissionScene with a fading enemy appearance and pulsing lane marker.
 - Enemies taking cover remain rendered at their cover position behind the cover layer. The muzzle-to-target segment is checked against the same cover rectangles before damage is applied; hidden targets cannot be shot through cover. Enemies sharing a cover use distinct peek offsets to reduce stacking.
 - Added eight SpawnDirector tests (seed determinism, seed variation, bounds, separation/cover clearance, stagger/order with roster preservation, single boss, route-entry interpolation and clamping) and two cover line-of-sight tests.
-- This is a code-level implementation only. Browser screenshots, manual combat QA and physical Android checks have not yet been performed. Run `45677074691` passed the previous head `0726f5cdea03d2c72feac86cfa8cf3ecccaa957a`; a later code push changed single-boss lane preservation and shared-cover peek spacing. CI for current head `41c6064f49309df8525af13fa28b6a291b61ac41` is pending and must be checked before merging.
+- This is a code-level implementation only. Browser screenshots, manual combat QA and physical Android checks have not yet been performed. GitHub Actions run `45677650389` on current head `c7c2b48dbaf9a354fc9a20b5136eda824495e87a` passed dependency install, TypeScript, Vitest, ESLint and production build. Publish-build was skipped because this is a feature PR, not a main deployment.
 
 ### Skills and asset research
 
