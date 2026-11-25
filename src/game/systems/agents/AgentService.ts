@@ -63,14 +63,15 @@ export class AgentService {
     }
 
     const team = agentIds.map((id) => save.agents.find((agent) => agent.id === id)!);
-    const successChance = calculateAgentMissionChance(mission, team);
+    const research = save.agencyResearch;
+    const successChance = Math.min(95, calculateAgentMissionChance(mission, team) + research.intelNetwork * 5);
     const runId = mission.id + '-' + now + '-' + save.agentMissions.length;
     save.agentMissions.push({
       id: runId,
       missionId,
       agentIds: [...agentIds],
       startedAt: now,
-      completesAt: now + mission.durationMs,
+      completesAt: now + Math.round(mission.durationMs * (1 - research.logistics * 0.1)),
       success: Math.max(0, Math.min(0.999999, randomValue)) * 100 < successChance,
       successChance,
     });
@@ -92,7 +93,7 @@ export class AgentService {
     save.components += componentsEarned;
     save.agents = save.agents.map((agent) => {
       if (!run.agentIds.includes(agent.id)) return agent;
-      const xp = agent.xp + mission.agentXpReward;
+      const xp = agent.xp + Math.round(mission.agentXpReward * (1 + save.agencyResearch.training * 0.2));
       return { ...agent, xp, level: getAgentLevel(xp) };
     });
     this.saves.save(save);
@@ -101,7 +102,7 @@ export class AgentService {
       missionId: run.missionId,
       success: run.success,
       componentsEarned,
-      agentXpEarned: mission.agentXpReward,
+      agentXpEarned: Math.round(mission.agentXpReward * (1 + save.agencyResearch.training * 0.2)),
       completedAt: now,
     };
   }
@@ -126,7 +127,7 @@ export class AgentService {
     const save = this.saves.load();
     const team = agentIds.map((id) => save.agents.find((agent) => agent.id === id))
       .filter((agent): agent is NonNullable<typeof agent> => Boolean(agent));
-    return calculateAgentMissionChance(mission, team);
+    return Math.min(95, calculateAgentMissionChance(mission, team) + save.agencyResearch.intelNetwork * 5);
   }
 }
 
