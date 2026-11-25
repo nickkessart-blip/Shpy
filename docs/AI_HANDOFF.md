@@ -42,7 +42,7 @@
 - Uses Phaser's documented CanvasTexture API; missing source textures/canvas failure preserve Kenney/SVG fallbacks, and a loaded authored atlas is never overwritten.
 - Geometry: 384×1024, 3×4, 128×256; row-major guard/armored/assault/boss × aim/fire/hit; baseline y=248.
 - docs/ENEMY_ANIMATION_ATLAS.md records implementation, limitations, fallback policy and replacement procedure.
-- CI and visual Android validation are pending for this commit.
+- GitHub Actions CI run #45523076355 passed on commit 7a80199c2577a3d9e83329e746ff5f08612d2f28: typecheck, tests, lint and production build all succeeded. Physical Android visual validation remains pending.
 
 ## Следующие задачи
 
