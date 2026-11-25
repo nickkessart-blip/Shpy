@@ -2,7 +2,7 @@
 
 ## Runtime implementation
 
-The runtime no longer depends on transferring the prepared Library-only WebP to GitHub. AssetCatalog.ensureEnemyAnimationAtlas() builds a deterministic 384×1024 Phaser CanvasTexture from the four SVG enemy assets committed in src/assets/enemies/. It runs when MissionScene starts, after BootScene completes the shared preload. It uses Phaser's documented CanvasTexture API (createCanvas, getContext, refresh and add), makes no network requests, and does not mutate source assets or combat coordinates.
+AssetCatalog.ensureEnemyAnimationAtlas() builds a deterministic 384×1024 Phaser CanvasTexture from the four committed SVG enemy assets after BootScene preload. This removes the runtime dependency on transferring the prepared Library-only WebP. The implementation uses Phaser's documented CanvasTexture API (createCanvas, getContext, refresh and add), makes no network requests, and does not mutate source assets or combat coordinates.
 
 - Texture key: enemy-animation-atlas.
 - Geometry: 3 columns × 4 rows; 128×256 per cell.
@@ -11,7 +11,7 @@ The runtime no longer depends on transferring the prepared Library-only WebP to 
 - Frame index: row * 3 + column (0–11).
 - Baseline: y=248 in each cell.
 - Source/license: original SHPY SVG assets; no third-party material and no newly generated image.
-- Runtime integration: in-memory texture, registered with Phaser TextureManager, selected by MissionScene.drawEnemies().
+- Runtime integration: in-memory texture registered with Phaser TextureManager and selected by MissionScene.drawEnemies().
 
 ## Meaning and limits of states
 
@@ -29,6 +29,7 @@ These variants provide deterministic state feedback. They do not invent limb mot
 - If a source texture is missing or canvas creation fails, the builder returns false and the existing Kenney CC0/SVG fallback remains active.
 - A malformed/partial authored texture is never overwritten.
 - No external fetch, image generation, filesystem writes or persistent asset mutation occurs at runtime.
+- The generated-atlas marker is tracked per Phaser Scene, so authored atlases do not receive generated-atlas sizing adjustments.
 
 ## Validation and replacement
 
