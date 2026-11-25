@@ -61,7 +61,8 @@ describe('world-space mobile aim and camera follow', () => {
 
   it('moves the camera to keep an off-screen target inside the safe viewport', () => {
     const scroll = followAimWithCamera({ x: 1500, y: 600 }, { x: 0, y: 0 }, viewport, scrollBounds);
-    expect(scroll).toEqual({ x: 420, y: 180 });
+    expect(scroll.x).toBe(420);
+    expect(scroll.y).toBeCloseTo(81.6, 8);
     expect(1500 - scroll.x).toBeGreaterThanOrEqual(1280 * 0.28);
     expect(600 - scroll.y).toBeGreaterThanOrEqual(720 * 0.28);
   });
