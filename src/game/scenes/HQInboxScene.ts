@@ -18,6 +18,7 @@ export class HQInboxScene extends Phaser.Scene {
     this.add.text(66, 82, 'ВХОДЯЩИЕ • СВОДКИ • ОПЕРАТИВНЫЕ ОТЧЁТЫ', {
       fontSize: '13px', color: '#aebdca', letterSpacing: 2,
     });
+    this.button(820, 34, 210, 46, 'ПОЛУЧИТЬ ВСЕ ОТЧЁТЫ', 0x765438, () => this.collectAllReports());
     this.button(1050, 34, 166, 46, 'В ШТАБ', 0x39495a, () => this.scene.start('HQ'));
     this.renderInbox();
     this.refreshTimer = this.time.addEvent({ delay: 1000, loop: true, callback: () => this.renderInbox() });
@@ -112,6 +113,18 @@ export class HQInboxScene extends Phaser.Scene {
     }).setInteractive({ useHandCursor: true });
     computer.on('pointerdown', () => this.scene.start('Computer'));
     content.add(computer);
+  }
+
+  private collectAllReports(): void {
+    const reports = agentService.collectReadyMissions();
+    if (reports.length === 0) {
+      this.showToast('НЕТ ГОТОВЫХ ОТЧЁТОВ');
+      return;
+    }
+    const successful = reports.filter((report) => report.success).length;
+    const components = reports.reduce((sum, report) => sum + report.componentsEarned, 0);
+    this.showToast('ОТЧЁТЫ ПОЛУЧЕНЫ: ' + reports.length + ' • УСПЕХОВ: ' + successful + ' • +' + components + ' КОМПОНЕНТОВ');
+    this.renderInbox();
   }
 
   private showToast(message: string): void {
