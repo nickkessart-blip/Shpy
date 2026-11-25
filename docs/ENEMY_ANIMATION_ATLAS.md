@@ -43,7 +43,7 @@ The separate Library copy SHPY_enemy_animation_atlas.webp remains uncommitted: 3
 Two native Library files were visually inspected; neither is committed or runtime-loaded.
 
 ### SHPY_enemy_animation_atlas.webp
-- 384×1024 RGBA WebP; 3 columns × 4 rows; each cell 192×384.
+- 384×1024 RGBA WebP; 3 columns × 4 rows; each cell 128×256.
 - Rows: guard, armored, assault, boss.
 - Columns: aim, fire, hit.
 - Alpha channel is present. All 12 cells have a consistent bottom bound at y=248, so the sheet is structurally more suitable for direct Phaser spritesheet loading than the larger contact sheet.
@@ -55,7 +55,7 @@ Two native Library files were visually inspected; neither is committed or runtim
 - Alpha channel is present, but bottom bounds vary by cell; normalize baselines and pivots before using it for frame animation.
 
 ### Current integration status
-- The committed runtime still uses the generated 384×1024 CanvasTexture from four static SVGs, with aim, fire and hit state variants. It is not using either Library atlas.
+- The committed runtime now uses the generated 576×1536 CanvasTexture from four static SVGs, with aim, fire and hit state variants. It is not using either Library atlas.
 - A prepared asset is not integrated until the exact binary is committed, loaded by BootScene, registered with AssetCatalog, mapped to runtime animation states and visually validated.
 - The available tool path in this audit could inspect/materialize the Library WebP but could not pass its binary bytes to GitHub. Do not claim integration or silently substitute the runtime-generated state atlas for the prepared sheet.
 
