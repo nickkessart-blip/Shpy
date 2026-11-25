@@ -183,3 +183,14 @@ export function planEnemyWave(
 
   return plan;
 }
+
+/** Smooth, deterministic horizontal entrance from a route edge into a lane. */
+export function sampleSpawnEntryX(startX: number, targetX: number, elapsedMs: number, durationMs: number): number {
+  if (![startX, targetX, elapsedMs, durationMs].every(Number.isFinite) || durationMs < 0) {
+    throw new RangeError('spawn entry values must be finite and duration non-negative');
+  }
+  if (durationMs === 0) return targetX;
+  const progress = Math.max(0, Math.min(1, elapsedMs / durationMs));
+  const eased = 1 - Math.pow(1 - progress, 3);
+  return startX + (targetX - startX) * eased;
+}
