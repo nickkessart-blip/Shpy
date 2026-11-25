@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { sampleEnemyHitReaction } from './enemyPresentation';
+import { sampleEnemyAimCharge, sampleEnemyHitReaction } from './enemyPresentation';
 
 describe('enemy hit presentation', () => {
   it('returns a neutral pose when the hit flash has expired', () => {
@@ -23,5 +23,20 @@ describe('enemy hit presentation', () => {
     expect(half.angle).toBe(3.5);
     expect(half.scaleX).toBe(1.0225);
     expect(sampleEnemyHitReaction(-10, 4).offsetX).toBe(0);
+  });
+});
+
+describe('enemy aim charge', () => {
+  it('progresses from zero to full charge as the aim timer expires', () => {
+    expect(sampleEnemyAimCharge(1000, 1000)).toBe(0);
+    expect(sampleEnemyAimCharge(500, 1000)).toBe(0.5);
+    expect(sampleEnemyAimCharge(0, 1000)).toBe(1);
+  });
+
+  it('clamps invalid and out-of-range timer values safely', () => {
+    expect(sampleEnemyAimCharge(1200, 1000)).toBe(0);
+    expect(sampleEnemyAimCharge(-10, 1000)).toBe(1);
+    expect(sampleEnemyAimCharge(20, 0)).toBe(0);
+    expect(sampleEnemyAimCharge(Number.NaN, 1000)).toBe(0);
   });
 });

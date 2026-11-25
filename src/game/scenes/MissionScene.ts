@@ -15,7 +15,7 @@ import { getMobileControlScale } from '../systems/input/mobileControlLayout';
 import { FeedbackService, triggerHaptic } from '../systems/feedback/FeedbackService';
 import { RailTimeline } from '../systems/missions/RailTimeline';
 import { planEnemyWave, sampleSpawnEntryX } from '../systems/waves/SpawnDirector';
-import { sampleEnemyHitReaction } from '../systems/combat/enemyPresentation';
+import { sampleEnemyAimCharge, sampleEnemyHitReaction } from '../systems/combat/enemyPresentation';
 
 type EnemyState = 'Entering' | 'Exposed' | 'Aiming' | 'Attacking' | 'SeekingCover' | 'Hidden' | 'Peeking' | 'Repositioning' | 'Defeated';
 interface RuntimeEnemy {
@@ -1774,8 +1774,28 @@ export class MissionScene extends Phaser.Scene {
           .setVisible(enemy.state !== 'Hidden');
       }
       if (enemy.state === 'Aiming') {
-        this.fx.lineStyle(2, 0xe25c54, 0.9); this.fx.strokeCircle(enemy.x, enemy.y - 70, 25 + Math.sin(this.time.now / 90) * 3);
-        this.fx.lineStyle(2, 0xe25c54, 0.65); this.fx.lineBetween(enemy.x, enemy.y - 70, MUZZLE.x, MUZZLE.y - 10);
+        const warningX = enemy.x;
+        const warningY = enemy.y - 70;
+        const warningRadius = 25 + Math.sin(this.time.now / 90) * 3;
+        const aimDuration = Math.max(1, ENEMIES[enemy.type].aimMs);
+        const charge = sampleEnemyAimCharge(enemy.timer, aimDuration);
+        const pulse = 0.72 + Math.sin(this.time.now / 65) * 0.18;
+        this.fx.lineStyle(2, 0xe25c54, 0.34);
+        this.fx.strokeCircle(warningX, warningY, warningRadius);
+        this.fx.lineStyle(3, 0xff695e, pulse);
+        const segments = Math.max(1, Math.ceil(charge * 28));
+        for (let i = 0; i < segments; i += 1) {
+          const start = -Math.PI / 2 + (i / 28) * Math.PI * 2;
+          const end = -Math.PI / 2 + ((i + 0.82) / 28) * Math.PI * 2;
+          this.fx.lineBetween(
+            warningX + Math.cos(start) * warningRadius, warningY + Math.sin(start) * warningRadius,
+            warningX + Math.cos(end) * warningRadius, warningY + Math.sin(end) * warningRadius,
+          );
+        }
+        this.fx.lineStyle(2, 0xe25c54, 0.42 + charge * 0.28);
+        this.fx.lineBetween(warningX, warningY, MUZZLE.x, MUZZLE.y - 10);
+        this.fx.fillStyle(0xf04f48, pulse * charge);
+        this.fx.fillCircle(MUZZLE.x, MUZZLE.y - 10, 5 + charge * 7);
       }
       if (enemy.state === 'Peeking') {
         this.fx.fillStyle(0xf1c16d, 1); this.fx.fillCircle(enemy.x, enemy.y - 105, 4);

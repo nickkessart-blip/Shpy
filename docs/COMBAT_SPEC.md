@@ -153,3 +153,10 @@ Current numeric values in `balance.ts` and `enemies.ts` are prototype values, no
 - Direction is stable per enemy identity to avoid random visual jitter. The sampler is pure and covered by Vitest.
 - The sampled pose is render-only. It does not alter enemy world coordinates, target hitboxes, cover tests, aim or damage.
 - This improves readability but does not replace hand-authored hit/recoil frames.
+
+### Enemy attack charge telegraph — 2026-11-26
+
+- While an enemy is in `Aiming`, its warning ring now fills clockwise according to the remaining authored aim timer.
+- The target line intensifies and a pulsing marker highlights the player's incoming danger point as the attack approaches.
+- Charge progress is clamped by a pure helper with deterministic unit tests. The telegraph is visual only; existing state transitions and damage timing are unchanged.
+- This is intended to make the existing wind-up readable on small screens, but requires physical Android visual QA.

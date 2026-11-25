@@ -19,3 +19,9 @@ export function sampleEnemyHitReaction(hitFlashMs: number, uid: number): EnemyHi
     scaleY: 1 - 0.025 * strength,
   };
 }
+
+/** Returns 0 before the aim wind-up begins and 1 when the attack is ready. */
+export function sampleEnemyAimCharge(timerMs: number, aimDurationMs: number): number {
+  if (!Number.isFinite(timerMs) || !Number.isFinite(aimDurationMs) || aimDurationMs <= 0) return 0;
+  return Math.max(0, Math.min(1, 1 - timerMs / aimDurationMs));
+}
