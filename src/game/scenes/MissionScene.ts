@@ -12,6 +12,7 @@ import { runSession } from '../systems/missions/runSession';
 import { settingsService, type GameSettings } from '../../settings/SettingsService';
 import { moveAim } from '../systems/input/aimMath';
 import { FeedbackService, triggerHaptic } from '../systems/feedback/FeedbackService';
+import { RailTimeline } from '../systems/missions/RailTimeline';
 
 type EnemyState = 'Exposed' | 'Aiming' | 'Attacking' | 'SeekingCover' | 'Hidden' | 'Peeking' | 'Repositioning' | 'Defeated';
 interface RuntimeEnemy {
@@ -52,6 +53,7 @@ export class MissionScene extends Phaser.Scene {
   private parallaxFar?: Phaser.GameObjects.Graphics;
   private parallaxMid?: Phaser.GameObjects.Graphics;
   private parallaxNear?: Phaser.GameObjects.Graphics;
+  private readonly railTimeline = new RailTimeline({ routeLength: 1280, speedPxPerSecond: 60 });
   private currentSettings: GameSettings = settingsService.load();
   private message!: Phaser.GameObjects.Text;
   private reloadHint!: Phaser.GameObjects.Text;
@@ -362,6 +364,7 @@ export class MissionScene extends Phaser.Scene {
     if (this.phase === 'paused' || this.phase === 'finished') return;
     const dt = Math.min(delta, 50);
     const inputDelta = Math.min(Math.max(0, delta), 120);
+    if (this.phase === 'active') this.railTimeline.advance(dt);
     this.shotCooldown = Math.max(0, this.shotCooldown - inputDelta);
     this.weaponRecoil = Math.max(0, this.weaponRecoil - inputDelta * 0.16);
     this.weaponRecoilAngle = Math.max(0, this.weaponRecoilAngle - inputDelta * 0.00038);
@@ -375,11 +378,23 @@ export class MissionScene extends Phaser.Scene {
     const lookY = this.isMobileControls
       ? Phaser.Math.Clamp(this.cameras.main.scrollY / 180, -1, 1)
       : this.aim.y / GAME_HEIGHT - 0.5;
-    const parallaxEnabled = this.currentSettings.parallaxEnabled && this.currentSettings.graphicsQuality !== 'low';
-    this.parallaxFar?.setPosition(parallaxEnabled ? -lookX * 4 : 0, parallaxEnabled ? -lookY * 2 : 0);
-    this.parallaxMid?.setPosition(parallaxEnabled ? -lookX * 9 : 0, parallaxEnabled ? -lookY * 4 : 0);
-    this.parallaxNear?.setPosition(parallaxEnabled ? lookX * 13 : 0, parallaxEnabled ? lookY * 6 : 0);
-    if (this.parallaxFar) this.parallaxFar.setAlpha(parallaxEnabled ? 0.84 + Math.sin(this.time.now / 900) * 0.025 : 0);
+    const isTrainScene = this.sceneDef?.id.startsWith('east-express') ?? false;
+    const farPeriod = isTrainScene ? 92 : 108;
+    const midPeriod = isTrainScene ? 86 : 188;
+    const nearPeriod = isTrainScene ? 170 : 320;
+    this.parallaxFar?.setPosition(
+      this.railTimeline.layerOffset(farPeriod, 0.12) - lookX * 4,
+      -lookY * 2,
+    );
+    this.parallaxMid?.setPosition(
+      this.railTimeline.layerOffset(midPeriod, 0.32) - lookX * 9,
+      -lookY * 4,
+    );
+    this.parallaxNear?.setPosition(
+      this.railTimeline.layerOffset(nearPeriod, 0.7) + lookX * 13,
+      lookY * 6,
+    );
+    if (this.parallaxFar) this.parallaxFar.setAlpha(0.84 + Math.sin(this.time.now / 900) * 0.025);
     if ((this.mobileFireHeld || this.desktopFireHeld) && this.phase === 'active'
       && getWeapon(this.currentWeaponId).fireMode !== 'semi') this.shoot();
     this.shotFlash = Math.max(0, this.shotFlash - inputDelta);
@@ -410,6 +425,7 @@ export class MissionScene extends Phaser.Scene {
     if (index >= this.missionScenes.length) { this.finishMission(true); return; }
     this.sceneIndex = index;
     this.sceneDef = this.missionScenes[index];
+    this.railTimeline.reset(Math.max(GAME_WIDTH, this.sceneDef.waves.length * 1000));
     this.backgroundArt?.destroy();
     this.backgroundArt = undefined;
     this.children.getAll().forEach((child) => {
@@ -453,14 +469,6 @@ export class MissionScene extends Phaser.Scene {
     const near = this.parallaxNear;
     if (!far || !mid || !near) return;
     far.clear(); mid.clear(); near.clear();
-    if (this.currentSettings.graphicsQuality === 'low') {
-      far.clearMask(false); mid.clearMask(false); near.clearMask(false);
-      this.parallaxMaskGraphics?.destroy();
-      this.parallaxMaskGraphics = undefined;
-      this.parallaxWindowMask = undefined;
-      return;
-    }
-
     if (this.sceneDef?.id.startsWith('east-express')) {
       const mask = this.add.graphics();
       mask.fillStyle(0xffffff, 1);
@@ -534,11 +542,12 @@ export class MissionScene extends Phaser.Scene {
     }
 
     near.fillStyle(0x080e15, 0.18);
-    near.fillRoundedRect(-40, 476, 250, 118, 22);
-    near.fillRoundedRect(GAME_WIDTH - 230, 462, 270, 132, 22);
-    near.lineStyle(2, 0xd4ad72, 0.17);
-    near.lineBetween(0, 520, 214, 520);
-    near.lineBetween(GAME_WIDTH - 210, 510, GAME_WIDTH, 510);
+    for (let i = -1; i < 6; i += 1) {
+      const x = i * 320;
+      near.fillRoundedRect(x + 20, 476, 250, 118, 22);
+      near.lineStyle(2, 0xd4ad72, 0.17);
+      near.lineBetween(x + 30, 520, x + 240, 520);
+    }
     if (this.currentSettings.graphicsQuality === 'high') {
       near.fillStyle(0xf0c16d, 0.11);
       for (let i = 0; i < 24; i += 1) {
@@ -1452,6 +1461,10 @@ export class MissionScene extends Phaser.Scene {
         this.hudBars.fillRoundedRect(x, 43, healthSegmentWidth * segmentFill, 13, 3);
       }
     }
+    this.hudBars.fillStyle(0x293744, 0.98);
+    this.hudBars.fillRoundedRect(76, 84, 270, 4, 2);
+    this.hudBars.fillStyle(0xd5a65e, 0.95);
+    this.hudBars.fillRoundedRect(76, 84, 270 * this.railTimeline.progress, 4, 2);
     this.hudAmmoText.setText(ammoLabel);
 
     // Right weapon panel: recognizable weapon silhouette and magazine meter.
