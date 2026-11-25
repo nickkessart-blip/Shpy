@@ -22,7 +22,7 @@ Do not start a new project. Do not silently change canon. Do not generate or edi
 - Latest verified main commit at the start of this task: `a99476fe254e3c235dad5bb12de02fd0f2c0d56c`.
 - PR #15, #16 and #17 are historical/integrated work; do not recreate their branches or duplicate their changes.
 - PR #18 (`docs/shpy-canon-rebaseline-2026-11-25`) was merged into `main` as `a99476fe254e3c235dad5bb12de02fd0f2c0d56c`. Do not recreate it.
-- Active feature branch for mobile world-space aim: `fix/mobile-world-aim-and-camera-2026-11-25` (base `main`). Query its live HEAD and PR state before any further edit. Latest verified main at task start: `a99476fe254e3c235dad5bb12de02fd0f2c0d56c`.
+- Active feature branch for mobile world-space aim: `fix/mobile-world-aim-and-camera-2026-11-25` → PR #19 (base `main`). Latest verified feature head before this handoff update: `9ec21c7904bcd6643801eed9a025f0295473b004`. Latest verified main: `a99476fe254e3c235dad5bb12de02fd0f2c0d56c`.
 - Historical branch head before the first handoff refresh in this work session: `5a27635d3661f9887d8b47b61acefbe31171a03d`. Always query the live branch HEAD before editing. Query live branch HEAD before any subsequent edit; documentation commits may have moved it. Always query the live branch/PR head before writing; subsequent commits may move it.
 - Keep one shared game codebase for Web, Android and desktop. Do not create separate PC/mobile gameplay branches.
 - The latest user environment report is Node.js 24.19.0, npm 11.17.0 and Git 2.55.0.windows.3. CI currently uses Node.js 26.
@@ -129,3 +129,17 @@ User explicitly asked to continue development after reporting that the prior rel
 - Settings copy explains the stick/camera behaviour.
 - Physical Android and visual browser validation have not yet been performed. Do not mark mobile acceptance complete until real-device checks confirm multi-touch, orientation, safe-area layout, reticle visibility and shots near all four world bounds.
 - Manual Android checklist: (1) left stick moves reticle smoothly in eight directions; (2) camera pans when reticle reaches safe margin and does not snap; (3) right fire button can be held simultaneously; (4) targets at left/right/top/bottom mission bounds remain aimable; (5) sensitivity changes reticle speed immediately; (6) rotate device and verify controls remain anchored and no black screen; (7) reload/switch/grenade/medkit/pause remain independently tappable.
+
+
+### Mobile world-space aim — CI evidence and release boundary
+- PR #19: https://github.com/nickkessart-blip/Shpy/pull/19
+- Latest gameplay-code commit: `9ec21c7904bcd6643801eed9a025f0295473b004`.
+- GitHub Actions PR run `45684166228` completed successfully: typecheck, Vitest, ESLint and production build all passed. The publish-build job was skipped as expected for a PR.
+- This work is not yet in `main` or GitHub Pages. Do not send the live game URL as though this PR were deployed.
+- Physical Android/browser QA is still outstanding.
+
+### Asset audit — 2026-11-25
+- Inspected Library `SHPY_enemy_animation_atlas.webp`: 384×1024 RGBA, 3 columns × 4 rows, 128×256 cells, alpha present and common bottom baseline at y=248. It is a prepared, hand-authored state atlas, but remains Library-only and is not integrated into the runtime.
+- Inspected Library `SHPY_enemy_character_atlas.webp`: 1024×1536 RGBA, 4×4 cells of 256×384, alpha present. It is a larger candidate, but cell content has inconsistent bottom bounds and needs baseline normalization before runtime use.
+- Neither file is in the repository. The current runtime still composes its 3-state atlas from four committed SVGs. Do not describe either Library atlas as integrated.
+- Binary transfer from the materialized Library file into a GitHub blob was not available through the current tool path in this run. Do not replace this with an external fetch or a text file disguised as an image. Resume only with a verified binary-transfer route and then add the atlas to AssetCatalog/BootScene, test its frame map and inspect the rendered result.
