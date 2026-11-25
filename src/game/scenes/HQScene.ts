@@ -81,16 +81,14 @@ export class HQScene extends Phaser.Scene {
     this.add.text(400, 566, 'ОРУЖЕЙНЫЙ ШКАФ', { fontSize: '13px', color: '#d9c09a', fontStyle: 'bold' });
     this.roomHotspot(386, 344, 186, 238, 'ОРУЖЕЙНЫЙ ШКАФ', 'Арсенал, закрытое снаряжение, перки, модификации и косметика', () => this.scene.start('Loadout'));
 
-    // Phone reserved for future agency systems.
+    // Agency phone: operative reports and encrypted messages.
     g.fillStyle(0x111820, 1); g.fillRoundedRect(706, 380, 90, 138, 12);
     g.fillStyle(0x283b47, 1); g.fillRoundedRect(714, 390, 74, 112, 7);
     g.fillStyle(0x79a68c, 0.8); g.fillRect(724, 407, 54, 4);
     g.fillStyle(0x79a68c, 0.45); g.fillRect(724, 420, 42, 4);
     g.fillCircle(751, 509, 4);
     this.add.text(680, 526, 'ТЕЛЕФОН', { fontSize: '12px', color: '#d9c09a' });
-    this.roomHotspot(690, 370, 124, 176, 'ТЕЛЕФОН', 'События и престиж агентства появятся позже', () => {
-      this.showRoomNotice('Телефон пока молчит. События и престиж откроются по мере развития агентства.');
-    });
+    this.roomHotspot(690, 370, 124, 176, 'ТЕЛЕФОН', 'Входящие сообщения и отчёты оперативников', () => this.scene.start('HQInbox'));
 
     // Agency cat.
     g.fillStyle(0x080d12, 0.35); g.fillEllipse(914, 590, 98, 25);
