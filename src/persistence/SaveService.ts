@@ -1,4 +1,5 @@
 import { BALANCE } from '../game/data/balance';
+import { AGENCY_RESEARCH, DEFAULT_AGENCY_RESEARCH, normalizeAgencyResearch, type AgencyResearchId } from '../game/data/agencyResearch';
 import { getAccountLevel } from '../game/data/progression';
 import {
   DEFAULT_LOADOUT, normalizeLoadout, type LoadoutSelection,
@@ -17,7 +18,7 @@ export type UpgradeKind = 'damage' | 'magazine' | 'reload' | 'health' | 'armor' 
 export type GearUpgradeKind = 'grenadeCapacity' | 'medkitEfficiency';
 
 export interface SaveData {
-  schemaVersion: 5;
+  schemaVersion: 6;
   accountXp: number;
   dollars: number;
   upgrades: Record<UpgradeKind, number>;
@@ -27,6 +28,7 @@ export interface SaveData {
   components: number;
   gearUpgrades: Record<GearUpgradeKind, number>;
   cosmetics: CosmeticLoadout;
+  agencyResearch: Record<AgencyResearchId, number>;
 }
 
 export const GEAR_UPGRADE_COSTS: Record<GearUpgradeKind, readonly number[]> = {
@@ -35,7 +37,7 @@ export const GEAR_UPGRADE_COSTS: Record<GearUpgradeKind, readonly number[]> = {
 };
 
 const DEFAULT_SAVE: SaveData = {
-  schemaVersion: 5,
+  schemaVersion: 6,
   accountXp: 0,
   dollars: 0,
   upgrades: { damage: 0, magazine: 0, reload: 0, health: 0, armor: 0, precision: 0 },
@@ -45,6 +47,7 @@ const DEFAULT_SAVE: SaveData = {
   components: 0,
   gearUpgrades: { grenadeCapacity: 0, medkitEfficiency: 0 },
   cosmetics: structuredClone(DEFAULT_COSMETICS),
+  agencyResearch: structuredClone(DEFAULT_AGENCY_RESEARCH),
 };
 
 export class SaveService {
@@ -65,13 +68,13 @@ export class SaveService {
         schemaVersion?: unknown; reputation?: unknown; accountXp?: unknown; dollars?: unknown;
         upgrades?: Partial<Record<UpgradeKind, unknown>>; loadout?: unknown;
         agents?: unknown; agentMissions?: unknown; components?: unknown;
-        gearUpgrades?: unknown; cosmetics?: unknown;
+        gearUpgrades?: unknown; cosmetics?: unknown; agencyResearch?: unknown;
       };
       const version = data.schemaVersion;
-      if (![1, 2, 3, 4, 5].includes(version as number) || !data.upgrades || typeof data.upgrades !== 'object') {
+      if (![1, 2, 3, 4, 5, 6].includes(version as number) || !data.upgrades || typeof data.upgrades !== 'object') {
         return this.rejectCorruptSave(raw);
       }
-      const legacy = version !== 4 && version !== 5;
+      const legacy = version !== 4 && version !== 5 && version !== 6;
       if (legacy && (typeof data.reputation !== 'number' || !Number.isFinite(data.reputation))) {
         return this.rejectCorruptSave(raw);
       }
@@ -108,10 +111,11 @@ export class SaveService {
           medkitEfficiency: clampLevel(rawGear.medkitEfficiency, GEAR_UPGRADE_COSTS.medkitEfficiency.length - 1),
         },
         cosmetics: normalizeCosmetics(data.cosmetics),
+        agencyResearch: normalizeAgencyResearch(data.agencyResearch),
       };
       this.volatileSave = structuredClone(normalized);
       this.volatileSaveExists = true;
-      if (version !== 5) this.save(normalized);
+      if (version !== 6) this.save(normalized);
       return normalized;
     } catch { return this.rejectCorruptSave(raw); }
   }
@@ -126,7 +130,7 @@ export class SaveService {
         schemaVersion?: unknown; reputation?: unknown; accountXp?: unknown; dollars?: unknown; upgrades?: unknown;
       };
       const legacy = data.schemaVersion === 1 || data.schemaVersion === 2 || data.schemaVersion === 3;
-      const validVersion = legacy || data.schemaVersion === 4 || data.schemaVersion === 5;
+      const validVersion = legacy || data.schemaVersion === 4 || data.schemaVersion === 5 || data.schemaVersion === 6;
       const validXp = legacy ? typeof data.reputation === 'number' && Number.isFinite(data.reputation)
         : typeof data.accountXp === 'number' && Number.isFinite(data.accountXp);
       const validMoney = legacy || (typeof data.dollars === 'number' && Number.isFinite(data.dollars));
@@ -215,7 +219,7 @@ export class SaveService {
     return { success: true, reason: null, data };
   }
 
-  purchaseCosmetic(id: CosmeticId): {
+  purchaseAgencyResearch(id: AgencyResearchId): {\n    success: boolean; reason: 'maxed' | 'components' | 'locked' | null; data: SaveData;\n  } {\n    const data = this.load();\n    if (getAccountLevel(data.accountXp) < 3) return { success: false, reason: 'locked', data };\n    const definition = AGENCY_RESEARCH.find((entry) => entry.id === id);\n    if (!definition) return { success: false, reason: 'maxed', data };\n    const next = data.agencyResearch[id] + 1;\n    if (next >= definition.costs.length) return { success: false, reason: 'maxed', data };\n    const cost = definition.costs[next] ?? Number.POSITIVE_INFINITY;\n    if (data.components < cost) return { success: false, reason: 'components', data };\n    data.components -= cost;\n    data.agencyResearch[id] = next;\n    this.save(data);\n    return { success: true, reason: null, data };\n  }\n\n  purchaseCosmetic(id: CosmeticId): {
     success: boolean; reason: 'unknown' | 'owned' | 'components' | null; data: SaveData;
   } {
     const data = this.load();
