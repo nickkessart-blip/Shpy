@@ -41,3 +41,8 @@
 - Casino main/bar: detailed layered 1280×720 SVG backgrounds.
 - First-person weapon viewmodels: original weapon SVGs rasterized at 720×1240 for the combat rig; the old small atlas remains fallback only.
 - Enemies: 2× source rasterization and a 192×384 runtime atlas. State poses are still generated from static source SVGs, so full animation cycles remain future work.
+
+
+### Восточный экспресс: раздельные планы
+
+`backgrounds/train-carriage.svg` — базовый интерьер. `train-carriage-far.svg`, `train-carriage-mid.svg` и `train-carriage-near.svg` — прозрачные оверлеи 1280×720, выровненные под базу: ночной город за окнами, дождь/отражения на стекле и передние кресла с отделкой. MissionScene загружает их как независимые планы с разной скоростью параллакса; при отсутствии полного набора остаётся исходный фон.
