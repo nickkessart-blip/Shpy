@@ -14,7 +14,7 @@
 - CI для main после PR #15: run `45520916259`, успешно; публикация downloadable `prototype-build` успешно завершена.
 - GitHub Pages после PR #15: run `45520916130`, успешно; после PR #16 проверь новый Pages deployment на актуальном main.
 - Физический Android-плейтест не выполнен и остаётся обязательным. Не выдавать CI за проверку реального сенсорного устройства.
-- Enemy state atlas: AssetCatalog.ensureEnemyAnimationAtlas() builds a 384×1024 Phaser CanvasTexture from four committed enemy SVGs after Boot preload; MissionScene selects frames 0–11 for aim/fire/hit. This deterministic state atlas is integrated in code, not a hand-drawn frame animation. The prepared Library WebP remains uncommitted and is not the runtime source. See docs/ENEMY_ANIMATION_ATLAS.md.
+- Enemy state atlas is integrated in main: AssetCatalog.ensureEnemyAnimationAtlas() builds a deterministic 384×1024 Phaser CanvasTexture from four committed SVGs; MissionScene selects frames 0–11 for aim/fire/hit. This is a state atlas, not hand-drawn frame animation. See docs/ENEMY_ANIMATION_ATLAS.md.
 - Следующая рабочая ветка должна быть создана от актуального main, когда появится новая задача. Перед записью получать свежий HEAD и использовать expected SHA/fast-forward.
 
 ## Основные реализованные системы
@@ -23,10 +23,10 @@
 - Существующий Kenney CC0 `muzzle-flare.png` подключён к выстрелу; существующий impact smoke используется при попадании.
 - Декоративные SVG-рамки HP/ammo и кодовые сегменты динамических значений.
 - Процедурные реакции врагов (idle bob/breathing, наклон при прицеливании, импульс атаки, hit flash/tint) не меняют боевые координаты и хитбоксы.
-- Готовый атлас врагов находится в Library: `SHPY_enemy_animation_atlas.webp`, RGBA WebP 384×1024, сетка 3×4, кадр 128×256, baseline y=248, SHA-256 `27893c782fb375ea892f53ed0ca9d256fffd23ec2ad7cfdac2fa6cc8632faf04`. Новое изображение не создавалось.
-- Слот, spritesheet loader 128×256 и переключение кадров по типу/боевому состоянию закоммичены. **Сам бинарный WebP пока не находится в ветке**, поэтому в runtime всё ещё fallback на Kenney CC0/SVG.
-- `scripts/verify-enemy-atlas.mjs` и `npm run verify:enemy-atlas` проверяют WebP signature, alpha, 384×1024, сетку 3×4, byte size и SHA-256. Локальная проверка подготовленного файла из Library прошла; это проверка целостности источника, не runtime-тест Phaser.
-- GitHub connector `create_blob` принимает Base64; `create_file/update_file` — только UTF-8. `files__materialize` кладёт байты в контейнер, но инструменты-коннекторы не имеют прямого filesystem bridge; `files__read(mode=image_file)` для этого WebP сообщил, что native pixels недоступны. Это ограничение передачи байтов в инструментах, **не public/private репозитория**. См. точную границу и порядок обхода в `docs/GIT_WORKFLOW.md`.
+- Подготовленный Library WebP `SHPY_enemy_animation_atlas.webp` не включён в runtime и остаётся необязательным источником для будущей замены; текущая игра использует CanvasTexture из четырёх SVG.
+- Слот, процедурная CanvasTexture 128×256 и переключение кадров по типу/боевому состоянию интегрированы в main. Fallback Kenney CC0/SVG остаётся только для ошибок создания атласа или отсутствующих исходных SVG.
+- `scripts/verify-enemy-atlas.mjs` и `npm run verify:enemy-atlas` проверяют отдельный подготовленный WebP, но не runtime CanvasTexture. Runtime path описан в `docs/ENEMY_ANIMATION_ATLAS.md`.
+- Прежняя проблема передачи Library WebP больше не блокирует разработку: runtime atlas воспроизводимо строится из SVG, без бинарной загрузки, внешних запросов или изменения исходных ассетов.
 
 ## CI и проверки
 
