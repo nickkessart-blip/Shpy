@@ -164,7 +164,7 @@ Every completed, CI-validated implementation slice must be integrated into `main
 - [x] Render muzzle flash, coloured tracer and chest-level impact confirmation; play a quieter enemy-fire sound.
 - [x] Keep fired shots active after the source enemy is defeated and wait for all rounds before wave rewards or location transitions.
 - [x] Add deterministic trajectory tests for intermediate positions, progress clamping, exact arrival and invalid values.
-- [ ] Add player dodge/cover/interception counterplay and validate readability/latency on physical Android.
+- [~] Add player projectile counterplay: a timed 560 ms duck (Shift / mobile УКЛОН) with a 2,400 ms cooldown avoids rounds only during its central 68 px hitbox-shift window; cover destruction/interception and physical Android validation remain open.
 
 ### First-person arms and weapon viewmodels — 2026-11-26
 - [x] Integrate the Library's transparent 2×2 set of pistol/SMG/shotgun/rifle viewmodels with gloved hands and forearms.
@@ -172,3 +172,8 @@ Every completed, CI-validated implementation slice must be integrated into `main
 - [x] Align diagonal SMG/shotgun/rifle poses to the reticle and calculate muzzle positions from the same container transform that draws the sprite.
 - [x] Add a deterministic frame integrity check and geometry tests; keep per-weapon SVG/procedural fallback.
 - [ ] Split gloves/sleeves/weapon into separately swappable cosmetic layers; validate viewmodel size and aim alignment on physical Android.
+### Player duck/evade counterplay — 2026-11-26
+- [x] Add a timed crouch ability on Shift and a dedicated mobile button.
+- [x] Move the first-person rig and chest hit point down through a short duck curve; resolve enemy rounds against the current point rather than automatically damaging the player.
+- [x] Add a 2.4 s cooldown, button countdown, success VFX, sound/haptic feedback and deterministic dodge-window tests.
+- [ ] Add other counterplay methods (cover/interception) and tune readability/timing on physical Android.

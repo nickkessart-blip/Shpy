@@ -71,7 +71,7 @@ export class FeedbackService {
   }
 }
 
-export type HapticAction = 'shot' | 'hit' | 'damage' | 'reload' | 'grenade' | 'medkit' | 'success' | 'failure';
+export type HapticAction = 'shot' | 'hit' | 'damage' | 'reload' | 'grenade' | 'medkit' | 'dodge' | 'success' | 'failure';
 
 const HAPTIC_PATTERNS: Record<HapticAction, number | number[]> = {
   shot: 9,
@@ -80,6 +80,7 @@ const HAPTIC_PATTERNS: Record<HapticAction, number | number[]> = {
   reload: [12, 28, 12],
   grenade: [24, 28, 68],
   medkit: [18, 20, 18],
+  dodge: [14, 24, 24],
   success: [38, 36, 58],
   failure: [75, 35, 75],
 };
