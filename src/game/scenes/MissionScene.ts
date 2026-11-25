@@ -1434,10 +1434,13 @@ export class MissionScene extends Phaser.Scene {
     if (!overlay || !host) return;
     const hostRect = host.getBoundingClientRect();
     const canvasRect = canvas.getBoundingClientRect();
+    const controlScale = Math.max(0.65, Math.min(1, canvasRect.width / GAME_WIDTH, canvasRect.height / GAME_HEIGHT));
     overlay.style.left = Math.round(canvasRect.left - hostRect.left) + 'px';
     overlay.style.top = Math.round(canvasRect.top - hostRect.top) + 'px';
-    overlay.style.width = Math.round(canvasRect.width) + 'px';
-    overlay.style.height = Math.round(canvasRect.height) + 'px';
+    overlay.style.width = Math.round(canvasRect.width / controlScale) + 'px';
+    overlay.style.height = Math.round(canvasRect.height / controlScale) + 'px';
+    overlay.style.transform = 'scale(' + controlScale + ')';
+    overlay.style.transformOrigin = 'top left';
     overlay.style.right = 'auto';
     overlay.style.bottom = 'auto';
   }
