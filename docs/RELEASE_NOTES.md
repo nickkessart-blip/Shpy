@@ -1,5 +1,13 @@
 # SHPY — Release Notes
 
+## 2026-11-25 — Approved game design rebaseline
+- Re-centered SHPY on its approved spy-parody rail-shooter identity and protagonist progression.
+- Defined the first campaign's narrative frame, five location signature mechanics and the layered operation-modifier model.
+- Defined mission-bound manual, assisted and fully autonomous combat; endgame autonomous missions are watched after preparation and launch.
+- Specified the distinction between player-agent and recruited operatives, including support availability.
+- Documented the UI/HQ/Settings/Armory/Mission Preparation expectations and contextual prologue/tutorial.
+- Rebased MVP scope and roadmap. This was a documentation-only change: no gameplay behaviour, numeric balance, save schema or assets were changed.
+
 ## 2026-11-25 — Reuse existing muzzle-flare artwork
 - Connected the existing Kenney CC0 muzzle-flare texture to the mission firing effect. The sprite follows the weapon muzzle and aim direction, uses additive blending and fades with the shot flash.
 - Scale is uniform and derived from the source frame bounds to preserve the artwork's aspect ratio; the procedural tracer/flash remains as fallback.
