@@ -75,3 +75,27 @@ No images were generated or edited during this audit. Do not treat a Library fil
 4. Inspect full-resolution dimensions, alpha, frame boundaries, scale and baseline.
 5. Keep license/source and runtime status explicit: found → inspected → prepared → committed → registered → loaded → visually validated.
 6. Run focused tests, TypeScript, lint, tests, production build and visual checks; record physical-device checks separately.
+
+
+## Другие репозитории пользователя: аудит применимости
+
+Проверены также `Triglav`, `Rubezh`, `Chernaya-Flyaga`, `AshVeil` и `NeoGrad` (в репозитории NeoGrad README указывает название Riftblade: Zero).
+
+### Наиболее полезные находки
+
+| Репозиторий | Что найдено | Что применяем в SHPY |
+|---|---|---|
+| [NeoGrad / Riftblade: Zero](https://github.com/nickkessart-blip/NeoGrad) | `city_far.png`, `city_mid.png`, `city_road.png`, `industrial_mid.png`, `perimeter_mid.png`; manifest хранит размеры, SHA-256 и роль; `tools/art/inspect_assets.cjs` проверяет размеры, alpha, байты, SHA-256 и pivot каждого кадра. | Берём как эталон проверки многослойного фона и asset manifest. Сами PNG помечены в manifest как legacy 2.0 source (not preloaded), по 0.8–2.4 MB каждый; не импортировать в SHPY без проверки лицензии, визуального соответствия и размера. |
+| [Triglav](https://github.com/nickkessart-blip/Triglav) | Явный `asset-pack.json` с типом ресурса, ключом, путём и frameConfig; отдельные source sheets, runtime sprites и музыкальные темы с score metadata. | Использовать manifest-first подход и явные размеры кадров для будущих врагов/оперативников SHPY. Архив v10.10.0 исторический; код и ассеты не переносить автоматически. |
+| [AshVeil](https://github.com/nickkessart-blip/AshVeil) | `ASSET_CREDITS.md`, отдельный файл лицензии Kenney Blaster Kit (CC0), точные страницы Quaternius; Playwright browser tests и визуальные проверки. | Копируем дисциплину provenance/license и тестовую схему. 3D-модели Quaternius/Kenney не соответствуют текущему 2D-спрайтовому SHPY; можно вернуться к ним только при отдельном 3D-рендер-пайплайне. |
+| [Чёрная Фляга](https://github.com/nickkessart-blip/Chernaya-Flyaga) | QA отчёт: 22 state checks + 23 Chromium сценария; проверка page errors, console errors, HTTP 4xx/5xx и скриншотов. | Хороший образец отдельного browser regression слоя для SHPY. Сценарии используют debug API и не заменяют ручное прохождение/ощущение игры. |
+| [РУБЕЖ](https://github.com/nickkessart-blip/Rubezh) | Development pipeline с таблицами проверок, asset manifests, атрибуцией источников и разделением CI/runtime/physical-device evidence. | Использовать структуру отчётности и правила лицензий. Godot-специфичные импортеры и 3D-ассеты не переносить в Phaser-проект. |
+
+### Приоритет внедрения инструментов
+
+1. Добавить в SHPY автоматический asset inspection report: размеры, alpha, размер файла, SHA-256, frame bounds и baseline/pivot.
+2. Добавить Playwright browser smoke/visual suite с фиксацией console/network errors и скриншотов на 1280×720 и мобильном viewport.
+3. Ввести явный manifest для аудио: назначение, громкость, длительность, loop, license/source и runtime key.
+4. Не переносить чужие 2D/3D ассеты только потому, что они есть в соседнем репозитории. Сначала проверять авторство, лицензию, стиль и производительность.
+
+Это аудит применимости, а не заявление о переносе исходников. Ссылки на другие репозитории оставлены как источники методик и кандидатов.
