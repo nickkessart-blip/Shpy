@@ -79,7 +79,7 @@ Implementation status (2026-11-25): PR #18 adds a deterministic route clock, rou
 - [ ] Acceptance: the first failed attempt cannot buy a large share of the arsenal; normal successful progress stays satisfying.
 
 ### P4 — Operative department and location framework
-- [ ] Give roster assignments clear stages, visible progress and useful reports.
+- [~] Give roster assignments clear stages, visible progress and useful reports: timed runs and inbox reports exist; batch claim is implemented, persistent automation/report history remain open.
 - [ ] Expand assignment rewards to components, supplies and intelligence without making them mandatory chores.
 - [ ] Add main-operation support assignment and operative availability rules.
 - [ ] Implement the shared location-event contract and modifier compatibility rules.

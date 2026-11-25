@@ -1,5 +1,5 @@
 # SHPY — AI handoff
-Updated: 2026-11-25 | Active task: operative auto-dispatch (assisted agency automation)
+Updated: 2026-11-25 | Active task: bulk operative report collection
 
 ## Mandatory reading order
 
@@ -164,3 +164,15 @@ User explicitly asked to continue development after reporting that the prior rel
 - Assisted automation slice: AgentService.dispatchRecommended(now, randomValue) enumerates unlocked legal team combinations, scores expected Components/minute using current intel/logistics research, then delegates to the existing validated dispatch path. The Agency Computer exposes an explicit “АВТОПОДБОР + ОТПРАВКА” action. It sends one operation only; it does not silently run in the background or auto-claim reports.
 - Tests added for best expected-value dispatch and no-eligible-team handling. CI evidence is pending until the feature PR run completes.
 - Next: verify focused tests/CI, fix any failures, update this handoff with exact PR/commit/run, then merge only after checks pass. After merge, verify both the Pages deployment workflow and the published build branch SHA before reporting the Pages URL.
+
+
+## Latest release state — 2026-11-25
+
+- Current main at the start of this task: dd38b2e338fdc30ebf04340541c5ac882375f41f. PR #23 (assisted operative auto-dispatch) and PR #24 (Pages artifact permissions) are merged.
+- PR #23 added AgentService.dispatchRecommended: enumerate all legal unlocked operative teams, score each assignment by expected Components/minute using intel/logistics research, and dispatch through the normal validation path. Agency Computer exposes an explicit one-click action. It is a single manual trigger, not background autonomy.
+- PR #23 CI push run 45692381951 passed typecheck, 81 Vitest tests, lint and production build. The first run exposed a bad no-available-agent test assumption; the test was corrected to reserve the only operative on an active run and the full run passed.
+- PR #24 added actions: read to .github/workflows/deploy-pages.yml. This fixed deploy-pages@v4 artifact discovery. Main CI run 45692713204 succeeded (typecheck, tests, lint, build and prototype-build publication). Pages deployment run 45692713553 succeeded, deploying main SHA dd38b2e338fdc30ebf04340541c5ac882375f41f. prototype-build output branch updated to 9fe8759543eaf03a91d343343579b39065d15c92.
+- GitHub Pages URL: https://nickkessart-blip.github.io/Shpy/ . Do not claim physical Android QA; it has not been performed.
+- Active branch for next slice: feat/bulk-operative-report-collection-2026-11-25. It adds AgentService.collectReadyMissions(now) and a “ПОЛУЧИТЬ ВСЕ ОТЧЁТЫ” action in HQInboxScene. The method only claims completed runs and returns each report; unfinished runs remain untouched. Focused tests cover two completed reports and an unfinished boundary.
+- CI for the bulk-collection slice is pending. Re-fetch branch/PR state before editing; update this handoff and roadmap after validation/merge.
+- Next after batch collection: persistent assignment doctrine (opt-in auto-collect/auto-dispatch) must be designed with explicit save migration and app-lifecycle processing; do not imply background automation from scene-local UI actions.

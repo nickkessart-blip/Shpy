@@ -128,6 +128,15 @@ export class AgentService {
     return this.dispatch(best.missionId, best.agentIds, now, randomValue);
   }
 
+  collectReadyMissions(now = Date.now()): AgentMissionReport[] {
+    const readyIds = this.saves.load().agentMissions
+      .filter((run) => run.completesAt <= now)
+      .map((run) => run.id);
+    return readyIds
+      .map((runId) => this.collectMission(runId, now))
+      .filter((report): report is AgentMissionReport => report !== null);
+  }
+
   collectMission(runId: string, now = Date.now()): AgentMissionReport | null {
     const save = this.saves.load();
     const index = save.agentMissions.findIndex((run) => run.id === runId);

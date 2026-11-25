@@ -78,4 +78,23 @@ describe('agent operations', () => {
     expect(saves.load().agentMissions).toHaveLength(1);
   });
 
+  it('collects all completed operative reports in one batch and leaves unfinished runs untouched', () => {
+    const save = saves.load();
+    save.accountXp = 1_800;
+    save.dollars = 1_000;
+    saves.save(save);
+    expect(agents.recruit('fox')).toEqual({ success: true });
+    expect(agents.recruit('cipher')).toEqual({ success: true });
+    const first = agents.dispatch('recon', ['fox'], 1_000, 0);
+    const second = agents.dispatch('recon', ['cipher'], 1_000, 0);
+    expect(first.success && second.success).toBe(true);
+
+    expect(agents.collectReadyMissions(60_999)).toHaveLength(0);
+    const reports = agents.collectReadyMissions(61_000);
+    expect(reports).toHaveLength(2);
+    expect(reports.every((report) => report.success)).toBe(true);
+    expect(saves.load().components).toBe(36);
+    expect(saves.load().agentMissions).toHaveLength(0);
+  });
+
 });
