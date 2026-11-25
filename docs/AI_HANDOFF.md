@@ -114,3 +114,13 @@ The exact first-slice acceptance and deferred work are in `docs/superpowers/plan
 - For mobile work, retain a physical-device checklist.
 - Commit code, tests, assets and relevant docs together for each coherent implementation task.
 - Keep the user out of routine Git operations; do not ask them to connect Git or create commits.
+
+## Agency research implementation handoff — 2026-11-25
+
+- Feature branch: feat/agency-research-2026-11-25 (based on main).
+- Added the Agency Computer research tab with three persistent branches: informant network (+5 percentage points to operative mission success per level), logistics (-10% assignment duration per level), and training (+20% operative XP per level).
+- Research is unlocked at account level 3 and paid with Components, independently from personal upgrades paid with Dollars.
+- Effects are applied when dispatching/collecting operations; already-dispatched runs keep their original chance and completion timestamp.
+- Save schema v6 migrates v5 and earlier saves without resetting currencies, roster, missions, or existing upgrades.
+- Focused tests cover migration, research purchase gates/currency separation and all three gameplay effects.
+- Remaining: broader agency infrastructure (support capacity, automation policies), balancing, browser visual review and physical Android QA.
