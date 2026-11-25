@@ -35,8 +35,8 @@ export function normalizeSettings(value: unknown): GameSettings {
   const raw = value && typeof value === 'object' ? value as Partial<GameSettings> : {};
   const graphicsQuality: GraphicsQuality = raw.graphicsQuality === 'low' || raw.graphicsQuality === 'high'
     ? raw.graphicsQuality : 'balanced';
-  // Legacy 'swipe' and 'tap' saves both migrate to the unified tap-and-drag hybrid.
-  const mobileControlMode: MobileControlMode = raw.mobileControlMode === 'stick' ? 'stick' : 'tap';
+  // Explicit tap-and-drag remains selectable; missing/unknown values use the new stick default.
+  const mobileControlMode: MobileControlMode = raw.mobileControlMode === 'tap' ? 'tap' : 'stick';
   return {
     graphicsQuality,
     musicVolume: clamp(raw.musicVolume, 0, 1, DEFAULT_SETTINGS.musicVolume),

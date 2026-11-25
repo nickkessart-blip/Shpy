@@ -457,6 +457,9 @@ export class MissionScene extends Phaser.Scene {
     if (index >= this.missionScenes.length) { this.finishMission(true); return; }
     this.sceneIndex = index;
     this.sceneDef = this.missionScenes[index];
+    // Every authored room starts from its own camera origin and a predictable reticle position.
+    this.cameras.main.setScroll(0, 0);
+    this.aim = { x: GAME_WIDTH / 2, y: GAME_HEIGHT / 2 };
     this.railTimeline.reset(Math.max(GAME_WIDTH, this.sceneDef.waves.length * 1000));
     this.backgroundArt?.destroy();
     this.backgroundArt = undefined;
