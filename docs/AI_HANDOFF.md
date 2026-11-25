@@ -44,7 +44,28 @@
 - docs/ENEMY_ANIMATION_ATLAS.md records implementation, limitations, fallback policy and replacement procedure.
 - GitHub Actions CI run #45523076355 passed on commit 7a80199c2577a3d9e83329e746ff5f08612d2f28: typecheck, tests, lint and production build all succeeded. Physical Android visual validation remains pending.
 
-## Следующие задачи
+## Canon rebaseline — 2026-11-25
+
+A user-approved design rebaseline is now documented on branch `docs/shpy-canon-rebaseline-2026-11-25`:
+- `docs/GAME_BIBLE.md` is version 2.0 and is the current canon.
+- `docs/GAME_DESIGN.md` and `docs/COMBAT_SPEC.md` now describe a moving rail-shooter model; older static-scene-only descriptions are superseded.
+- `docs/CAMPAIGN_AND_LOCATIONS.md` defines the story framing, five persistent locations and their signature mechanics/modifier direction.
+- `docs/AUTOMATION_DESIGN.md` defines manual, assisted and full autonomous operations. In endgame spectator mode the player prepares and launches; the game performs all combat actions and the player watches.
+- `docs/UI_UX_SPEC.md` captures the feedback on menu, settings, HQ, map, armory, agency computer and onboarding.
+- `docs/MVP_SCOPE.md` and `docs/ROADMAP.md` reset production priorities and identify what is implemented versus what still needs real validation.
+- `docs/DECISIONS.md` contains decisions D-009 through D-020 and separates open content/balance details from approved canon.
+- `docs/TECHNICAL_ARCHITECTURE.md` describes the future rail timeline, location event, modifier, combat controller and autonomy boundaries.
+
+No gameplay code, save schema, balance values, images or audio were changed in this documentation task. The existing `accountXp` save field remains the persisted representation of Reputation; do not rename it without a tested migration. The current game still contains prototype implementations whose reported quality problems are not fixed by this documentation change.
+
+## Next production work
+
+1. Before coding, read the new canon docs and the relevant skills in `.ai/skills/`.
+2. Start P0 from `docs/ROADMAP.md`: make the Casino route a reliable moving rail-shooter slice. Prioritize coordinate correctness, layered parallax, cover occlusion, spawn spacing, enemy behaviour, attack feedback and visible first-person hands/weapon.
+3. Add deterministic tests for rail events, pointer/world transforms, valid spawn spacing and cover/line-of-sight.
+4. Do not attempt all five locations or full autonomy in one change. Prove one end-to-end Casino route and its permanent lighting signature first.
+5. After the combat foundation, work through UI/HQ, tutorial/story, economy and the autonomy ladder in the documented order.
+6. Keep desktop visual QA and physical Android validation separate from CI evidence.
 
 1. Провести desktop/browser visual QA текущей main-версии: стартовый экран, штаб, вход в миссию, стрельба, попадания, смена aim/fire/hit кадров, HUD, resize/fullscreen и консоль браузера.
 2. По результатам desktop QA исправить визуальные/функциональные дефекты отдельными логическими PR.
