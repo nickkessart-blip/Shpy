@@ -124,4 +124,4 @@ Every completed, CI-validated implementation slice must be integrated into `main
 
 
 ### Combat target feedback — 2026-11-25
-- [~] Reticle changes color for a clear enemy hit, a shot blocked by cover, or no target; mobile fire button mirrors the same feedback. Deterministic geometry tests added. CI/Pages publication pending; physical Android QA remains required.
+- [x] Reticle changes color for a clear enemy hit, a shot blocked by cover, or no target; mobile fire button mirrors the same feedback. Deterministic geometry tests added and PR #29 published to Pages. Physical Android QA remains required.
