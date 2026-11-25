@@ -40,11 +40,11 @@ Feedback: muzzle flash, tracer/projectile where appropriate, impact effect, hit 
 ## 4. Enemy archetypes
 
 Enemies are not differentiated only by HP. Each archetype has an attack/defence loop and a tactical counter:
-- Guard: baseline firearm, predictable cover use and controlled attack timing.
-- Armored: slow, resilient and equipped with protected zones/weak points or a vulnerability window.
-- Assault: fast lane changes, aggressive repositioning and short attack wind-ups.
+- Guard: baseline firearm, predictable cover use and controlled attack timing. After each shot it uses the established seek-cover → hidden → peek → reposition cycle.
+- Armored: slow, resilient pressure unit. Body hits deal 0.45× damage; head hits deal 1.55× damage before the weapon's normal precision headshot bonus. It holds its ground and has an 860 ms recovery window after firing instead of immediately hiding.
+- Assault: fast lane flanker with the existing short 820 ms aim wind-up. After firing it moves 150 world pixels toward an alternating adjacent lane over 260 ms, clamped to the playable arena, rather than repeating the guard's cover loop.
 - Specialist (future): uses grenades, suppression, shields, cameras or other location interactions.
-- Boss: multi-phase encounter with a unique pattern, arena interaction and clear phase transitions.
+- Boss: multi-phase encounter with a unique pattern, arena interaction and clear phase transitions; the existing boss phase timing/damage escalation remains separate from the three regular archetypes.
 
 Every enemy exposes visible state cues: idle/positioning, preparing attack, attacking, seeking cover, hidden, peeking, repositioning, hit and defeated. Damage/animation offsets never move the authoritative hitbox unexpectedly.
 
@@ -129,7 +129,7 @@ Current numeric values in `balance.ts` and `enemies.ts` are prototype values, no
 
 - Casino main/bar use independent base/far/mid/near layers, all authored at 1280×720 and loaded locally. Keep background parallax layers behind gameplay hitboxes.
 - First-person weapon artwork is a separate transparent viewmodel layer, rasterized at 2× from 360×620 SVG source. Mobile viewmodel rotates toward the world-space reticle; muzzle position must be derived from the same rig transform used to draw it.
-- Enemy source SVGs are rasterized at 2× and composed into a 3×4 atlas with 192×384 cells. Current aim/fire/hit variants are still derived from one source pose; do not describe them as full frame animation.
+- The authored enemy sheet is committed at `src/assets/enemies/animation-atlas.png`: 4 columns × 4 rows, 192×288 per frame; rows guard/armored/assault/boss and columns idle/aim/fire/hit. `MissionScene` maps the 16 frames to combat states. This is a four-pose state atlas, not continuous multi-frame walk, reload or death animation; those cycles remain future work.
 
 
 ## Mobile control sizing and fire lifecycle — 2026-11-25

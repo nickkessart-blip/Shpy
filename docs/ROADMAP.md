@@ -52,7 +52,7 @@ Implementation status (2026-11-25): PR #18 adds a deterministic route clock, rou
 - [~] Fix pointer-to-world mapping and off-screen target access: world-space reticle, bounded camera follow and sensitivity applied to aim travel. Verify on desktop browser and physical Android before marking complete.
 - [~] Make cover render as physical occlusion; hidden enemies remain drawn behind the cover and line-of-sight shots are blocked. Validate in browser; add physical cover-state polish.
 - [~] Seeded SpawnDirector varies lane assignment, enemy entry order and stagger timing, enforcing minimum spacing. Authored enemy role composition remains fixed per wave; seeded composition variants and route-lane entry/exit remain open.
-- [ ] Differentiate enemy behaviour, attack patterns and counters beyond HP.
+- [x] Differentiate Guard, Armored and Assault combat loops beyond HP: predictable cover cycle, armored head weak point/body resistance, and alternating assault flanks; retain the separate multi-phase boss pattern.
 - [ ] Add readable enemy attack launch/effects and restore a clear lower-screen arms/hands/weapon presentation.
 - [ ] Rebalance music and combat SFX.
 - [ ] Acceptance: the Casino route is playable from entry to extraction with consistent aim/hitboxes, readable cover, distinct enemies and fair hazards.
@@ -147,3 +147,12 @@ Every completed, CI-validated implementation slice must be integrated into `main
 - [x] Add a pure frame mapper, 16-frame uniqueness/order tests and an exact PNG integrity script.
 - [ ] Browser screenshot inspection and physical Android checks remain outstanding; CI is not visual QA.
 - [ ] Add genuine multi-frame walk/idle/reload/death cycles in a later art pass.
+
+
+### Enemy archetype combat rules — 2026-11-26
+- [x] Armored body damage is reduced to 0.45× while head weak-point damage is 1.55× before normal precision bonuses; the wave intro explains the counter.
+- [x] Armored holds its lane and uses an 860 ms recovery window instead of automatically entering the guard cover loop.
+- [x] Assault alternates between adjacent flank lanes with a 260 ms reposition and arena-bound clamping.
+- [x] Guard cover loop and the existing multi-phase boss behaviour remain distinct.
+- [x] Added deterministic unit tests for multipliers, timings, alternating flank direction, bounds and invalid inputs.
+- [ ] Attack launch/projectile travel, specialist enemy mechanics and full visual Android validation remain separate work.
