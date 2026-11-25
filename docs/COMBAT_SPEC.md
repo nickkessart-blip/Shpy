@@ -134,7 +134,7 @@ Current numeric values in `balance.ts` and `enemies.ts` are prototype values, no
 
 ## Mobile control sizing and fire lifecycle — 2026-11-25
 
-- Previous overlay scaling followed the Phaser logical-to-physical canvas ratio. On a 640×360 landscape phone, this reduced the 96px fire button to roughly 48px and the 154px aim stick to roughly 77px.
+- Previous overlay scaling followed the Phaser logical-to-physical canvas ratio. On a 640×360 landscape phone, the old 0.65 minimum rendered the 96px fire button at roughly 62px and the 154px aim stick at roughly 100px. The new 0.8 minimum increases them to roughly 77px and 123px, with larger landscape screens scaling further up.
 - New layout scaling targets usable physical touch controls: scale is clamped to 0.8–1.15 using a 800×450 reference viewport, while the overlay remains aligned to the actual FIT canvas.
 - Fire now captures its active pointer where supported, releases on pointerup/pointercancel/lostpointercapture, and clears held-fire state on window blur. Window-level release remains a fallback.
 - This is a code-level fix with deterministic sizing tests. It is not a substitute for physical Android verification.
