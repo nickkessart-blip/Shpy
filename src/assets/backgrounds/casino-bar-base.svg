@@ -1,15 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
 <defs>
- <linearGradient id="wall" x2="0" y2="1"><stop stop-color="#17232c"/><stop offset="1" stop-color="#422d2d"/></linearGradient>
- <linearGradient id="floor" x2="0" y2="1"><stop stop-color="#5c3c3b"/><stop offset="1" stop-color="#101820"/></linearGradient>
- <linearGradient id="brass" x2="0" y2="1"><stop stop-color="#f1d28d"/><stop offset=".5" stop-color="#a66d36"/><stop offset="1" stop-color="#52351f"/></linearGradient>
- <linearGradient id="bottle" x2="0" y2="1"><stop stop-color="#8dbb9b" stop-opacity=".8"/><stop offset="1" stop-color="#234c47"/></linearGradient>
- <radialGradient id="glow"><stop stop-color="#e99c58" stop-opacity=".65"/><stop offset="1" stop-color="#e99c58" stop-opacity="0"/></radialGradient>
+ <linearGradient id="wall" x2="0" y2="1"><stop stop-color="#182630"/><stop offset=".55" stop-color="#493c38"/><stop offset="1" stop-color="#1b2026"/></linearGradient>
+ <linearGradient id="floor" x2="0" y2="1"><stop stop-color="#69403a"/><stop offset=".45" stop-color="#34232b"/><stop offset="1" stop-color="#0d151c"/></linearGradient>
+ <linearGradient id="brass" x2="0" y2="1"><stop stop-color="#f4d99e"/><stop offset=".5" stop-color="#a87542"/><stop offset="1" stop-color="#4e3020"/></linearGradient>
+ <pattern id="tile" width="58" height="58" patternUnits="userSpaceOnUse"><path d="M29 0V58M0 29H58" stroke="#d2aa76" stroke-opacity=".08" stroke-width="2"/><path d="M29 9 49 29 29 49 9 29Z" fill="none" stroke="#d2aa76" stroke-opacity=".1" stroke-width="2"/></pattern>
+ <radialGradient id="warm"><stop stop-color="#d48b50" stop-opacity=".24"/><stop offset="1" stop-color="#d48b50" stop-opacity="0"/></radialGradient>
 </defs>
-<rect width="1280" height="720" fill="#0d141b"/>
-<path d="M0 0H1280V490L640 410 0 490Z" fill="#121b24"/>
-<path d="M80 70H1200V465H80Z" fill="url(#wall)" stroke="#a47748" stroke-width="5"/>
-<path d="M0 490 640 404 1280 490V720H0Z" fill="url(#floor)"/>
-<path d="M0 490 640 404 1280 490V720H0Z" fill="#271d24" opacity=".65"/>
-<path d="M0 490 640 404 1280 490" stroke="#d1a26a" stroke-width="5" fill="none"/>
+<rect width="1280" height="720" fill="#0b1218"/>
+<path d="M0 0H1280V470L640 390 0 470Z" fill="#111a23"/>
+<path d="M70 65H1210V460H70Z" fill="url(#wall)" stroke="url(#brass)" stroke-width="7"/>
+<path d="M92 90H1188V438H92Z" fill="none" stroke="#d3ad78" stroke-opacity=".35" stroke-width="3"/>
+<path d="M0 480 640 390 1280 480V720H0Z" fill="url(#floor)"/>
+<path d="M0 480 640 390 1280 480V720H0Z" fill="url(#tile)"/>
+<path d="M0 480 640 390 1280 480" fill="none" stroke="url(#brass)" stroke-width="7"/>
+<path d="M640 390V720M320 435 170 720M960 435 1110 720" stroke="#d0a26a" stroke-opacity=".25" stroke-width="3"/>
+<ellipse cx="640" cy="270" rx="500" ry="230" fill="url(#warm)"/>
 </svg>
