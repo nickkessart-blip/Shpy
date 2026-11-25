@@ -54,7 +54,7 @@ Implementation status (2026-11-25): PR #18 adds a deterministic route clock, rou
 - [~] Seeded SpawnDirector varies lane assignment, enemy entry order and stagger timing, enforcing minimum spacing. Authored enemy role composition remains fixed per wave; seeded composition variants and route-lane entry/exit remain open.
 - [x] Differentiate Guard, Armored and Assault combat loops beyond HP: predictable cover cycle, armored head weak point/body resistance, and alternating assault flanks; retain the separate multi-phase boss pattern.
 - [x] Add readable enemy attack launch/effects: per-archetype projectiles travel toward the player and apply damage on impact; muzzle/tracer/impact feedback is visible and wave transitions wait for fired rounds.
-- [ ] Restore a clear lower-screen arms/hands/weapon presentation.
+- [x] Restore a clear lower-screen arms/hands/weapon presentation with a transparent 2×2 first-person atlas: full pistol/SMG/shotgun/rifle viewmodels include gloved hands and forearms; muzzle coordinates are mapped from the actual frame and rig transform.
 - [ ] Rebalance music and combat SFX.
 - [ ] Acceptance: the Casino route is playable from entry to extraction with consistent aim/hitboxes, readable cover, distinct enemies and fair hazards.
 
@@ -165,3 +165,10 @@ Every completed, CI-validated implementation slice must be integrated into `main
 - [x] Keep fired shots active after the source enemy is defeated and wait for all rounds before wave rewards or location transitions.
 - [x] Add deterministic trajectory tests for intermediate positions, progress clamping, exact arrival and invalid values.
 - [ ] Add player dodge/cover/interception counterplay and validate readability/latency on physical Android.
+
+### First-person arms and weapon viewmodels — 2026-11-26
+- [x] Integrate the Library's transparent 2×2 set of pistol/SMG/shotgun/rifle viewmodels with gloved hands and forearms.
+- [x] Replace the small clipped weapon-only atlas branch with a primary full-arm viewmodel at 360×270 display size.
+- [x] Align diagonal SMG/shotgun/rifle poses to the reticle and calculate muzzle positions from the same container transform that draws the sprite.
+- [x] Add a deterministic frame integrity check and geometry tests; keep per-weapon SVG/procedural fallback.
+- [ ] Split gloves/sleeves/weapon into separately swappable cosmetic layers; validate viewmodel size and aim alignment on physical Android.

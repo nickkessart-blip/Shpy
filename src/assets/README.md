@@ -33,14 +33,14 @@
 
 ## Оружие SHPY 0.7
 
-`weapons/pistol.svg`, `smg.svg`, `shotgun.svg` и `rifle.svg` — четыре собственные векторные модели. Их силуэты различаются длиной/формой ствола, ресивером, магазином, оптикой и помповым цевьём; файлы используются в боевой сцене и в оружейном шкафу. Это оригинальные проектные файлы, а не сторонний CC0-пак. Правовой режим проекта описан в `/COPYRIGHT.md`.
+`weapons/pistol.svg`, `smg.svg`, `shotgun.svg` и `rifle.svg` — четыре собственные векторные модели для карточек оружейной и fallback-показа. Основной first-person viewmodel берётся из `weapons/first-person-atlas.png`: четыре прозрачных композиции оружия, перчаток и предплечий. Точка вылета снаряда привязана к дулу каждого кадра через `src/game/systems/combat/weaponViewmodel.ts`. Это Library artwork проекта, а не заявленный сторонний CC0-пак. Правовой режим проекта описан в `/COPYRIGHT.md`.
 
 
 ## Visual recovery pass
 
 - Casino main/bar: detailed layered 1280×720 SVG backgrounds.
-- First-person weapon viewmodels: original weapon SVGs rasterized at 720×1240 for the combat rig; the old small atlas remains fallback only.
-- Enemies: 2× source rasterization and a 192×384 runtime atlas. State poses are still generated from static source SVGs, so full animation cycles remain future work.
+- First-person combat rig: weapons/first-person-atlas.png is the preferred transparent 2×2 sheet at 768×576 (384×288 per cell). Pistol, SMG, shotgun and rifle each include both gloved hands and forearms. The named frame follows weapon selection and the whole composition rotates toward the reticle; per-weapon SVGs and the procedural arm remain fallbacks.
+- Enemies: the 768×1152 transparent 4×4 PNG uses 192×288 cells. Full multi-frame locomotion/reload/death cycles remain future work.
 
 
 ### Восточный экспресс: раздельные планы

@@ -128,7 +128,7 @@ Current numeric values in `balance.ts` and `enemies.ts` are prototype values, no
 ## Visual asset contract — 2026-11-25
 
 - Casino main/bar use independent base/far/mid/near layers, all authored at 1280×720 and loaded locally. Keep background parallax layers behind gameplay hitboxes.
-- First-person weapon artwork is a separate transparent viewmodel layer, rasterized at 2× from 360×620 SVG source. Mobile viewmodel rotates toward the world-space reticle; muzzle position must be derived from the same rig transform used to draw it.
+- The first-person rig uses a transparent 2×2 atlas at `src/assets/weapons/first-person-atlas.png`: pistol, SMG, shotgun and rifle, each in a full-arm composition with gloved hands and forearms (384×288 per cell). Mobile and desktop viewmodels rotate toward the world-space reticle. The visible barrel tip is transformed through the same rig container position/rotation used to draw the sprite, so muzzle flash and projectile origin stay attached to the weapon. Individual weapon SVGs remain fallback/catalog art; a fully separate uniform/arm cosmetic layer is still future work.
 - The authored enemy sheet is committed at `src/assets/enemies/animation-atlas.png`: 4 columns × 4 rows, 192×288 per frame; rows guard/armored/assault/boss and columns idle/aim/fire/hit. `MissionScene` maps the 16 frames to combat states. This is a four-pose state atlas, not continuous multi-frame walk, reload or death animation; those cycles remain future work.
 
 

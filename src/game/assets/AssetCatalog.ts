@@ -68,7 +68,10 @@ export class AssetCatalog {
       const asset = assetsBySlot.get(slot);
       if (!asset) continue;
 
-      if (slot === 'enemies/animation-atlas') {
+      if (slot === 'weapons/first-person-atlas') {
+        // Four first-person viewmodels with gloved hands and forearms, 384×288 each.
+        scene.load.spritesheet(key, asset.url, { frameWidth: 384, frameHeight: 288 });
+      } else if (slot === 'enemies/animation-atlas') {
         // Authored transparent 4×4 atlas: 192×288 pixels per state frame.
         scene.load.spritesheet(key, asset.url, { frameWidth: 192, frameHeight: 288 });
       } else if (/\.svg$/i.test(asset.path)) {
@@ -213,10 +216,10 @@ export class AssetCatalog {
     if (!scene.textures.exists(key)) return;
     const atlas = scene.textures.get(key);
     const frames = [
-      ['fp-pistol', 0, 0], ['fp-smg', 192, 0],
-      ['fp-shotgun', 0, 144], ['fp-rifle', 192, 144],
+      ['fp-pistol', 0, 0], ['fp-smg', 384, 0],
+      ['fp-shotgun', 0, 288], ['fp-rifle', 384, 288],
     ] as const;
-    for (const [name, x, y] of frames) if (!atlas.has(name)) atlas.add(name, 0, x, y, 192, 144);
+    for (const [name, x, y] of frames) if (!atlas.has(name)) atlas.add(name, 0, x, y, 384, 288);
   }
 
   static ensureKenneyEnemyFrames(scene: Phaser.Scene): void {

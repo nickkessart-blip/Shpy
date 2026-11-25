@@ -41,7 +41,7 @@ The original SHPY SVG fallback assets now have distinct shape cues: guard cap/sh
 
 ## Existing project artwork
 
-- `src/assets/weapons/first-person-atlas.webp` — first-person weapon atlas.
+- `src/assets/weapons/first-person-atlas.png` — primary transparent 2×2 first-person weapon-and-arms atlas (768×576, 384×288 per frame; pistol/SMG/shotgun/rifle). Imported from the Library first-person weapon set, downscaled cell-for-cell and palette-optimized to 61,810 bytes.
 - `src/assets/backgrounds/train-carriage-real.webp` — East Express carriage background.
 - `src/assets/effects/muzzle-flare.png` and `impact-smoke.png` — Kenney CC0 effects; both are loaded through `AssetCatalog`. `muzzle-flare.png` is now used by the mission muzzle-flash visual and `impact-smoke.png` is used for hit feedback.
 - `src/assets/licenses/Kenney-CC0.txt` — license record for the existing effects.
@@ -96,3 +96,14 @@ This is an improvement to the current art baseline, not a claim that the final g
 - All three layers are registered in `assetSlots.ts` and rasterized at 1280×720 by `AssetCatalog`.
 - `MissionScene` now selects the four-layer set for `backgrounds/train-carriage`; the existing single-image fallback remains intact.
 - These overlays are original vector cutouts aligned to the committed carriage artwork, not downloaded third-party art. No new third-party license obligations were introduced.
+
+## First-person arms and weapon atlas — 2026-11-26
+
+- Runtime file: `src/assets/weapons/first-person-atlas.png`, indexed transparent PNG, 768×576, 61,810 bytes.
+- Grid: 2 columns × 2 rows with 384×288 display frames: pistol (top-left), SMG (top-right), shotgun (bottom-left), rifle (bottom-right).
+- Each frame includes the weapon, both gloved hands and forearms; no HUD, background or text is baked into the frame.
+- AssetCatalog loads the 384×288 Phaser spritesheet and creates stable frame IDs `fp-pistol`, `fp-smg`, `fp-shotgun` and `fp-rifle`.
+- MissionScene uses the full-arm atlas as the primary first-person viewmodel. Per-weapon SVGs and the procedural arm remain fallback options.
+- `src/game/systems/combat/weaponViewmodel.ts` maps the visible barrel tip into rig coordinates; muzzle flash and player-fired tracer use the same container transform as the rendered sprite.
+- Integrity is checked by `npm run verify:first-person-atlas` in both CI and Pages workflows.
+- Source: Library first-person weapon sheet (1448×1086 RGBA), cropped into 2×2 cells, individually resized to 384×288 and palette-optimized. The artwork is a user Library resource; no third-party license is asserted.
