@@ -367,3 +367,11 @@ The user reports a complete failure in graphics quality and mobile shooting and 
 - The wheel is one-use per main room; reset on room entry. Interaction is suppressed while the first-operation tutorial is active and after activation.
 - The manual flash temporarily overrides the recurring jackpot presentation while the automatic event clock continues. Automatic cycle remains separate.
 - Geometry tests cover target centre/edge, miss and parallax alignment. Physical Android aiming tolerance and browser visual QA remain outstanding.
+## Enemy projectile cover collision — 2026-11-26
+
+- Pure first-intersection helper: `src/game/systems/combat/enemyProjectileCover.ts`. It uses Liang–Barsky segment clipping against the authored `Rect[]`, returns the earliest progress, impact point and cover index, and validates all geometry.
+- `RuntimeEnemyProjectile.blockedByCover` marks a shot intercepted at launch. `launchEnemyProjectile()` changes its endpoint to the nearest cover entry and scales travel time by the segment progress (with a small minimum fraction).
+- On arrival, a blocked projectile is removed, emits the existing yellow `cover` impact ring/cross, plays a quiet impact sound and skips damage/dodge resolution. It never reaches the player behind the cover.
+- Unblocked shots retain their original recorded player endpoint and existing dodge behavior. Already launched projectile state is independent of later enemy death/wave changes.
+- This is static solid cover interception, not cover destruction or crouching behind every cover. Player hitboxes and cover coordinates are unchanged.
+- Tests cover clear line, first of multiple covers, exact edge contact, start-inside, invalid coordinate and invalid rectangle.

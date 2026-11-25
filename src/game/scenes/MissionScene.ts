@@ -23,6 +23,7 @@ import {
   getEnemyHitAreaMultiplier,
 } from '../systems/combat/enemyCombatRules';
 import { getEnemyProjectileTravelMs, sampleEnemyProjectile } from '../systems/combat/enemyProjectile';
+import { findEnemyProjectileCoverImpact } from '../systems/combat/enemyProjectileCover';
 import {
   PLAYER_DODGE_COOLDOWN_MS,
   PLAYER_DODGE_DURATION_MS,
@@ -64,7 +65,7 @@ interface RuntimeEnemy {
 }
 interface RuntimeEnemyProjectile {
   uid: number; type: EnemyType; start: Point; target: Point;
-  elapsedMs: number; durationMs: number; damage: number;
+  elapsedMs: number; durationMs: number; damage: number; blockedByCover: boolean;
 }
 
 const MUZZLE: Point = { x: GAME_WIDTH / 2, y: 662 };
@@ -982,10 +983,13 @@ export class MissionScene extends Phaser.Scene {
       x: enemy.x + (target.x >= enemy.x ? 22 : -22),
       y: enemy.y - 62,
     };
-    const durationMs = getEnemyProjectileTravelMs(enemy.type);
+    const coverImpact = findEnemyProjectileCoverImpact(start, target, this.sceneDef.covers);
+    const durationMs = getEnemyProjectileTravelMs(enemy.type)
+      * (coverImpact ? Math.max(0.12, coverImpact.progress) : 1);
     this.enemyProjectiles.push({
       uid: this.uniqueId++, type: enemy.type, start,
-      target: { x: target.x, y: target.y }, elapsedMs: 0, durationMs, damage,
+      target: coverImpact?.point ?? { x: target.x, y: target.y },
+      elapsedMs: 0, durationMs, damage, blockedByCover: coverImpact !== null,
     });
     this.advanceTutorial('projectile');
     this.impactEffects.push({
@@ -1005,6 +1009,14 @@ export class MissionScene extends Phaser.Scene {
       if (sample.progress < 1) continue;
 
       this.enemyProjectiles.splice(index, 1);
+      if (projectile.blockedByCover) {
+        this.impactEffects.push({
+          x: projectile.target.x, y: projectile.target.y,
+          life: 420, maxLife: 420, kind: 'cover', damage: 0,
+        });
+        FeedbackService.play(this, 'hit', 0.28);
+        continue;
+      }
       const currentPlayerPoint = this.getPlayerHitPoint();
       const dodged = isPlayerDodgeEvading(
         this.dodgeRemainingMs, projectile.target, currentPlayerPoint,

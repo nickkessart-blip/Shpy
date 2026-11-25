@@ -206,3 +206,10 @@ Current numeric values in `balance.ts` and `enemies.ts` are prototype values, no
 - A successful shot consumes one round, counts as a fired shot, marks the roulette wheel spent for that room, and triggers an immediate 420 ms central jackpot flash. This manual pulse distracts eligible stationary security in a wider 300 px lane radius; it does not deal damage or cancel incoming projectiles.
 - The interaction is disabled during first-operation onboarding and after one successful activation. The automatic slot-bank jackpot cycle remains separate.
 - Touch aim uses screen-to-world camera conversion while the roulette target uses the mid-layer parallax factor; deterministic geometry tests cover zero and non-zero camera offsets. Physical Android visual/tolerance QA remains required.
+## Enemy projectile impact with cover — 2026-11-26
+
+- Enemy rounds now test their muzzle-to-player segment against the same authored cover rectangles used by player-shot line-of-sight.
+- If a table/barrier intersects the segment, the projectile's recorded endpoint is moved to the first near-side intersection and its travel time is scaled by the distance fraction. The round renders the same tracer, then creates a yellow cover impact ring/sparks and does not damage the player.
+- When no cover blocks the line, existing dodge/impact resolution remains unchanged. Cover collision is decided at launch; an already-launched round retains its recorded path even if the room changes state.
+- The collision does not destroy cover or move enemies/player. It models solid tabletop/partition interception. The player duck remains a separate countermeasure for rounds with a clear line.
+- Deterministic tests cover no-hit, single cover, nearest of multiple covers, boundary contact, starting inside a rectangle and invalid geometry.
