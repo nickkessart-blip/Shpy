@@ -88,7 +88,8 @@ export class AssetCatalog {
     const frameHeight = 256;
     const baseline = 248;
     const sources = types.map((type) => {
-      const sourceKey = ASSET_SLOTS['enemies/' + type];
+      const sourceSlot = ('enemies/' + type) as keyof typeof ASSET_SLOTS;
+      const sourceKey = ASSET_SLOTS[sourceSlot];
       if (!scene.textures.exists(sourceKey)) return null;
       const source = scene.textures.get(sourceKey).getSourceImage() as HTMLImageElement | HTMLCanvasElement;
       const width = 'naturalWidth' in source ? source.naturalWidth : source.width;
