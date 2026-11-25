@@ -69,6 +69,89 @@ export class AssetCatalog {
     }
   }
 
+
+  /**
+   * Compose a deterministic Phaser CanvasTexture from the four committed enemy
+   * SVGs. This is a state atlas, not a hand-drawn animation sheet.
+   */
+  static ensureEnemyAnimationAtlas(scene: Phaser.Scene): boolean {
+    const key = ASSET_SLOTS['enemies/animation-atlas'];
+    if (scene.textures.exists(key)) {
+      const authored = scene.textures.get(key);
+      return authored.has('0') && authored.has('11');
+    }
+
+    const types = ['guard', 'armored', 'assault', 'boss'] as const;
+    const poses = ['aim', 'fire', 'hit'] as const;
+    const frameWidth = 128;
+    const frameHeight = 256;
+    const baseline = 248;
+    const sources = types.map((type) => {
+      const sourceKey = ASSET_SLOTS['enemies/' + type];
+      if (!scene.textures.exists(sourceKey)) return null;
+      const source = scene.textures.get(sourceKey).getSourceImage() as HTMLImageElement | HTMLCanvasElement;
+      const width = 'naturalWidth' in source ? source.naturalWidth : source.width;
+      const height = 'naturalHeight' in source ? source.naturalHeight : source.height;
+      return width > 0 && height > 0 ? { source, width, height } : null;
+    });
+    if (sources.some((source) => source === null)) return false;
+
+    const atlas = scene.textures.createCanvas(key, frameWidth * 3, frameHeight * 4);
+    if (!atlas) return false;
+    const context = atlas.getContext();
+    context.clearRect(0, 0, frameWidth * 3, frameHeight * 4);
+
+    sources.forEach((entry, row) => {
+      if (!entry) return;
+      poses.forEach((pose, column) => {
+        const x = column * frameWidth;
+        const y = row * frameHeight;
+        const scale = Math.min(frameWidth / entry.width, 216 / entry.height);
+        const width = entry.width * scale;
+        const height = entry.height * scale;
+        const drawX = x + (frameWidth - width) / 2;
+        const drawY = y + baseline - height;
+        context.save();
+        if (pose === 'fire') context.translate(-1.5, 1.5);
+        if (pose === 'hit') context.translate(-2, 0);
+        context.drawImage(entry.source, drawX, drawY, width, height);
+        context.restore();
+
+        if (pose === 'fire') {
+          const flashX = x + frameWidth - 8;
+          const flashY = y + baseline - height * 0.55;
+          context.save();
+          context.globalCompositeOperation = 'screen';
+          context.fillStyle = 'rgba(255, 218, 145, 0.9)';
+          context.beginPath();
+          context.ellipse(flashX, flashY, 7, 3.5, -0.35, 0, Math.PI * 2);
+          context.fill();
+          context.fillStyle = 'rgba(255, 112, 58, 0.75)';
+          context.beginPath();
+          context.ellipse(flashX - 2, flashY, 3.5, 1.7, -0.35, 0, Math.PI * 2);
+          context.fill();
+          context.restore();
+        } else if (pose === 'hit') {
+          context.save();
+          context.globalCompositeOperation = 'source-atop';
+          context.fillStyle = 'rgba(220, 58, 58, 0.30)';
+          context.fillRect(x, y, frameWidth, frameHeight);
+          context.restore();
+        }
+      });
+    });
+
+    atlas.refresh();
+    types.forEach((_type, row) => {
+      poses.forEach((_pose, column) => {
+        atlas.add(String(row * 3 + column), 0, column * frameWidth, row * frameHeight, frameWidth, frameHeight);
+      });
+    });
+    return types.every((_type, row) =>
+      poses.every((_pose, column) => atlas.has(String(row * 3 + column))),
+    );
+  }
+
   static ensureFirstPersonWeaponFrames(scene: Phaser.Scene): void {
     const key = ASSET_SLOTS['weapons/first-person-atlas'];
     if (!scene.textures.exists(key)) return;

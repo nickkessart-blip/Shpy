@@ -1,40 +1,37 @@
 # SHPY enemy animation atlas
 
-## Exported source
+## Runtime implementation
 
-The generated reference sheet was segmented by its actual alpha mask, not by equal-sized grid guesses. Only the 16 connected character silhouettes were retained; transparent panel artwork and stray marks were excluded.
+The runtime no longer depends on transferring the prepared Library-only WebP to GitHub. AssetCatalog.ensureEnemyAnimationAtlas() builds a deterministic 384×1024 Phaser CanvasTexture from the four SVG enemy assets committed in src/assets/enemies/. It runs when MissionScene starts, after BootScene completes the shared preload. It uses Phaser's documented CanvasTexture API (createCanvas, getContext, refresh and add), makes no network requests, and does not mutate source assets or combat coordinates.
 
-The prepared export is available in the user's Library as `SHPY_enemy_animation_atlas.webp` (115,008 bytes; 3 columns × 4 rows, 384×1024 px). Each cell is exactly 128×256 px, RGBA transparency is retained, and the character baseline is aligned to y=248 in every cell. SHA-256: `27893c782fb375ea892f53ed0ca9d256fffd23ec2ad7cfdac2fa6cc8632faf04`. It has **not yet been committed to this Git branch**.
+- Texture key: enemy-animation-atlas.
+- Geometry: 3 columns × 4 rows; 128×256 per cell.
+- Rows: guard, armored, assault, boss.
+- Columns: aim, fire, hit.
+- Frame index: row * 3 + column (0–11).
+- Baseline: y=248 in each cell.
+- Source/license: original SHPY SVG assets; no third-party material and no newly generated image.
+- Runtime integration: in-memory texture, registered with Phaser TextureManager, selected by MissionScene.drawEnemies().
 
-## Frame map
+## Meaning and limits of states
 
-| Enemy row | Enemy | Frame 0 | Frame 1 | Frame 2 |
-|---|---|---|---|---|
-| 0 | guard | aim | fire | hit |
-| 1 | armored | aim | fire | hit |
-| 2 | assault | aim | fire | hit |
-| 3 | boss | aim | fire | hit |
+This is a state atlas, not a hand-drawn frame animation:
+- aim: original SVG pose, fitted into a fixed transparent cell and baseline-aligned.
+- fire: same silhouette with a restrained recoil offset and muzzle flash.
+- hit: same silhouette with a small offset and red source-atop damage tint.
 
-Frames are row-major: `row * 3 + column`. Use `aim` as the stable combat pose, play `fire` briefly on attack, and `hit` briefly after damage. Do not loop the hit frame. Idle should use the aim pose with a restrained breathing/bob tween until a dedicated idle drawing is available.
+These variants provide deterministic state feedback. They do not invent limb motion, idle cycles, reload or death animation. Existing code-driven breathing, aiming lean, recoil timing and hit feedback remain separate and do not alter hitboxes. The prepared hand-authored WebP remains a possible future replacement, not a prerequisite for the current runtime path.
 
-## Slicing and alignment rules
+## Safety and fallback
 
-- Cell size is fixed at 128×256 px; never crop each frame to its own runtime dimensions.
-- Each enemy row uses one shared scale factor across its three poses.
-- Every pose is bottom-aligned to the same baseline and horizontally centered.
-- Keep alpha edges; do not apply a dark matte or a lossy background-removal pass.
-- Do not stretch cells independently. Display size must be identical for all poses of the same enemy.
-- The original first-column portraits were intentionally excluded from animation because the guard portrait is a cropped, shorter pose and would cause visible scale popping.
-- The runtime loader slot and state-selection code are prepared in `assetSlots.ts`, `AssetCatalog.ts` and `MissionScene.ts`, but the Library-only file is absent from `src/assets/` in the current branch. Therefore the atlas is **not loaded or displayed by the build**; active enemies continue to use Kenney CC0/SVG fallbacks.
-- Once the binary file is present at `src/assets/enemies/enemy-animation-atlas.webp`, the existing code will select aim/fire/hit frames by combat state. This is **state-based pose switching**, not a continuously looping animation. The sheet has no dedicated idle cycle, reload or death poses.
+- If a complete authored spritesheet is already loaded under enemy-animation-atlas, it is preserved and used as-is.
+- The runtime atlas is created only when that key is absent and all four SVG textures are loaded.
+- If a source texture is missing or canvas creation fails, the builder returns false and the existing Kenney CC0/SVG fallback remains active.
+- A malformed/partial authored texture is never overwritten.
+- No external fetch, image generation, filesystem writes or persistent asset mutation occurs at runtime.
 
-## Binary integrity check
+## Validation and replacement
 
-Run `npm run verify:enemy-atlas` after placing the exact prepared file at `src/assets/enemies/enemy-animation-atlas.webp`. The script checks the WebP/VP8X signature, alpha flag, 384×1024 dimensions, 3×4 frame geometry, exact byte size and SHA-256. It accepts an alternate file path as its first argument, which is useful for checking a separately materialized copy. This check validates the source file only; it does not prove Phaser runtime rendering.
+CI typecheck and production build validate Phaser API usage. Frame IDs 0–11 are created and checked before hasEnemyAnimationFrame reports success. CI does not visually inspect rendered sprites; desktop/browser and physical Android checks remain required for baseline, crop and appearance. The optional npm run verify:enemy-atlas script validates only the exact prepared WebP, not the runtime CanvasTexture.
 
-## Validation still required
-
-- Run the CI typecheck, lint, unit tests and production build for the integrating commit; do not infer these from successful file writes.
-- Check pose transitions at runtime on desktop and Android, especially armored aim-to-hit scale consistency and boss hit silhouette.
-- Verify that the 1:2 frame aspect ratio and baseline look correct at gameplay size on narrow Android screens.
-- The loader slot and gameplay selection path are committed, but the binary asset is Library-only and has not been added to the repo. Until that file is committed, runtime uses the fallback sprites. Visual/runtime validation remains pending.
+The separate Library copy SHPY_enemy_animation_atlas.webp remains uncommitted: 384×1024 RGBA WebP, 115,008 bytes, SHA-256 27893c782fb375ea892f53ed0ca9d256fffd23ec2ad7cfdac2fa6cc8632faf04. It is not the current runtime source and must not be described as integrated. The current path is reproducible from four committed SVG files and uses the same frame mapping/state selection, so a future approved replacement does not require rewriting combat code.
