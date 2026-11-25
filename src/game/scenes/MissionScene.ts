@@ -2436,6 +2436,14 @@ export class MissionScene extends Phaser.Scene {
         this.coverLayer.lineBetween(cover.x + cover.width - 12, cover.y + 14, cover.x + 12, cover.y + cover.height - 14);
       }
       if (cover.stage === 'damaged') {
+        const durability = Math.max(0, Math.min(1, cover.hp / cover.maxHp));
+        const barWidth = Math.min(112, Math.max(46, cover.width - 28));
+        const barX = cover.x + (cover.width - barWidth) / 2;
+        const barY = cover.y - 13;
+        this.coverDamageLayer.fillStyle(0x0b1118, 0.92);
+        this.coverDamageLayer.fillRoundedRect(barX, barY, barWidth, 6, 2);
+        this.coverDamageLayer.fillStyle(durability > 0.3 ? 0xd4a15a : 0xc75a52, 0.98);
+        this.coverDamageLayer.fillRoundedRect(barX, barY, barWidth * durability, 6, 2);
         const crackX = cover.x + cover.width * 0.56;
         this.coverDamageLayer.lineStyle(3, 0x20170f, 0.9);
         this.coverDamageLayer.lineBetween(crackX - 12, cover.y + 8, crackX + 2, cover.y + cover.height * 0.42);
@@ -2486,6 +2494,7 @@ export class MissionScene extends Phaser.Scene {
   }
 
   private getAimFeedback(): AimFeedbackState {
+    const covers = this.getActiveCovers();
     const targets = this.enemies
       .filter((enemy) => enemy.state !== 'Defeated' && enemy.state !== 'Hidden')
       .map((enemy) => {
@@ -2497,7 +2506,9 @@ export class MissionScene extends Phaser.Scene {
           bodyRadius: isBoss ? 66 : 48,
         };
       });
-    return getAimFeedbackState(this.aim, this.getWeaponMuzzle(), targets, this.getActiveCovers());
+    const state = getAimFeedbackState(this.aim, this.getWeaponMuzzle(), targets, covers);
+    if (state !== 'none') return state;
+    return findEnemyProjectileCoverImpact(this.getWeaponMuzzle(), this.aim, covers) ? 'blocked' : 'none';
   }
 
   private updateMobileFireFeedback(state: AimFeedbackState): void {
