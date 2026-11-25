@@ -138,3 +138,11 @@ Current numeric values in `balance.ts` and `enemies.ts` are prototype values, no
 - New layout scaling targets usable physical touch controls: scale is clamped to 0.8–1.15 using a 800×450 reference viewport, while the overlay remains aligned to the actual FIT canvas.
 - Fire now captures its active pointer where supported, releases on pointerup/pointercancel/lostpointercapture, and clears held-fire state on window blur. Window-level release remains a fallback.
 - This is a code-level fix with deterministic sizing tests. It is not a substitute for physical Android verification.
+
+
+## Reticle and mobile fire target feedback — 2026-11-25
+
+- Reticle state is computed from the exact same head/body hit radii and cover-segment test used by shooting.
+- Clear target: green reticle and green fire-button rim. Target under the reticle but behind cover: amber reticle and amber rim. No target: neutral white reticle and original fire-button rim.
+- The mobile reticle is enlarged slightly for thumb-based play. Feedback is visual only; it does not change hitboxes, damage, or aim position.
+- Unit tests cover clear target, cover-blocked target, no target and overlapping target cases.
