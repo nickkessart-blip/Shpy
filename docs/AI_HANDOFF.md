@@ -208,3 +208,12 @@ The user reports a complete failure in graphics quality and mobile shooting and 
 - Enemy SVG source textures are rasterized at 2× resolution; generated runtime atlas upgraded from 128×256 cells to 192×384 cells (576×1536 overall), with aspect-ratio-preserving display sizing.
 - Documentation updated in ASSET_CATALOG, ENEMY_ANIMATION_ATLAS, ROADMAP and src/assets/README. Full hand-authored animation cycles and additional location art remain outstanding.
 - PR #27 merged: https://github.com/nickkessart-blip/Shpy/pull/27. Merge commit 338149fef3b793fd148f72f4b3c86efef5167011. PR CI run 45695320789 and main CI run 45695411598 passed typecheck, Vitest, lint and production build. Pages deployment run 45695411580 succeeded for the same main SHA. prototype-build updated to a67f85e902cc8e900f49b993128e8ab9493565e0. Live Pages: https://nickkessart-blip.github.io/Shpy/.
+
+
+## Follow-up mobile control recovery — 2026-11-25
+
+- New branch: fix/mobile-combat-touch-targets-2026-11-25, based on main 723857c3.
+- Code review found the touch overlay still scaled all controls by the Phaser logical-to-CSS canvas ratio. At a 640×360 landscape canvas this reduced the 96px fire control to about 48px and the 154px aim stick to about 77px. The overlay was correctly positioned, but the hit areas were too small.
+- The follow-up introduces a physical control scale based on an 800×450 reference viewport, clamped to 0.8–1.15, with deterministic sizing tests.
+- Fire now captures its pointer when supported, handles pointerup/pointercancel/lostpointercapture, and releases on window blur. Window-level release remains as fallback.
+- CI/Pages publication pending. Physical Android QA still required.
