@@ -4,20 +4,18 @@
 
 ## Активное состояние GitHub
 
-- Репозиторий: `nickkessart-blip/Shpy` (public), default branch: `main`.
-- PR #15: [hybrid mobile controls](https://github.com/nickkessart-blip/Shpy/pull/15), Draft, base `main`, head `feature/shpy-0.9-hybrid-mobile-controls`.
-- PR #16: [visual polish](https://github.com/nickkessart-blip/Shpy/pull/16), Draft, base `feature/shpy-0.9-hybrid-mobile-controls`, head `feature/shpy-0.9-visual-polish`.
-- Это stacked PR chain, а не отдельные ветки ПК и Android. #16 зависит от #15. Текущие сравнения: #15 — 14 commits ahead of main; #16 — ещё 62 commits ahead of mobile-controls.
-- Обе ветки mergeable по последнему ответу GitHub API, но остаются Draft и не слиты.
-- Не считай Draft самостоятельной блокировкой. При прямом поручении пользователя на завершение/релиз перевести PR в Ready и слить после CI и интеграции родительской ветки.
-- Ветка для новых изменений: `feature/shpy-0.9-visual-polish`. Перед записью обязательно получить её свежий HEAD и использовать expected SHA/fast-forward.
-
-## Что исправлено в workflow этим коммитом
-
-- Добавлен `docs/GIT_WORKFLOW.md` с аудитом веток, причинами торможения, правилами ветвления, binary-transfer boundary и границей source vs deployment.
-- CI переписан: PR-trigger больше не ограничен base=`main`; concurrency изолирован по PR/ref; публикация `prototype-build` возможна только на push в `main`; write permission вынесен из проверки.
-- AGENTS, skill index, README и decision log синхронизированы с единым Git-процессом.
-- Проверь GitHub Actions после push: этот handoff не является доказательством успешного CI.
+- Репозиторий: `nickkessart-blip/Shpy`, default branch: `main`.
+- PR #15 (hybrid mobile controls) **слит** в main: `129d701842ed0f773eacad8912736eca4b05390a`.
+- PR #16 (visual polish) **слит** напрямую в main: `120efbddaff7b5b7943b87782ca44ba9d80f5463`.
+- Обе задачи теперь в одной интегрированной версии main. Отдельных source-веток ПК и Android нет.
+- Старые feature branches являются историей изменений; новые задачи начинать от актуального main и направлять одним PR в main. Не создавать stacked PR без реальной зависимости.
+- PR #16 был переподготовлен как один commit поверх нового main, чтобы после squash-интеграции PR #15 не дублировать мобильные изменения в diff.
+- CI на integration head PR #16: workflow run `45520971687`, проверки typecheck, tests, lint, production build завершились успешно.
+- CI для main после PR #15: run `45520916259`, успешно; публикация downloadable `prototype-build` успешно завершена.
+- GitHub Pages после PR #15: run `45520916130`, успешно; после PR #16 проверь новый Pages deployment на актуальном main.
+- Физический Android-плейтест не выполнен и остаётся обязательным. Не выдавать CI за проверку реального сенсорного устройства.
+- Атлас врагов всё ещё не находится в `src/assets/enemies/`; fallback Kenney CC0/SVG активен. Не считать atlas integrated до коммита бинарника и runtime-проверки.
+- Следующая рабочая ветка должна быть создана от актуального main, когда появится новая задача. Перед записью получать свежий HEAD и использовать expected SHA/fast-forward.
 
 ## Основные реализованные системы
 
