@@ -1,5 +1,5 @@
 # SHPY — AI handoff
-Updated: 2026-11-25 | Canon rebaseline branch: `docs/shpy-canon-rebaseline-2026-11-25`
+Updated: 2026-11-25 | Active task: world-space mobile aiming and camera follow
 
 ## Mandatory reading order
 
@@ -19,10 +19,10 @@ Do not start a new project. Do not silently change canon. Do not generate or edi
 ## Repository and Git state
 
 - Repository: `nickkessart-blip/Shpy`; default branch: `main`.
-- Latest verified main commit at the start of this task: `0b0fe7ab1946e3e4e788be9f339a3e1a05212a40`.
+- Latest verified main commit at the start of this task: `a99476fe254e3c235dad5bb12de02fd0f2c0d56c`.
 - PR #15, #16 and #17 are historical/integrated work; do not recreate their branches or duplicate their changes.
-- Active feature branch and PR: `docs/shpy-canon-rebaseline-2026-11-25` → PR #18 (base `main`). PR #18 includes the approved canon rebaseline, Casino rail-timeline slice, seeded enemy spawn director and first-pass physical cover occlusion; it is still open and must not be assumed merged.
-- Latest branch head at handoff refresh: `41c6064f49309df8525af13fa28b6a291b61ac41`. Latest verified main remains `0b0fe7ab1946e3e4e788be9f339a3e1a05212a40`.
+- PR #18 (`docs/shpy-canon-rebaseline-2026-11-25`) was merged into `main` as `a99476fe254e3c235dad5bb12de02fd0f2c0d56c`. Do not recreate it.
+- Active feature branch for mobile world-space aim: `fix/mobile-world-aim-and-camera-2026-11-25` → PR #19 (base `main`). Latest verified feature code commit: `381c55fa62404b03ff2ba038050634e89932c1ac`. Latest verified main: `a99476fe254e3c235dad5bb12de02fd0f2c0d56c`.
 - Historical branch head before the first handoff refresh in this work session: `5a27635d3661f9887d8b47b61acefbe31171a03d`. Always query the live branch HEAD before editing. Query live branch HEAD before any subsequent edit; documentation commits may have moved it. Always query the live branch/PR head before writing; subsequent commits may move it.
 - Keep one shared game codebase for Web, Android and desktop. Do not create separate PC/mobile gameplay branches.
 - The latest user environment report is Node.js 24.19.0, npm 11.17.0 and Git 2.55.0.windows.3. CI currently uses Node.js 26.
@@ -115,12 +115,49 @@ The exact first-slice acceptance and deferred work are in `docs/superpowers/plan
 - Commit code, tests, assets and relevant docs together for each coherent implementation task.
 - Keep the user out of routine Git operations; do not ask them to connect Git or create commits.
 
-## Agency research implementation handoff — 2026-11-25
 
-- Feature branch: feat/agency-research-2026-11-25 (based on main).
-- Added the Agency Computer research tab with three persistent branches: informant network (+5 percentage points to operative mission success per level), logistics (-10% assignment duration per level), and training (+20% operative XP per level).
-- Research is unlocked at account level 3 and paid with Components, independently from personal upgrades paid with Dollars.
-- Effects are applied when dispatching/collecting operations; already-dispatched runs keep their original chance and completion timestamp.
-- Save schema v6 migrates v5 and earlier saves without resetting currencies, roster, missions, or existing upgrades.
-- Focused tests cover migration, research purchase gates/currency separation and all three gameplay effects.
-- Remaining: broader agency infrastructure (support capacity, automation policies), balancing, browser visual review and physical Android QA.
+## 2026-11-25 — Mobile world-space aim and camera follow
+
+User explicitly asked to continue development after reporting that the prior release did not fix camera range, off-screen enemies, aim sensitivity and mobile controls. This task implements a gameplay/input correction rather than another docs-only slice.
+
+- Feature branch: `fix/mobile-world-aim-and-camera-2026-11-25`, based on `main`.
+- Old mobile camera code set scroll from the finger's absolute screen position and hard-clamped stick aim to the current viewport. The left stick could not target world coordinates beyond the visible 1280×720 field.
+- Added pure world-space aim movement, pointer-drag delta movement and camera-follow math in `src/game/systems/input/aimMath.ts`, with focused unit tests.
+- Camera follows the world-space reticle after it crosses a 28% viewport safe margin, independently on X/Y, within authored camera bounds (-420..420 X, -180..180 Y). Reticle world limits are -420..1700 X and -180..900 Y.
+- Default mobile scheme is now the left virtual aim stick plus the existing right-side fire button. Legacy v1 settings migrate to v2 and select stick mode while preserving sensitivity, audio and graphics preferences. Alternate tap+drag remains available and now accumulates world-space pointer deltas rather than setting a fixed camera offset from absolute finger position.
+- Aim sensitivity controls reticle travel for both mobile schemes; camera follow is a consequence of reticle position.
+- Settings copy explains the stick/camera behaviour.
+- Physical Android and visual browser validation have not yet been performed. Do not mark mobile acceptance complete until real-device checks confirm multi-touch, orientation, safe-area layout, reticle visibility and shots near all four world bounds.
+- Manual Android checklist: (1) left stick moves reticle smoothly in eight directions; (2) camera pans when reticle reaches safe margin and does not snap; (3) right fire button can be held simultaneously; (4) targets at left/right/top/bottom mission bounds remain aimable; (5) sensitivity changes reticle speed immediately; (6) rotate device and verify controls remain anchored and no black screen; (7) reload/switch/grenade/medkit/pause remain independently tappable.
+
+
+### Mobile world-space aim — CI evidence and release boundary
+- PR #19: https://github.com/nickkessart-blip/Shpy/pull/19
+- Latest gameplay-code commit: `381c55fa62404b03ff2ba038050634e89932c1ac`.
+- GitHub Actions run `45684886138` completed successfully on the latest code commit: typecheck, Vitest, ESLint and production build all passed. The publish-build job was skipped as expected for a PR.
+- This work is not yet in `main` or GitHub Pages. Do not send the live game URL as though this PR were deployed.
+- Physical Android/browser QA is still outstanding.
+
+### Asset audit — 2026-11-25
+- Inspected Library `SHPY_enemy_animation_atlas.webp`: 384×1024 RGBA, 3 columns × 4 rows, 128×256 cells, alpha present and common bottom baseline at y=248. It is a prepared, hand-authored state atlas, but remains Library-only and is not integrated into the runtime.
+- Inspected Library `SHPY_enemy_character_atlas.webp`: 1024×1536 RGBA, 4×4 cells of 256×384, alpha present. It is a larger candidate, but cell content has inconsistent bottom bounds and needs baseline normalization before runtime use.
+- Neither file is in the repository. The current runtime still composes its 3-state atlas from four committed SVGs. Do not describe either Library atlas as integrated.
+- Binary transfer from the materialized Library file into a GitHub blob was not available through the current tool path in this run. Do not replace this with an external fetch or a text file disguised as an image. Resume only with a verified binary-transfer route and then add the atlas to AssetCatalog/BootScene, test its frame map and inspect the rendered result.
+
+
+## Active release workflow — user instruction (2026-11-25)
+
+- GitHub Pages is the user's primary and immediate build-review channel: https://nickkessart-blip.github.io/Shpy/.
+- For every coherent implementation slice, prioritize getting the validated build onto `main` and deployed to Pages before starting the next feature. Do not leave finished work stranded in feature branches/PRs when it can safely be integrated.
+- After merge, verify the `main` deployment workflow completed successfully and confirm the deployed commit matches the intended `main` commit before giving the Pages link as updated. Always include the Pages link in the completion report.
+- CI success on a PR is not publication. Do not claim Pages updated until the deployment run is successful and its source SHA is verified.
+- Keep changes small and sequential. Resolve branch conflicts by refreshing from current `main` and preserving both code and documentation; never overwrite newer main docs with stale branch copies.
+- User checks builds on Pages, primarily from a phone. Keep mobile usability and the live Pages build central to the handoff.
+
+## Latest feature — agency research (2026-11-25)
+
+- PR #21 branch `feat/agency-research-2026-11-25`, head `b8939f254fa544d7dc66709c337f234267c16956`.
+- Adds persistent Components-funded research: informant network (+5 percentage points success chance/level), logistics (-10% assignment duration/level), training (+20% operative XP/level).
+- Research unlocks at account level 3. Effects apply to newly dispatched/collected assignments; active runs are not rewritten.
+- Save schema v6 migrates earlier saves. CI run `45689504847` passed typecheck, Vitest, lint and production build.
+- Merge/deployment status must be checked live; PR checks do not publish Pages.
