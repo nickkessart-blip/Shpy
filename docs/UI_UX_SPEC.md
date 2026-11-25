@@ -23,7 +23,7 @@ Do not use a font solely because it looks "tactical". Readability and correct Cy
 - Armory: collection and inspection of weapons, upgrades, weapon attachments, cosmetics and locked content. It is not the final mission loadout confirmation.
 - Mission Preparation: select weapon slots, grenades, medkits, gadgets, support operative, turret/drone packages, modifier cards and automation policy before launch.
 - Agency Computer: separate tabs for personal improvements, agency infrastructure/research and operative management.
-- Phone: messages, story briefings, event notices and later prestige/special contracts. It must be active from the beginning with at least a small useful function.
+- Phone: messages, story briefings, event notices and later prestige/special contracts. Implemented first slice: an inbox screen lists operative assignments, live remaining time and claimable completion reports. Story messages, event notices and prestige contracts remain planned.
 - Agency cat: a recognizable cat silhouette with distinct head, ears, body, legs, tail and face. Clicks produce small contextual reactions and flavour lines; later morale bonuses must be transparent and modest.
 - Results: clear success/failure, objectives, elapsed time, combat summary, damage/resources lost, rewards, intel and unlocks.
 
