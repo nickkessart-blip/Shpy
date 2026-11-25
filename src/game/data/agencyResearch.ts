@@ -14,7 +14,7 @@ export const AGENCY_RESEARCH: readonly AgencyResearchDefinition[] = [
     costs: [0, 40, 90, 160], effect: (level) => '+' + level * 5 + '% к шансу успеха' },
   { id: 'logistics', title: 'ЛОГИСТИЧЕСКИЙ ОТДЕЛ',
     description: 'Оптимизация маршрутов сокращает время возвращения отрядов.',
-    costs: [0, 60, 130], effect: '−' + levelPercent(0) },
+    costs: [0, 60, 130], effect: (level) => '−' + levelPercent(level) },
   { id: 'training', title: 'УЧЕБНЫЙ ЦЕНТР',
     description: 'Регулярная подготовка ускоряет рост опыта оперативников.',
     costs: [0, 50, 110], effect: (level) => '+' + level * 20 + '% к опыту оперативников' },
