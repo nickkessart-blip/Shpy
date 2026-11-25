@@ -44,7 +44,7 @@ describe('SaveService economy and migration', () => {
       }),
     });
     const migrated = new SaveService().load();
-    expect(migrated.schemaVersion).toBe(5);
+    expect(migrated.schemaVersion).toBe(6);
     expect(migrated.accountXp).toBe(240);
     expect(migrated.dollars).toBe(240);
     expect(migrated.upgrades).toEqual({
