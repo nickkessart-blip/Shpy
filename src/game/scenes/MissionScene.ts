@@ -11,6 +11,7 @@ import { findVisiblePeekX, isShotBlocked, pointInRect, resolveHit, type Point } 
 import { runSession } from '../systems/missions/runSession';
 import { settingsService, type GameSettings } from '../../settings/SettingsService';
 import { followAimWithCamera, moveAimByPointerDelta, moveAimInWorld } from '../systems/input/aimMath';
+import { getMobileControlScale } from '../systems/input/mobileControlLayout';
 import { FeedbackService, triggerHaptic } from '../systems/feedback/FeedbackService';
 import { RailTimeline } from '../systems/missions/RailTimeline';
 import { planEnemyWave, sampleSpawnEntryX } from '../systems/waves/SpawnDirector';
@@ -114,6 +115,7 @@ export class MissionScene extends Phaser.Scene {
   private mobileAimEndHandler?: (event: PointerEvent) => void;
   private mobileControlsLayoutHandler?: () => void;
   private mobileFirePointerId: number | null = null;
+  private mobileFireBlurHandler?: () => void;
   private aimStickVector: Point = { x: 0, y: 0 };
   private aimStickActive = false;
   private aimStickPointerId: number | null = null;
@@ -1329,10 +1331,19 @@ export class MissionScene extends Phaser.Scene {
       if (this.phase !== 'active' || this.mobileFirePointerId !== null) return;
       this.mobileFirePointerId = event.pointerId;
       this.mobileFireHeld = true;
+      try { fire.setPointerCapture(event.pointerId); } catch { /* Window listeners remain the fallback. */ }
       this.shoot();
     });
+    fire.addEventListener('pointerup', stopFire);
+    fire.addEventListener('pointercancel', stopFire);
+    fire.addEventListener('lostpointercapture', stopFire);
     window.addEventListener('pointerup', stopFire);
     window.addEventListener('pointercancel', stopFire);
+    this.mobileFireBlurHandler = (): void => {
+      this.mobileFireHeld = false;
+      this.mobileFirePointerId = null;
+    };
+    window.addEventListener('blur', this.mobileFireBlurHandler);
     reload.addEventListener('pointerdown', (event) => {
       consume(event);
       if (this.phase === 'active') this.reload();
@@ -1445,7 +1456,10 @@ export class MissionScene extends Phaser.Scene {
     if (!overlay || !host) return;
     const hostRect = host.getBoundingClientRect();
     const canvasRect = canvas.getBoundingClientRect();
-    const controlScale = Math.max(0.65, Math.min(1, canvasRect.width / GAME_WIDTH, canvasRect.height / GAME_HEIGHT));
+    // Keep touch targets physically usable on compact landscape phones.
+    // The old GAME_WIDTH/GAME_HEIGHT ratio shrank a 96px fire button to ~48px
+    // on a 640px-wide phone, despite the control overlay being correctly aligned.
+    const controlScale = getMobileControlScale(canvasRect.width, canvasRect.height);
     overlay.style.left = Math.round(canvasRect.left - hostRect.left) + 'px';
     overlay.style.top = Math.round(canvasRect.top - hostRect.top) + 'px';
     overlay.style.width = Math.round(canvasRect.width / controlScale) + 'px';
@@ -1469,6 +1483,7 @@ export class MissionScene extends Phaser.Scene {
         window.removeEventListener('pointerup', this.mobileReleaseHandler);
         window.removeEventListener('pointercancel', this.mobileReleaseHandler);
       }
+      if (this.mobileFireBlurHandler) window.removeEventListener('blur', this.mobileFireBlurHandler);
       if (this.mobileAimMoveHandler) window.removeEventListener('pointermove', this.mobileAimMoveHandler);
       if (this.mobileAimEndHandler) {
         window.removeEventListener('pointerup', this.mobileAimEndHandler);
@@ -1480,6 +1495,7 @@ export class MissionScene extends Phaser.Scene {
       }
     }
     this.mobileReleaseHandler = undefined;
+    this.mobileFireBlurHandler = undefined;
     this.mobileAimMoveHandler = undefined;
     this.mobileAimEndHandler = undefined;
     this.mobileControlsLayoutHandler = undefined;
