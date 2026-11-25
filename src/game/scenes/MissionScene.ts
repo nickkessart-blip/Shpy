@@ -53,6 +53,9 @@ export class MissionScene extends Phaser.Scene {
   private parallaxFar?: Phaser.GameObjects.Graphics;
   private parallaxMid?: Phaser.GameObjects.Graphics;
   private parallaxNear?: Phaser.GameObjects.Graphics;
+  private casinoFarArt?: Phaser.GameObjects.Image;
+  private casinoMidArt?: Phaser.GameObjects.Image;
+  private casinoNearArt?: Phaser.GameObjects.Image;
   private readonly railTimeline = new RailTimeline({ routeLength: 1280, speedPxPerSecond: 60 });
   private currentSettings: GameSettings = settingsService.load();
   private message!: Phaser.GameObjects.Text;
@@ -395,6 +398,9 @@ export class MissionScene extends Phaser.Scene {
       lookY * 6,
     );
     if (this.parallaxFar) this.parallaxFar.setAlpha(0.84 + Math.sin(this.time.now / 900) * 0.025);
+    this.casinoFarArt?.setPosition(GAME_WIDTH / 2 + this.railTimeline.layerTravel(44, 0.6), GAME_HEIGHT / 2);
+    this.casinoMidArt?.setPosition(GAME_WIDTH / 2 + this.railTimeline.layerTravel(86, 0.9), GAME_HEIGHT / 2);
+    this.casinoNearArt?.setPosition(GAME_WIDTH / 2 + this.railTimeline.layerTravel(142, 1.2), GAME_HEIGHT / 2);
     if ((this.mobileFireHeld || this.desktopFireHeld) && this.phase === 'active'
       && getWeapon(this.currentWeaponId).fireMode !== 'semi') this.shoot();
     this.shotFlash = Math.max(0, this.shotFlash - inputDelta);
@@ -428,11 +434,31 @@ export class MissionScene extends Phaser.Scene {
     this.railTimeline.reset(Math.max(GAME_WIDTH, this.sceneDef.waves.length * 1000));
     this.backgroundArt?.destroy();
     this.backgroundArt = undefined;
+    this.casinoFarArt?.destroy(); this.casinoFarArt = undefined;
+    this.casinoMidArt?.destroy(); this.casinoMidArt = undefined;
+    this.casinoNearArt?.destroy(); this.casinoNearArt = undefined;
     this.children.getAll().forEach((child) => {
       if (child.name.startsWith('enemy-image-') || child.name.startsWith('boss-name-') || child.name.startsWith('cover-image-')) child.destroy();
     });
     const bgKey = AssetCatalog.imageKeyFor(this.sceneDef.backgroundSlot);
-    if (AssetCatalog.hasTexture(this, bgKey)) {
+    const layerPrefix = this.sceneDef.backgroundSlot === 'backgrounds/casino-main' ? 'casino-main'
+      : this.sceneDef.backgroundSlot === 'backgrounds/casino-bar' ? 'casino-bar' : null;
+    const layerKeys = layerPrefix ? {
+      base: layerPrefix + '-base', far: layerPrefix + '-far',
+      mid: layerPrefix + '-mid', near: layerPrefix + '-near',
+    } : null;
+    const hasLayerSet = layerKeys !== null
+      && Object.values(layerKeys).every((key) => AssetCatalog.hasTexture(this, key));
+    if (hasLayerSet && layerKeys) {
+      this.backgroundArt = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, layerKeys.base)
+        .setDisplaySize(GAME_WIDTH, GAME_HEIGHT).setDepth(-10);
+      this.casinoFarArt = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, layerKeys.far)
+        .setDisplaySize(GAME_WIDTH, GAME_HEIGHT).setDepth(-9).setScrollFactor(0.16);
+      this.casinoMidArt = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, layerKeys.mid)
+        .setDisplaySize(GAME_WIDTH, GAME_HEIGHT).setDepth(-7).setScrollFactor(0.42);
+      this.casinoNearArt = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, layerKeys.near)
+        .setDisplaySize(GAME_WIDTH, GAME_HEIGHT).setDepth(-4).setScrollFactor(0.74);
+    } else if (AssetCatalog.hasTexture(this, bgKey)) {
       this.backgroundArt = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, bgKey)
         .setDisplaySize(GAME_WIDTH, GAME_HEIGHT).setDepth(-10);
     }
@@ -469,6 +495,7 @@ export class MissionScene extends Phaser.Scene {
     const near = this.parallaxNear;
     if (!far || !mid || !near) return;
     far.clear(); mid.clear(); near.clear();
+    if (this.casinoFarArt) return;
     if (this.sceneDef?.id.startsWith('east-express')) {
       const mask = this.add.graphics();
       mask.fillStyle(0xffffff, 1);
