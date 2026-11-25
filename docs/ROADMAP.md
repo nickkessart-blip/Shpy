@@ -32,7 +32,7 @@ Older roadmap sections and numeric SHPY prototype phase labels are historical im
 - [x] Start, HQ, Operations, Loadout, Computer, Settings, Mission and Results scenes.
 - [x] Casino operation slice and East Express passenger-carriage slice.
 - [x] Four weapon definitions, six personal upgrade tracks, grenades and medkit.
-- [x] Account progression, Dollars and local save migration through schema v5.
+- [x] Account progression, Dollars and local save migration through schema v6.
 - [x] Operative roster with timed assignments and component rewards.
 - [x] Basic enemy archetypes, state machine, wave flow, cover states and attack telegraphs.
 - [~] Mobile world-space aim stick is now the default; camera follows the reticle through authored mission bounds. Hybrid tap-and-drag uses the same world-space camera-follow contract. Physical Android validation remains open.
@@ -58,7 +58,7 @@ Implementation status (2026-11-25): PR #18 adds a deterministic route clock, rou
 - [ ] Create reusable typography, spacing, button, tab, card, tooltip, meter and modal components.
 - [ ] Rebuild Start with consistent button geometry and a distinctive spy-agency identity.
 - [ ] Make Settings platform-aware; add desktop key rebinding and clear quality/vibration explanations; remove the normal parallax toggle.
-- [ ] Redesign HQ as an operative's workstation, including useful phone interactions and a recognizable cat.
+- [~] HQ phone opens an operative inbox with live assignment timers and claimable reports; stronger desk composition and recognizable cat remain open.
 - [ ] Replace the chart-like Operations screen with a geographic/dossier map.
 - [ ] Fix persistent active-tab states in Armory and Agency Computer.
 - [ ] Ensure all controls and physical objects have clear interaction affordances and descriptions.
@@ -72,7 +72,7 @@ Implementation status (2026-11-25): PR #18 adds a deterministic route clock, rou
 ### P3 — Economy, armory and meaningful progression
 - [ ] Simulate first failure, first clear, repeated early farming, new-sector unlock and boss clear.
 - [ ] Rebalance kill/wave/completion rewards and escalating costs; prevent early-wave/death farming.
-- [ ] Separate personal upgrades from agency infrastructure/research.
+- [~] Separate personal upgrades from agency infrastructure/research: three Components-funded research branches (intel, logistics, training) are implemented; deeper infrastructure and automation doctrine remain open.
 - [ ] Expand perks into concrete branches with readable effects and selected synergies.
 - [ ] Add a meaningful attachment pool and real weapon/agent visual layer separation.
 - [ ] Move actual kit confirmation to Mission Preparation.
@@ -111,3 +111,8 @@ Implementation status (2026-11-25): PR #18 adds a deterministic route clock, rou
 - Add deterministic tests for rail events, spawn spacing, cover/line-of-sight, modifier compatibility, reward pacing and automation decisions.
 - Desktop/browser visual review and physical Android testing are manual checks; a green CI run does not replace them.
 - Never mark a backlog item complete because its UI exists. Verify the mechanic in the running game.
+
+
+## Pages-first release rule
+
+Every completed, CI-validated implementation slice must be integrated into `main` and deployed to GitHub Pages before the next feature begins. Verify the main deployment workflow and deployed commit SHA, then include the live Pages URL in the completion report. PR CI alone is not publication. The user checks builds through Pages, primarily on a phone.
