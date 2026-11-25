@@ -125,3 +125,7 @@ Every completed, CI-validated implementation slice must be integrated into `main
 
 ### Combat target feedback — 2026-11-25
 - [x] Reticle changes color for a clear enemy hit, a shot blocked by cover, or no target; mobile fire button mirrors the same feedback. Deterministic geometry tests added and PR #29 published to Pages. Physical Android QA remains required.
+
+### Enemy defeat readability — 2026-11-26
+- [~] Add a brief visible fall/fade reaction on enemy defeat and let the wave transition wait for it. This is a code-driven presentation effect; authored death frames and complete idle/walk/fire/hit/death cycles remain open.
+
