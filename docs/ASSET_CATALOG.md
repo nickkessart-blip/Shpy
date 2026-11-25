@@ -34,6 +34,10 @@ The source pack is distributed as a ZIP by the original publisher. The current i
 - Full implementation and limits: docs/ENEMY_ANIMATION_ATLAS.md.
 
 
+## Enemy archetype silhouette pass (2026-11-26)
+
+The original SHPY SVG fallback assets now have distinct shape cues: guard cap/shoulder insignia, armored wide shoulder plates and reinforced chest, assault balaclava/goggles/red gear markers, and a broader boss coat. Runtime atlas generation and combat state selection remain unchanged.
+
 ## Existing project artwork
 
 - `src/assets/weapons/first-person-atlas.webp` — first-person weapon atlas.
