@@ -13,12 +13,14 @@ import { settingsService, type GameSettings } from '../../settings/SettingsServi
 import { moveAim } from '../systems/input/aimMath';
 import { FeedbackService, triggerHaptic } from '../systems/feedback/FeedbackService';
 import { RailTimeline } from '../systems/missions/RailTimeline';
-import { planEnemyWave } from '../systems/waves/SpawnDirector';
+import { planEnemyWave, sampleSpawnEntryX } from '../systems/waves/SpawnDirector';
 
 type EnemyState = 'Entering' | 'Exposed' | 'Aiming' | 'Attacking' | 'SeekingCover' | 'Hidden' | 'Peeking' | 'Repositioning' | 'Defeated';
 interface RuntimeEnemy {
   uid: number; type: EnemyType; x: number; baseX: number; y: number; originY: number; hp: number; maxHp: number;
-  coverId?: string; state: EnemyState; timer: number; entryDelayMs: number; phase: number; bossPhase: 0 | 1 | 2; hitFlash: number;
+  coverId?: string; state: EnemyState; timer: number;
+  entryStartX: number; entryTargetX: number; entryElapsedMs: number; entryDurationMs: number;
+  phase: number; bossPhase: 0 | 1 | 2; hitFlash: number;
 }
 
 const MUZZLE: Point = { x: GAME_WIDTH / 2, y: 662 };
@@ -594,15 +596,19 @@ export class MissionScene extends Phaser.Scene {
     const spawnPlan = planEnemyWave(wave.enemies, wave.spawnPoints, this.sceneDef.covers, seed);
     this.enemies = spawnPlan.map((entry) => {
       const def = ENEMIES[entry.type];
-      const entering = entry.entryDelayMs > 0;
+      const entryDurationMs = entry.type === 'boss' ? 0
+        : entry.type === 'assault' ? 320 : entry.type === 'armored' ? 520 : 420;
+      const entering = entryDurationMs > 0;
+      const entryStartX = entry.spawn.x < GAME_WIDTH / 2 ? -110 : GAME_WIDTH + 110;
       const state: EnemyState = entering ? 'Entering' : 'Exposed';
       return {
         uid: this.uniqueId++, type: entry.type,
-        x: entry.spawn.x, baseX: entry.spawn.x, y: entry.spawn.y, originY: entry.spawn.y,
+        x: entering ? entryStartX : entry.spawn.x,
+        baseX: entry.spawn.x, y: entry.spawn.y, originY: entry.spawn.y,
         hp: def.hp, maxHp: def.hp, coverId: entry.spawn.coverId,
-        state,
-        timer: entering ? entry.entryDelayMs : Math.round(def.exposeMs * 0.4),
-        entryDelayMs: entry.entryDelayMs, phase: 0, bossPhase: 0, hitFlash: 0,
+        state, timer: entering ? entry.entryDelayMs : Math.round(def.exposeMs * 0.4),
+        entryStartX, entryTargetX: entry.spawn.x, entryElapsedMs: 0, entryDurationMs,
+        phase: 0, bossPhase: 0, hitFlash: 0,
       };
     });
     this.waveAwarded = false;
@@ -785,12 +791,25 @@ export class MissionScene extends Phaser.Scene {
     for (const enemy of this.enemies) {
       enemy.hitFlash = Math.max(0, enemy.hitFlash - dt);
       if (enemy.state === 'Defeated') continue;
+      const def = ENEMIES[enemy.type];
+      if (enemy.state === 'Entering') {
+        const travelDelta = Math.max(0, dt - Math.max(0, enemy.timer));
+        enemy.timer = Math.max(0, enemy.timer - dt);
+        if (enemy.timer > 0) continue;
+        enemy.entryElapsedMs = Math.min(enemy.entryDurationMs, enemy.entryElapsedMs + travelDelta);
+        enemy.x = sampleSpawnEntryX(
+          enemy.entryStartX, enemy.entryTargetX, enemy.entryElapsedMs, enemy.entryDurationMs,
+        );
+        if (enemy.entryElapsedMs >= enemy.entryDurationMs) {
+          enemy.x = enemy.entryTargetX;
+          enemy.state = 'Exposed';
+          enemy.timer = Math.round(def.exposeMs * 0.4);
+        }
+        continue;
+      }
       enemy.timer -= dt;
       if (enemy.timer > 0) continue;
-      const def = ENEMIES[enemy.type];
       switch (enemy.state) {
-        case 'Entering':
-          enemy.state = 'Exposed'; enemy.timer = Math.round(def.exposeMs * 0.4); break;
         case 'Exposed': {
           const bossAimScale = enemy.type === 'boss' ? [1, 0.8, 0.62][enemy.bossPhase] : 1;
           enemy.state = 'Aiming'; enemy.timer = Math.round(def.aimMs * bossAimScale); break;
@@ -1604,8 +1623,9 @@ export class MissionScene extends Phaser.Scene {
         const displayWidth = generatedAtlas ? displayHeight * 0.5 : hasAnimationFrame ? baseHeight * 0.5 : baseWidth;
         image.setPosition(drawX, drawY + (aiming ? -2 : 0) + (attacking ? recoilKick * 3 : 0))
           .setDisplaySize(displayWidth * poseScaleX, displayHeight * poseScaleY).setVisible(true);
-        const entryAlpha = enemy.state === 'Entering'
-          ? 0.18 + 0.82 * (1 - enemy.timer / Math.max(1, enemy.entryDelayMs)) : 1;
+        const entryProgress = enemy.entryDurationMs > 0
+          ? enemy.entryElapsedMs / enemy.entryDurationMs : 1;
+        const entryAlpha = enemy.state === 'Entering' ? 0.2 + 0.8 * entryProgress : 1;
         image.setAlpha(enemy.state === 'Entering' ? entryAlpha
           : enemy.hitFlash > 0 ? 0.72 + Math.abs(hitPulse) * 0.28 : 1);
         image.setAngle(poseLean + Math.sin(phaseTime * 1.7) * (aiming ? 0.25 : 0.7));
