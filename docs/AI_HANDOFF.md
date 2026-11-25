@@ -21,7 +21,7 @@ Do not start a new project. Do not silently change canon. Do not generate or edi
 - Latest verified main commit before this documentation branch: `0b0fe7ab1946e3e4e788be9f339a3e1a05212a40`.
 - Previously integrated work includes mobile hybrid controls, visual polish and the enemy state atlas. PR #15, #16 and #17 are historical/integrated work; do not recreate their branches or duplicate their changes.
 - Current documentation branch: `docs/shpy-canon-rebaseline-2026-11-25`, created from the verified main commit above.
-- Current branch tip after documentation updates: `eba9fbd52f2f316f2bb16bdab7854823636a279d`.
+- The branch contains the documentation rebaseline and follow-up consistency corrections; always inspect its current HEAD rather than relying on a remembered SHA.
 - This branch has not yet been merged. It contains documentation changes only.
 - Start new work from the latest `main`; keep one shared game codebase for Web, Android and desktop.
 
