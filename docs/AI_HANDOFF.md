@@ -1,5 +1,5 @@
 # SHPY — AI handoff
-Updated: 2026-11-25 | Active task: world-space mobile aiming and camera follow
+Updated: 2026-11-25 | Active task: operative auto-dispatch (assisted agency automation)
 
 ## Mandatory reading order
 
@@ -153,3 +153,14 @@ User explicitly asked to continue development after reporting that the prior rel
 - Save schema v6 migrates older saves; research effects do not rewrite active runs.
 - The combined branch carries implementation files from PR #20 and #21 while preserving the latest `main` documentation and the Pages-first release rule.
 - Required CI: typecheck, Vitest, lint and production build. Publish only after merge to `main`; then verify the Pages deployment/source SHA.
+
+
+## Current verified repository state — 2026-11-25
+
+- The live default branch at task start was main commit 2ccc6dfb1d20e46669282aeedc9ea420efdd1069; PR #22 is merged and the previous handoff branch references above are historical/stale. Always prefer live GitHub state.
+- Pages deployment workflow run 45691184243 initially failed at actions/deploy-pages@v4: artifact upload succeeded, but the deploy action received zero artifacts from GitHub's artifact metadata API. The failed deploy job was re-run; verify its latest attempt before claiming Pages deployment.
+- CI run 45691184298 succeeded (typecheck, Vitest, lint, build, artifact upload and publish-build). prototype-build was updated to 1524ae2a97bd300eec4fad3b99add7d1e0cac1d5. Important: this is the downloadable build branch, not by itself proof that the Pages deployment workflow succeeded.
+- Current feature branch: feat/operative-auto-dispatch-2026-11-25, based on the live main commit above. Current implementation commits include AgentService auto-dispatch selection, focused tests and ComputerScene action. Re-fetch live branch head before editing.
+- Assisted automation slice: AgentService.dispatchRecommended(now, randomValue) enumerates unlocked legal team combinations, scores expected Components/minute using current intel/logistics research, then delegates to the existing validated dispatch path. The Agency Computer exposes an explicit “АВТОПОДБОР + ОТПРАВКА” action. It sends one operation only; it does not silently run in the background or auto-claim reports.
+- Tests added for best expected-value dispatch and no-eligible-team handling. CI evidence is pending until the feature PR run completes.
+- Next: verify focused tests/CI, fix any failures, update this handoff with exact PR/commit/run, then merge only after checks pass. After merge, verify both the Pages deployment workflow and the published build branch SHA before reporting the Pages URL.
