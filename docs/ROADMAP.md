@@ -58,7 +58,7 @@ Implementation status (2026-11-25): PR #18 adds a deterministic route clock, rou
 - [ ] Create reusable typography, spacing, button, tab, card, tooltip, meter and modal components.
 - [ ] Rebuild Start with consistent button geometry and a distinctive spy-agency identity.
 - [ ] Make Settings platform-aware; add desktop key rebinding and clear quality/vibration explanations; remove the normal parallax toggle.
-- [ ] Redesign HQ as an operative's workstation, including useful phone interactions and a recognizable cat.
+- [~] HQ is a spatial workstation; the phone now opens an operative inbox with live assignment timers and claimable reports. Remaining: stronger desk composition, recognizable cat silhouette and full interaction affordances.
 - [ ] Replace the chart-like Operations screen with a geographic/dossier map.
 - [ ] Fix persistent active-tab states in Armory and Agency Computer.
 - [ ] Ensure all controls and physical objects have clear interaction affordances and descriptions.
