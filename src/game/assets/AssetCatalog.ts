@@ -1,5 +1,12 @@
 import type Phaser from 'phaser';
 import { ASSET_SLOTS } from './assetSlots';
+import {
+  ENEMY_ANIMATION_POSES,
+  ENEMY_ANIMATION_TYPES,
+  enemyAnimationFrame as resolveEnemyAnimationFrame,
+  type EnemyAnimationPose,
+  type EnemyAnimationType,
+} from './enemyAnimationFrames';
 
 const importedAssets = import.meta.glob(
   '/src/assets/**/*.{png,jpg,jpeg,webp,svg,ogg,mp3,wav}',
@@ -62,8 +69,8 @@ export class AssetCatalog {
       if (!asset) continue;
 
       if (slot === 'enemies/animation-atlas') {
-        // The prepared atlas is a 3×4 sheet of fixed 128×256 frames.
-        scene.load.spritesheet(key, asset.url, { frameWidth: 128, frameHeight: 256 });
+        // Authored transparent 4×4 atlas: 192×288 pixels per state frame.
+        scene.load.spritesheet(key, asset.url, { frameWidth: 192, frameHeight: 288 });
       } else if (/\.svg$/i.test(asset.path)) {
         // Phaser's SVG loader rasterizes vector art at an explicit texture size.
         // Using load.image() leaves SVG sizing to browser defaults and can create
@@ -84,21 +91,20 @@ export class AssetCatalog {
 
 
   /**
-   * Compose a deterministic Phaser CanvasTexture from the four committed enemy
-   * SVGs. This is a state atlas, not a hand-drawn animation sheet.
+   * Preserve the hand-authored 4×4 atlas when it is loaded. If the PNG is
+   * missing, build a compatible 4×4 state atlas from the committed SVGs.
    */
   static ensureEnemyAnimationAtlas(scene: Phaser.Scene): boolean {
     const key = ASSET_SLOTS['enemies/animation-atlas'];
     if (scene.textures.exists(key)) {
       const authored = scene.textures.get(key);
-      return authored.has('0') && authored.has('11');
+      return authored.has('0') && authored.has('15');
     }
-    const types = ['guard', 'armored', 'assault', 'boss'] as const;
-    const poses = ['aim', 'fire', 'hit'] as const;
+
     const frameWidth = 192;
-    const frameHeight = 384;
-    const baseline = 372;
-    const sources = types.map((type) => {
+    const frameHeight = 288;
+    const baseline = 278;
+    const sources = ENEMY_ANIMATION_TYPES.map((type) => {
       const sourceSlot = ('enemies/' + type) as keyof typeof ASSET_SLOTS;
       const sourceKey = ASSET_SLOTS[sourceSlot];
       if (!scene.textures.exists(sourceKey)) return null;
@@ -108,25 +114,38 @@ export class AssetCatalog {
       return width > 0 && height > 0 ? { source, width, height } : null;
     });
     if (sources.some((source) => source === null)) return false;
-    const atlas = scene.textures.createCanvas(key, frameWidth * 3, frameHeight * 4);
+
+    const atlas = scene.textures.createCanvas(
+      key,
+      frameWidth * ENEMY_ANIMATION_POSES.length,
+      frameHeight * ENEMY_ANIMATION_TYPES.length,
+    );
     if (!atlas) return false;
+
     const context = atlas.getContext();
-    context.clearRect(0, 0, frameWidth * 3, frameHeight * 4);
+    context.clearRect(
+      0,
+      0,
+      frameWidth * ENEMY_ANIMATION_POSES.length,
+      frameHeight * ENEMY_ANIMATION_TYPES.length,
+    );
     sources.forEach((entry, row) => {
       if (!entry) return;
-      poses.forEach((pose, column) => {
+      ENEMY_ANIMATION_POSES.forEach((pose, column) => {
         const x = column * frameWidth;
         const y = row * frameHeight;
-        const scale = Math.min(frameWidth / entry.width, 324 / entry.height);
+        const scale = Math.min(frameWidth / entry.width, 246 / entry.height);
         const width = entry.width * scale;
         const height = entry.height * scale;
         const drawX = x + (frameWidth - width) / 2;
         const drawY = y + baseline - height;
         context.save();
-        if (pose === 'fire') context.translate(-1.5, 1.5);
+        if (pose === 'aim') context.translate(-0.75, 0);
+        if (pose === 'fire') context.translate(-1.5, 1.25);
         if (pose === 'hit') context.translate(-2, 0);
         context.drawImage(entry.source, drawX, drawY, width, height);
         context.restore();
+
         if (pose === 'fire') {
           const flashX = x + frameWidth - 8;
           const flashY = y + baseline - height * 0.55;
@@ -150,14 +169,22 @@ export class AssetCatalog {
         }
       });
     });
+
     atlas.refresh();
-    types.forEach((_type, row) => {
-      poses.forEach((_pose, column) => {
-        atlas.add(String(row * 3 + column), 0, column * frameWidth, row * frameHeight, frameWidth, frameHeight);
+    ENEMY_ANIMATION_TYPES.forEach((type, row) => {
+      ENEMY_ANIMATION_POSES.forEach((pose, column) => {
+        atlas.add(
+          String(resolveEnemyAnimationFrame(type, pose)),
+          0,
+          column * frameWidth,
+          row * frameHeight,
+          frameWidth,
+          frameHeight,
+        );
       });
     });
-    const complete = types.every((_type, row) =>
-      poses.every((_pose, column) => atlas.has(String(row * 3 + column))),
+    const complete = ENEMY_ANIMATION_TYPES.every((type) =>
+      ENEMY_ANIMATION_POSES.every((pose) => atlas.has(String(resolveEnemyAnimationFrame(type, pose)))),
     );
     if (complete) this.generatedEnemyAtlasScenes.add(scene);
     return complete;
@@ -165,6 +192,20 @@ export class AssetCatalog {
 
   static usesGeneratedEnemyAnimationAtlas(scene: Phaser.Scene): boolean {
     return this.generatedEnemyAtlasScenes.has(scene);
+  }
+
+  static enemyAnimationFrame(type: EnemyAnimationType, pose: EnemyAnimationPose): number {
+    return resolveEnemyAnimationFrame(type, pose);
+  }
+
+  static hasEnemyAnimationFrame(
+    scene: Phaser.Scene,
+    type: EnemyAnimationType,
+    pose: EnemyAnimationPose,
+  ): boolean {
+    const key = ASSET_SLOTS['enemies/animation-atlas'];
+    return scene.textures.exists(key)
+      && scene.textures.get(key).has(String(resolveEnemyAnimationFrame(type, pose)));
   }
 
   static ensureFirstPersonWeaponFrames(scene: Phaser.Scene): void {

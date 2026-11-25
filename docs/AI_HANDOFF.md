@@ -281,3 +281,14 @@ The user reports a complete failure in graphics quality and mobile shooting and 
 - Presentation only: enemy state transitions, damage timing, hitboxes and aim remain unchanged.
 - CI/Pages publication pending; physical Android visual QA remains outstanding.
 
+
+
+## Authored enemy atlas import — 2026-11-26
+
+- The Library source `Спрайт-лист оперативников в боевых позах.png` (1024×1536 RGBA) was converted to an optimized transparent PNG at `src/assets/enemies/animation-atlas.png`: 768×1152, 4×4 cells at 192×288, 96 indexed palette entries, 63,266 bytes.
+- SHA-256: `6af559f7b2b6fd4950cdd098e4792e6e56c9ca3bbb8324a691335f030fa3cc67`.
+- Mapping: rows guard/armored/assault/boss; columns idle/aim/fire/hit; frame ID = row × 4 + column (0–15).
+- AssetCatalog loads the PNG as a spritesheet. MissionScene picks idle, aim, fire or hit based on the active enemy state. A same-geometry CanvasTexture built from the committed SVG sources remains fallback.
+- Added `src/game/assets/enemyAnimationFrames.ts`, a 16-frame mapping test and updated `npm run verify:enemy-atlas` to check PNG signature, geometry, transparency, byte size and SHA-256.
+- User-reported upload issue: the WebP transfer to Git did not work in the current workflow. PNG was used successfully as the committed format. Do not generalize this as Vite/Phaser WebP incompatibility; the Vite asset glob still includes WEBP.
+- Validation boundary: unit/CI checks can prove build and frame mapping but cannot prove visual quality. Browser screenshot inspection and physical Android QA remain required.
