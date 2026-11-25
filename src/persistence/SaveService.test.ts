@@ -50,7 +50,7 @@ describe('SaveService economy and migration', () => {
     expect(migrated.upgrades).toEqual({
       damage: 2, magazine: 1, reload: 2, health: 0, armor: 0, precision: 0,
     });
-    expect(JSON.parse(values.get('shpy_save_v1') ?? '{}').schemaVersion).toBe(5);
+    expect(JSON.parse(values.get('shpy_save_v1') ?? '{}').schemaVersion).toBe(6);
   });
 
   it('migrates schema v2 and v3 without losing existing progression', () => {
@@ -63,14 +63,14 @@ describe('SaveService economy and migration', () => {
         }),
       });
       const migrated = new SaveService().load();
-      expect(migrated.schemaVersion).toBe(5);
+      expect(migrated.schemaVersion).toBe(6);
       expect(migrated.accountXp).toBe(1800);
       expect(migrated.dollars).toBe(1800);
       expect(migrated.loadout).toEqual({
         weapons: ['pistol', 'smg', 'rifle'], tacticalItem: 'grenade', activeItem: 'medkit',
       });
       expect(migrated.upgrades).toMatchObject({ damage: 3, health: 1, armor: 2, precision: 1 });
-      expect(JSON.parse(values.get('shpy_save_v1') ?? '{}').schemaVersion).toBe(5);
+      expect(JSON.parse(values.get('shpy_save_v1') ?? '{}').schemaVersion).toBe(6);
     }
   });
 
@@ -152,7 +152,7 @@ describe('SaveService economy and migration', () => {
     const service = new SaveService();
     const data = service.load();
     expect(data.accountXp).toBe(0);
-    expect(data.schemaVersion).toBe(5);
+    expect(data.schemaVersion).toBe(6);
     expect(values.get('shpy_save_recovery_backup')).toBeTruthy();
     expect(service.hasSave()).toBe(false);
   });
@@ -169,7 +169,7 @@ describe('SaveService economy and migration', () => {
     });
     const migrated = new SaveService().load();
     expect(migrated).toMatchObject({
-      schemaVersion: 5,
+      schemaVersion: 6,
       accountXp: 900,
       dollars: 410,
       components: 0,
@@ -178,7 +178,7 @@ describe('SaveService economy and migration', () => {
       gearUpgrades: { grenadeCapacity: 0, medkitEfficiency: 0 },
       cosmetics: { heroSkinId: 'hero-standard', weaponSkinId: 'weapon-standard' },
     });
-    expect(JSON.parse(values.get('shpy_save_v1') ?? '{}').schemaVersion).toBe(5);
+    expect(JSON.parse(values.get('shpy_save_v1') ?? '{}').schemaVersion).toBe(6);
   });
 
   it('spends agent components on modifications and cosmetics without touching main progress', () => {
