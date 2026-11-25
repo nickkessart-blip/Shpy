@@ -1305,6 +1305,7 @@ export class MissionScene extends Phaser.Scene {
     reload.style.borderRadius = '20px';
     const fire = makeButton('➤', 'ОГОНЬ', 96, '#a52f38f5');
     this.mobileFireButton = fire;
+    this.mobileFireFeedback = undefined;
     const switchButton = makeButton('⇄', 'ОРУЖИЕ', 62, '#40566bf0');
     switchButton.style.borderRadius = '18px';
     this.mobileSwitchButton = switchButton;
