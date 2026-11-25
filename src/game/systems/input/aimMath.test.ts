@@ -10,8 +10,9 @@ describe('mobile aim response', () => {
   it('keeps small, intentional thumb movements responsive', () => {
     const small = getAimVelocity({ x: 0.25, y: 0 }, 1.8);
     const full = getAimVelocity({ x: 1, y: 0 }, 1.8);
-    expect(small.x).toBeGreaterThan(0.8);
+    expect(small.x).toBeGreaterThan(0.1);
     expect(full.x).toBeGreaterThan(small.x * 1.5);
+    expect(full.x).toBeLessThan(0.5);
     expect(full.y).toBe(0);
   });
 
@@ -33,6 +34,7 @@ describe('mobile aim response', () => {
     const step50 = moveAim(start, { x: 1, y: 0 }, 1.8, 50, 1280, 720);
     const step100 = moveAim(start, { x: 1, y: 0 }, 1.8, 100, 1280, 720);
     expect(step50.x - start.x).toBeCloseTo(velocity * 50, 8);
+    expect(velocity).toBeLessThan(0.5);
     expect(step100.x - start.x).toBeCloseTo(velocity * 100, 8);
   });
 
