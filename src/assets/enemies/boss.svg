@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="320" height="500" viewBox="0 0 320 500">
 <defs><linearGradient id="coat" x2="1" y2="1"><stop stop-color="#373b40"/><stop offset="1" stop-color="#080c11"/></linearGradient><linearGradient id="gold"><stop stop-color="#8a6638"/><stop offset=".5" stop-color="#f0d39a"/><stop offset="1" stop-color="#79542d"/></linearGradient><linearGradient id="skin" x2="0" y2="1"><stop stop-color="#dbb592"/><stop offset="1" stop-color="#8c6553"/></linearGradient></defs>
 <ellipse cx="160" cy="474" rx="100" ry="18" fill="#05080c" opacity=".55"/>
-<path d="M83 209Q56 226 48 299L63 431Q160 475 257 431L272 299Q264 226 237 209L205 185H115Z" fill="url(#coat)" stroke="#59616a" stroke-width="7"/>
+<path d="M70 204Q34 220 28 302L46 440Q160 485 274 440L292 302Q286 220 250 204L205 185H115Z" fill="url(#coat)" stroke="#59616a" stroke-width="7"/>
 <path d="M116 187L160 244 204 187 194 159H126Z" fill="#202832"/><path d="M151 215H169L181 360 160 389 139 360Z" fill="#8d252b"/><path d="M160 224L177 360 160 380 143 360Z" fill="#d4b16f"/>
 <path d="M81 222Q39 235 28 324L51 362 83 345 108 264ZM239 222Q281 235 292 324L269 362 237 345 212 264Z" fill="url(#gold)" stroke="#5f482a" stroke-width="7"/>
 <path d="M98 290L80 419 111 444 129 306ZM222 290L240 419 209 444 191 306Z" fill="#111820" stroke="#515963" stroke-width="6"/>

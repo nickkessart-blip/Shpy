@@ -16,6 +16,14 @@ Before any code or content task:
 
 Do not start a new project. Do not silently change canon. Do not generate or edit images without the user's explicit request in the current turn.
 
+## Latest completed visual slice — enemy archetype silhouette pass (2026-11-26)
+
+- Feature branch: `art/enemy-archetype-silhouettes-2026-11-26`.
+- Updated four SVG enemy sources: guard cap/shoulder insignia, armored broad shoulder plates and reinforced chest, assault balaclava/goggles/red gear, broader boss coat silhouette.
+- Existing runtime state atlas remains 3×4 aim/fire/hit, generated from committed SVG sources; Kenney CC0 fallback remains.
+- The 1024×1536 RGBA 4×4 character atlas in Library was visually inspected but is not committed or runtime-loaded. It remains an explicit follow-up, not an integrated asset.
+- No new image generation used. Browser visual inspection and physical Android QA remain outstanding.
+
 ## Latest completed visual slice — East Express layered carriage (2026-11-26)\n\n- PR #33 merged into `main` as `88ad60e23c1cccb8b7106011afa7e038550d4362`.\n- Added three transparent 1280×720 SVG overlays aligned to the committed carriage base: distant night city through windows, rain/reflections on glass, and foreground seat backs/trim.\n- Registered the three layers and enabled the same independent parallax path already used by Casino. Existing single-background fallback remains.\n- External research checked SpriteCanvas CC0, the Tiddybub CC0 2D collection and OpenGameArt CC0 background elements. No unsuitable fantasy/top-down pack was forced into the realistic rail-shooter art style.\n- No image-generation credits were used.\n- PR verification CI passed; main CI run `45707674614` passed; Pages deployment run `45707674764` passed. `prototype-build` contains the three compiled assets (`train-carriage-far`, `train-carriage-mid`, `train-carriage-near`). Browser visual inspection and physical Android QA remain unperformed.\n\n## Repository and Git state
 
 - Repository: `nickkessart-blip/Shpy`; default branch: `main`.

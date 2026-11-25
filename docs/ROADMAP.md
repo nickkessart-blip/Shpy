@@ -43,6 +43,9 @@ Older roadmap sections and numeric SHPY prototype phase labels are historical im
 
 ### P0 — Rebuild and validate combat foundation
 
+- [x] Уточнить визуальное различие архетипов противников в SVG fallback: охранник, тяжёлый, штурмовик и босс получили отдельные силуэтные признаки (2026-11-26).
+- [ ] Импортировать библиотечный 4×4 character atlas как бинарный asset, зарегистрировать кадры idle/aim/fire/hit и проверить отображение в браузере/на Android. Сам файл пока не включён в репозиторий.
+
 Implementation status (2026-11-25): PR #18 adds a deterministic route clock, route progress HUD and eight transparent 1280×720 SVG planes extracted from the existing Casino/Bar source art. The follow-up P0 slice adds a seeded SpawnDirector: wave enemy roles remain authored, while lane assignments, entrance order and stagger timing vary per run; placements enforce 135px target separation and cover clearance. Enemies now enter from alternating route edges into assigned lanes with archetype-specific travel durations. Hidden enemies remain rendered behind cover, and cover geometry blocks shots along the muzzle-to-hitbox segment. This is still a prototype: no continuous rail travel during the whole operation, route exits, dynamic role-composition budgets, full cover destruction/peek validation, attack projectiles or Casino signature event yet.
 - [~] Add deterministic route timeline and independent authored far/mid/near SVG planes to the Casino prototype (first code slice; enemy lanes, spawn director and cover remain open). See [implementation plan](superpowers/plans/2026-11-25-casino-rail-timeline.md).
 - [~] Use genuinely independent background layers and separate foreground/environment set pieces: Casino layers remain in place; East Express now has separate night exterior, rainy glass and foreground-seat SVG planes. Further locations and visual validation remain open.

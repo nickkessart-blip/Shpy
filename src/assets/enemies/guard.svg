@@ -24,6 +24,9 @@
 <!-- weapon aimed toward viewer --><path d="M194 211 223 194 234 203 226 230 201 241Z" fill="#151d26" stroke="#05090e" stroke-width="5"/>
 <path d="M215 202 232 185 240 189 231 215" fill="#283744" stroke="#070c11" stroke-width="4"/>
 <path d="M220 229 237 224 235 248 220 249Z" fill="#161c23"/>
+<!-- shoulder tabs and security cap badge -->
+<path d="M54 155 76 145 89 164 69 179 48 174Z M164 164 181 145 205 155 212 174 190 181Z" fill="#40586a" stroke="#0a1118" stroke-width="5"/>
+<path d="M108 49 132 49 128 67 112 67Z" fill="#d2b27a" stroke="#111a22" stroke-width="3"/>
 <!-- insignia and gear --><path d="M91 177H109V200H91ZM132 177H151V200H132Z" fill="#8e9aa1" opacity=".5"/>
 <path d="M70 250 105 257 100 278 67 274ZM139 257 174 248 180 273 145 280Z" fill="#131d27" stroke="#697783" stroke-width="3"/>
 <text x="120" y="296" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" letter-spacing="2" fill="#d2b27a">SEC</text>
