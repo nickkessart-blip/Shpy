@@ -16,6 +16,12 @@ import { FeedbackService, triggerHaptic } from '../systems/feedback/FeedbackServ
 import { RailTimeline } from '../systems/missions/RailTimeline';
 import { planEnemyWave, sampleSpawnEntryX } from '../systems/waves/SpawnDirector';
 import { sampleEnemyAimCharge, sampleEnemyHitReaction } from '../systems/combat/enemyPresentation';
+import {
+  ARMORED_RECOVERY_MS,
+  ASSAULT_REPOSITION_MS,
+  getAssaultFlankTargetX,
+  getEnemyHitAreaMultiplier,
+} from '../systems/combat/enemyCombatRules';
 
 type EnemyState = 'Entering' | 'Exposed' | 'Aiming' | 'Attacking' | 'SeekingCover' | 'Hidden' | 'Peeking' | 'Repositioning' | 'Defeated';
 interface RuntimeEnemy {
@@ -658,8 +664,12 @@ export class MissionScene extends Phaser.Scene {
       };
     });
     this.waveAwarded = false;
-    this.showToast(wave.enemies.includes('boss') ? 'ТРЕВОГА • НАЧАЛЬНИК ОХРАНЫ ВЫШЕЛ НА СЦЕНУ'
-      : 'ВОЛНА ' + (this.waveIndex + 1) + '/' + this.sceneDef.waves.length, wave.enemies.includes('boss') ? 2200 : 1200);
+    const hasBoss = wave.enemies.includes('boss');
+    const hasArmored = wave.enemies.includes('armored');
+    this.showToast(hasBoss ? 'ТРЕВОГА • НАЧАЛЬНИК ОХРАНЫ ВЫШЕЛ НА СЦЕНУ'
+      : hasArmored ? 'БРОНЯ: ЦЕЛЬСЯ В ГОЛОВУ'
+        : 'ВОЛНА ' + (this.waveIndex + 1) + '/' + this.sceneDef.waves.length,
+    hasBoss || hasArmored ? 1700 : 1200);
   }
 
   private updateWaveFlow(dt: number): void {
@@ -871,6 +881,21 @@ export class MissionScene extends Phaser.Scene {
             enemy.x = Math.max(110, Math.min(GAME_WIDTH - 110, enemy.baseX + (enemy.phase % 2 === 0 ? -104 : 104)));
             enemy.phase += 1; break;
           }
+          if (enemy.type === 'assault') {
+            enemy.state = 'Repositioning';
+            enemy.timer = ASSAULT_REPOSITION_MS;
+            const targetX = getAssaultFlankTargetX(enemy.baseX, enemy.phase, 110, GAME_WIDTH - 110);
+            enemy.phase += 1;
+            this.tweens.add({ targets: enemy, x: targetX,
+              duration: ASSAULT_REPOSITION_MS, ease: 'Sine.easeInOut' });
+            break;
+          }
+          if (enemy.type === 'armored') {
+            // Heavy armor holds its ground and exposes only a short recovery window after firing.
+            enemy.state = 'Exposed';
+            enemy.timer = ARMORED_RECOVERY_MS;
+            break;
+          }
           enemy.state = 'SeekingCover'; enemy.timer = 320;
           const cover = this.sceneDef.covers.find((item) => item.id === enemy.coverId);
           if (cover) this.tweens.add({ targets: enemy, x: cover.x + cover.width / 2,
@@ -904,6 +929,7 @@ export class MissionScene extends Phaser.Scene {
         }
         case 'Repositioning':
           enemy.state = 'Exposed'; enemy.baseX = enemy.type === 'boss' ? 640 : enemy.x;
+          enemy.originY = enemy.y;
           enemy.timer = enemy.type === 'boss' ? Math.max(360, def.exposeMs - enemy.bossPhase * 150) : def.exposeMs;
           break;
       }
@@ -994,7 +1020,8 @@ export class MissionScene extends Phaser.Scene {
     for (const result of targetHits.values()) {
       const pelletHits = result.headHits + result.bodyHits;
       const damage = weaponStats.damage * weapon.pelletDamageMultiplier
-        * (result.bodyHits + result.headHits * headMultiplier);
+        * (result.bodyHits * getEnemyHitAreaMultiplier(result.enemy.type, 'body')
+          + result.headHits * headMultiplier * getEnemyHitAreaMultiplier(result.enemy.type, 'head'));
       if (pelletHits <= 0 || damage <= 0) continue;
 
       totalPelletsHit += pelletHits;

@@ -292,3 +292,14 @@ The user reports a complete failure in graphics quality and mobile shooting and 
 - Added `src/game/assets/enemyAnimationFrames.ts`, a 16-frame mapping test and updated `npm run verify:enemy-atlas` to check PNG signature, geometry, transparency, byte size and SHA-256.
 - User-reported upload issue: the WebP transfer to Git did not work in the current workflow. PNG was used successfully as the committed format. Do not generalize this as Vite/Phaser WebP incompatibility; the Vite asset glob still includes WEBP.
 - Validation boundary: unit/CI checks can prove build and frame mapping but cannot prove visual quality. Browser screenshot inspection and physical Android QA remain required.
+
+
+## Enemy archetype combat rules — 2026-11-26
+
+- Guard preserves the predictable seek-cover → hidden → peek → reposition loop.
+- Armored: torso damage multiplier 0.45, head weak-point multiplier 1.55 (normal weapon precision headshot multiplier applies additionally); after its attack it holds position for an 860 ms recovery/exposure window instead of using the guard cover loop. Waves containing armored enemies show the hint "БРОНЯ: ЦЕЛЬСЯ В ГОЛОВУ".
+- Assault: uses the existing 820 ms aim wind-up, then moves 150 world pixels to an alternating adjacent lane over 260 ms. The target X is clamped to [110, GAME_WIDTH - 110].
+- Boss multi-phase attack timing and damage escalation remain unchanged.
+- Pure rules live in `src/game/systems/combat/enemyCombatRules.ts`; tests cover damage multipliers, timings, alternating flanks, arena clamping and invalid input.
+- Damage resolution uses the same authored head/body hits as before. This slice changes damage scaling and enemy movement policy only; no hitbox geometry or attack damage timing is changed.
+- Browser visual inspection and physical Android QA remain outstanding.
