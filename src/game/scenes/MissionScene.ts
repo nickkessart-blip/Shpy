@@ -39,6 +39,12 @@ import {
   type CasinoLightEventState,
   type CasinoLightPhase,
 } from '../systems/missions/casinoLightEvent';
+import {
+  getCasinoJackpotDistractionMs,
+  sampleCasinoJackpotEvent,
+  type CasinoJackpotEventState,
+  type CasinoJackpotPhase,
+} from '../systems/missions/casinoJackpotEvent';
 
 type EnemyState = 'Entering' | 'Exposed' | 'Aiming' | 'Attacking' | 'SeekingCover' | 'Hidden' | 'Peeking' | 'Repositioning' | 'Defeated';
 type TutorialStep = 'fire' | 'reload' | 'telegraph' | 'dodge' | 'cover' | 'finish';
@@ -47,6 +53,7 @@ interface RuntimeEnemy {
   coverId?: string; state: EnemyState; timer: number;
   entryStartX: number; entryTargetX: number; entryElapsedMs: number; entryDurationMs: number;
   phase: number; bossPhase: 0 | 1 | 2; hitFlash: number; deathElapsedMs: number;
+  distractionRemainingMs: number;
 }
 interface RuntimeEnemyProjectile {
   uid: number; type: EnemyType; start: Point; target: Point;
@@ -69,6 +76,9 @@ export class MissionScene extends Phaser.Scene {
   private casinoLightElapsedMs = 0;
   private casinoLightState: CasinoLightEventState | null = null;
   private casinoLightPhase: CasinoLightPhase = 'idle';
+  private casinoJackpotElapsedMs = 0;
+  private casinoJackpotState: CasinoJackpotEventState | null = null;
+  private casinoJackpotPhase: CasinoJackpotPhase = 'idle';
   private weaponRig?: Phaser.GameObjects.Container;
   private impactEffects: Array<{ x: number; y: number; life: number; maxLife: number; kind: 'hit' | 'cover' | 'miss' | 'explosion' | 'enemy-muzzle' | 'player-hit' | 'player-dodge'; damage: number }> = [];
   private selectedWeapons: WeaponId[] = ['pistol'];
@@ -559,6 +569,10 @@ export class MissionScene extends Phaser.Scene {
     this.casinoLightElapsedMs = 0;
     this.casinoLightPhase = 'idle';
     this.casinoLightState = this.isCasinoRoom() ? sampleCasinoLightEvent(0, this.sceneDef.id as 'casino-main' | 'casino-bar') : null;
+    this.casinoJackpotElapsedMs = 0;
+    this.casinoJackpotPhase = 'idle';
+    this.casinoJackpotState = this.isCasinoRoom()
+      ? sampleCasinoJackpotEvent(0, this.sceneDef.id as 'casino-main' | 'casino-bar') : null;
     // Every authored room starts from its own camera origin and a predictable reticle position.
     this.cameras.main.setScroll(0, 0);
     this.aim = { x: GAME_WIDTH / 2, y: GAME_HEIGHT / 2 };
@@ -738,7 +752,7 @@ export class MissionScene extends Phaser.Scene {
         hp: def.hp, maxHp: def.hp, coverId: entry.spawn.coverId,
         state, timer: entering ? entry.entryDelayMs : Math.round(def.exposeMs * 0.4),
         entryStartX, entryTargetX: entry.spawn.x, entryElapsedMs: 0, entryDurationMs,
-        phase: 0, bossPhase: 0, hitFlash: 0, deathElapsedMs: 0,
+        phase: 0, bossPhase: 0, hitFlash: 0, deathElapsedMs: 0, distractionRemainingMs: 0,
       };
     });
     this.waveAwarded = false;
@@ -997,6 +1011,10 @@ export class MissionScene extends Phaser.Scene {
     for (const enemy of this.enemies) {
       enemy.hitFlash = Math.max(0, enemy.hitFlash - dt);
       if (enemy.state === 'Defeated') { enemy.deathElapsedMs = Math.min(520, enemy.deathElapsedMs + dt); continue; }
+      if (enemy.state !== 'Entering' && enemy.distractionRemainingMs > 0) {
+        enemy.distractionRemainingMs = Math.max(0, enemy.distractionRemainingMs - dt);
+        continue;
+      }
       const def = ENEMIES[enemy.type];
       if (enemy.state === 'Entering') {
         const travelDelta = Math.max(0, dt - Math.max(0, enemy.timer));
@@ -1861,6 +1879,8 @@ export class MissionScene extends Phaser.Scene {
     if (!this.isCasinoRoom()) {
       this.casinoLightState = null;
       this.casinoLightPhase = 'idle';
+      this.casinoJackpotState = null;
+      this.casinoJackpotPhase = 'idle';
       return;
     }
     this.casinoLightElapsedMs += dt;
@@ -1872,6 +1892,41 @@ export class MissionScene extends Phaser.Scene {
     }
     this.casinoLightState = state;
     this.casinoLightPhase = state.phase;
+
+    this.casinoJackpotElapsedMs += dt;
+    const jackpot = sampleCasinoJackpotEvent(this.casinoJackpotElapsedMs, roomId);
+    if (jackpot.phase === 'warning' && this.casinoJackpotPhase !== 'warning') {
+      const sector = jackpot.laneIndex === 0 ? 'ЛЕВЫЙ' : jackpot.laneIndex === 1 ? 'ЦЕНТРАЛЬНЫЙ' : 'ПРАВЫЙ';
+      this.showToast('ИГРОВОЙ АВТОМАТ • ' + sector + ' СЕКТОР • ДЖЕКПОТ', 900);
+    }
+    if (jackpot.phase === 'flash' && this.casinoJackpotPhase !== 'flash') {
+      this.applyCasinoJackpotDistraction(jackpot);
+    }
+    this.casinoJackpotState = jackpot;
+    this.casinoJackpotPhase = jackpot.phase;
+  }
+
+  private applyCasinoJackpotDistraction(state: CasinoJackpotEventState): void {
+    const laneCenter = this.cameras.main.getWorldPoint(state.centerX + state.sweepOffset, 0).x;
+    let distractedCount = 0;
+    for (const enemy of this.enemies) {
+      if (enemy.state === 'Defeated' || enemy.state === 'Entering' || enemy.state === 'Hidden') continue;
+      const duration = getCasinoJackpotDistractionMs(enemy.type);
+      if (duration <= 0 || Math.abs(enemy.x - laneCenter) > 170) continue;
+      enemy.distractionRemainingMs = Math.max(enemy.distractionRemainingMs, duration);
+      distractedCount += 1;
+    }
+    const callout = this.add.text(state.centerX, 164, '777  •  ДЖЕКПОТ', {
+      fontSize: '24px', color: '#ffe29a', fontStyle: 'bold',
+      stroke: '#21170b', strokeThickness: 6, shadow: { offsetX: 0, offsetY: 0, color: '#ffc84d', blur: 12, fill: true },
+    }).setOrigin(0.5).setDepth(27).setScrollFactor(0);
+    this.tweens.add({
+      targets: callout, y: 132, alpha: 0, duration: 620, ease: 'Quad.easeOut',
+      onComplete: () => callout.destroy(),
+    });
+    this.showToast(distractedCount > 0
+      ? 'ДЖЕКПОТ • ОХРАНА ОТВЛЕЧЕНА ×' + distractedCount
+      : 'ДЖЕКПОТ • ВСПЫШКА В ПУСТОМ СЕКТОРЕ', 700);
   }
 
   private drawCasinoLightCone(): void {
@@ -1897,6 +1952,26 @@ export class MissionScene extends Phaser.Scene {
       layer.strokeCircle(top.x, top.y + 20, radius);
       layer.fillStyle(0xfff0c8, 0.75);
       layer.fillCircle(top.x, top.y + 20, 4);
+    }
+  }
+
+  private drawCasinoJackpotFlash(): void {
+    const state = this.casinoJackpotState;
+    if (!state || state.phase !== 'flash') return;
+    const center = this.cameras.main.getWorldPoint(state.centerX + state.sweepOffset, 258);
+    const pulse = 0.7 + Math.sin(this.time.now / 42) * 0.18;
+    this.fx.fillStyle(0xffd85c, 0.1 * pulse);
+    this.fx.fillCircle(center.x, center.y, 92);
+    this.fx.lineStyle(5, 0xffd45e, 0.78 * pulse);
+    this.fx.strokeCircle(center.x, center.y, 58);
+    this.fx.lineStyle(2, 0xfff0ad, 0.82 * pulse);
+    this.fx.strokeCircle(center.x, center.y, 73);
+    for (let index = 0; index < 3; index += 1) {
+      const x = center.x + (index - 1) * 25;
+      this.fx.fillStyle(0xffedaa, 0.9 * pulse);
+      this.fx.fillRoundedRect(x - 8, center.y - 10, 16, 20, 3);
+      this.fx.lineStyle(2, 0x8d4d16, 0.88);
+      this.fx.strokeRoundedRect(x - 8, center.y - 10, 16, 20, 3);
     }
   }
 
@@ -2096,7 +2171,8 @@ export class MissionScene extends Phaser.Scene {
           ? this.cameras.main.getWorldPoint(lightState.centerX + lightState.sweepOffset, 0).x : -10000;
         const underSpotlight = lightState?.phase === 'flash' && Math.abs(enemy.x - lightCenterX) <= 172;
         image.setTint(enemy.hitFlash > 0 ? 0xffd5d5
-          : attacking ? 0xffe3c2 : underSpotlight ? 0xfff0c4 : 0xffffff);
+          : attacking ? 0xffe3c2 : enemy.distractionRemainingMs > 0 ? 0xffdf8e
+            : underSpotlight ? 0xfff0c4 : 0xffffff);
       } else {
         this.world.fillStyle(0x05080c, 0.45); this.world.fillEllipse(drawX, enemy.y + 3, 65, 15);
         this.world.fillStyle(def.color, 1); this.world.fillRoundedRect(drawX - 24, drawY - 18, 48, 76, 8);
@@ -2201,6 +2277,7 @@ export class MissionScene extends Phaser.Scene {
       this.fx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
     }
     this.drawEnemyOverlays();
+    this.drawCasinoJackpotFlash();
     this.drawCasinoLightFlash();
     this.drawEnemyProjectiles();
     this.updateWeaponRig();
@@ -2355,6 +2432,16 @@ export class MissionScene extends Phaser.Scene {
       const barY = enemy.y - (enemy.type === 'boss' ? 140 : 88);
       this.fx.fillStyle(0x131a22, 0.95); this.fx.fillRoundedRect(enemy.x - barWidth / 2, barY, barWidth, 8, 3);
       this.fx.fillStyle(def.color, 1); this.fx.fillRoundedRect(enemy.x - barWidth / 2, barY, barWidth * (enemy.hp / enemy.maxHp), 8, 3);
+      if (enemy.distractionRemainingMs > 0) {
+        const sparkleY = enemy.y - 114;
+        const sparklePulse = 0.76 + Math.sin(this.time.now / 55 + enemy.uid) * 0.2;
+        this.fx.fillStyle(0xffd36e, sparklePulse);
+        this.fx.fillCircle(enemy.x, sparkleY, 5);
+        this.fx.lineStyle(2, 0xfff0b1, sparklePulse);
+        this.fx.lineBetween(enemy.x - 13, sparkleY, enemy.x + 13, sparkleY);
+        this.fx.lineBetween(enemy.x, sparkleY - 13, enemy.x, sparkleY + 13);
+        this.fx.strokeCircle(enemy.x, sparkleY, 11 + (1 - sparklePulse) * 5);
+      }
       if (enemy.state === 'Aiming') {
         this.fx.lineStyle(2, 0xe25c54, 0.9); this.fx.strokeCircle(enemy.x, enemy.y - 70, 25 + Math.sin(this.time.now / 90) * 3);
         this.fx.lineStyle(2, 0xe25c54, 0.65); this.fx.lineBetween(enemy.x, enemy.y - 70, MUZZLE.x, MUZZLE.y - 10);

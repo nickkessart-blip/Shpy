@@ -58,7 +58,7 @@ A signature mechanic is part of the location's identity and is present in every 
 - Some security staff use furniture, partitions and crowd routes to reposition.
 - Light changes affect target readability, not the underlying hitbox coordinates.
 
-**First runtime slice (2026-11-26):** the Casino main hall and bar now run a deterministic lane spotlight event with a 1.1 s warning, a 620 ms localized flash and a short recovery. It alternates affected lanes and highlights enemies in the beam. Hitboxes and damage are unchanged. This is a first mechanic prototype; authored moving fixtures, roulette/slot-machine set-pieces and optional modifiers remain open.
+**First runtime slices (2026-11-26):** the Casino main hall and bar run a deterministic lane spotlight (1.1 s warning, 620 ms localized flash) plus a separate slot-machine jackpot sequence (900 ms warning, 420 ms flash). Spotlight changes readability; the jackpot briefly delays exposed security AI in the affected lane. Neither event changes hitboxes, positions or damage, and fired projectiles remain dangerous. Player-triggered slot interactions, roulette set-pieces and the optional Jackpot Sequence modifier remain open.
 
 **Possible operation modifiers:**
 - Emergency lighting: parts of the hall periodically go dark.

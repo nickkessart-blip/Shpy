@@ -189,3 +189,8 @@ Every completed, CI-validated implementation slice must be integrated into `main
 - [x] Freeze the event during pause/transitions and reset it for each authored room.
 - [x] Add deterministic tests for boundaries, event phases, lane rotation and invalid inputs.
 - [ ] Validate visual balance/readability on desktop browser and physical Android; extend moving spotlights and slot/roulette set-piece interactions after review.
+### Casino jackpot distraction event — 2026-11-26
+- [~] Add a deterministic slot-machine jackpot sequence to Casino rooms, separate from the spotlight event. The warning identifies a sector; the brief 777 flash interrupts the action timers of eligible security staff in that lane.
+- [x] Guard and assault are distracted for different durations; armored enemies recover faster and the boss is unaffected. A projectile already launched remains in flight.
+- [x] Add an event clock that pauses with the mission, lane rotation per room/cycle, temporary enemy sparkle/tint, and tests for phase boundaries and enemy response durations.
+- [ ] Browser and physical Android review; add player-triggered slot interactions and a separate optional jackpot modifier only after the baseline signature is validated.

@@ -350,3 +350,11 @@ The user reports a complete failure in graphics quality and mobile shooting and 
 - MissionScene draws a tapered cone on a depth-1 graphics layer (behind enemy sprites and cover), an upper-layer bounded glare during flash, and a warm highlight tint on enemies in the illuminated lane. The event never changes enemy coordinates, aim/hitbox logic, damage, accuracy or cover checks.
 - The warning toast names the affected sector. Counterplay is to aim outside the lit lane during the warning or wait through the 620 ms flash.
 - This is the first working Casino signature slice. It does not yet add independently animated spotlight fixtures, slot jackpot sequences, roulette set-pieces or optional modifiers. Browser/mobile visual QA remains outstanding.
+## Casino slot-machine jackpot distraction — 2026-11-26
+
+- Pure sequence/timing and archetype response durations are in `src/game/systems/missions/casinoJackpotEvent.ts` with deterministic Vitest coverage.
+- It is a separate 15,000 ms room event: warning 900 ms, flash 420 ms, recovery 900 ms. Casino main and bar cycle different initial lanes.
+- On entering `flash`, MissionScene selects living enemies in the lane. Guard pauses 1,350 ms; Assault 900 ms; Armored 420 ms; Boss is immune. Enemies entering or hidden behind cover are not tagged.
+- `RuntimeEnemy.distractionRemainingMs` pauses the selected enemy's AI timer/movement, but does not alter position, HP, hitbox or the already launched projectile array. A projectile already fired continues to impact normally.
+- The top `777 • ДЖЕКПОТ` callout and gold flash/spin marker above affected enemy heads signal the opening; the warning toast states the lane.
+- The automatic signature slice is not a player-triggered slot interaction and is not yet the optional jackpot modifier. Physical/browser visual QA remains outstanding.
