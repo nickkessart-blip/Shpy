@@ -58,7 +58,7 @@ describe('aim target feedback', () => {
   });
 
   it('prefers a clear target if overlapping target zones include a blocked one', () => {
-    const clear = { head: { x: 100, y: 80 }, body: { x: 100, y: 120 }, headRadius: 20, bodyRadius: 30 };
+    const clear = { head: { x: 110, y: 50 }, body: { x: 110, y: 90 }, headRadius: 40, bodyRadius: 30 };
     expect(getAimFeedbackState({ x: 100, y: 80 }, { x: 0, y: 180 }, [target, clear],
       [{ x: 40, y: 110, width: 40, height: 30 }])).toBe('clear');
   });
