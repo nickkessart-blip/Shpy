@@ -22,6 +22,7 @@ import {
   getAssaultFlankTargetX,
   getEnemyHitAreaMultiplier,
 } from '../systems/combat/enemyCombatRules';
+import { getEnemyProjectileTravelMs, sampleEnemyProjectile } from '../systems/combat/enemyProjectile';
 
 type EnemyState = 'Entering' | 'Exposed' | 'Aiming' | 'Attacking' | 'SeekingCover' | 'Hidden' | 'Peeking' | 'Repositioning' | 'Defeated';
 interface RuntimeEnemy {
@@ -29,6 +30,10 @@ interface RuntimeEnemy {
   coverId?: string; state: EnemyState; timer: number;
   entryStartX: number; entryTargetX: number; entryElapsedMs: number; entryDurationMs: number;
   phase: number; bossPhase: 0 | 1 | 2; hitFlash: number; deathElapsedMs: number;
+}
+interface RuntimeEnemyProjectile {
+  uid: number; type: EnemyType; start: Point; target: Point;
+  elapsedMs: number; durationMs: number; damage: number;
 }
 
 const MUZZLE: Point = { x: GAME_WIDTH / 2, y: 662 };
@@ -44,7 +49,7 @@ export class MissionScene extends Phaser.Scene {
   private coverLayer!: Phaser.GameObjects.Graphics;
   private fx!: Phaser.GameObjects.Graphics;
   private weaponRig?: Phaser.GameObjects.Container;
-  private impactEffects: Array<{ x: number; y: number; life: number; maxLife: number; kind: 'hit' | 'cover' | 'miss' | 'explosion'; damage: number }> = [];
+  private impactEffects: Array<{ x: number; y: number; life: number; maxLife: number; kind: 'hit' | 'cover' | 'miss' | 'explosion' | 'enemy-muzzle' | 'player-hit'; damage: number }> = [];
   private selectedWeapons: WeaponId[] = ['pistol'];
   private currentWeaponId: WeaponId = 'pistol';
   private weaponAmmo = new Map<WeaponId, { magazine: number; reserve: number }>();
@@ -78,6 +83,7 @@ export class MissionScene extends Phaser.Scene {
   private transitionWalkTweens: Phaser.Tweens.Tween[] = [];
   private aim: Point = { x: GAME_WIDTH / 2, y: GAME_HEIGHT / 2 };
   private enemies: RuntimeEnemy[] = [];
+  private enemyProjectiles: RuntimeEnemyProjectile[] = [];
   private sceneIndex = 0;
   private waveIndex = 0;
   private spawnTimer = 300;
@@ -147,6 +153,7 @@ export class MissionScene extends Phaser.Scene {
     this.cameras.main.setScroll(0, 0);
     this.cameras.main.setBounds(-420, -180, GAME_WIDTH + 840, GAME_HEIGHT + 360);
     this.enemies = [];
+    this.enemyProjectiles = [];
     this.sceneIndex = 0;
     this.waveIndex = 0;
     this.spawnTimer = 300;
@@ -472,6 +479,7 @@ export class MissionScene extends Phaser.Scene {
       this.reloading -= inputDelta;
       if (this.reloading <= 0) this.finishReload();
     }
+    this.updateEnemyProjectiles(dt);
     this.updateEnemies(dt);
     this.updateWaveFlow(dt);
     this.drawFrame();
@@ -518,6 +526,7 @@ export class MissionScene extends Phaser.Scene {
         .setDisplaySize(GAME_WIDTH, GAME_HEIGHT).setDepth(-10);
     }
     this.enemies = [];
+    this.enemyProjectiles = [];
     this.waveIndex = 0;
     this.spawnTimer = 350;
     this.waveAwarded = false;
@@ -673,6 +682,8 @@ export class MissionScene extends Phaser.Scene {
   }
 
   private updateWaveFlow(dt: number): void {
+    // A fired round remains dangerous even if its shooter is defeated.
+    if (this.enemyProjectiles.length > 0) return;
     if (this.enemies.length === 0) {
       this.spawnTimer -= dt;
       if (this.spawnTimer <= 0) this.spawnWave();
@@ -843,6 +854,42 @@ export class MissionScene extends Phaser.Scene {
     });
   }
 
+  private launchEnemyProjectile(enemy: RuntimeEnemy, damage: number): void {
+    const target = this.cameras.main.getWorldPoint(GAME_WIDTH / 2, GAME_HEIGHT - 96);
+    const start = {
+      x: enemy.x + (target.x >= enemy.x ? 22 : -22),
+      y: enemy.y - 62,
+    };
+    const durationMs = getEnemyProjectileTravelMs(enemy.type);
+    this.enemyProjectiles.push({
+      uid: this.uniqueId++, type: enemy.type, start,
+      target: { x: target.x, y: target.y }, elapsedMs: 0, durationMs, damage,
+    });
+    this.impactEffects.push({
+      x: start.x, y: start.y, life: 130, maxLife: 130, kind: 'enemy-muzzle', damage: 0,
+    });
+    FeedbackService.play(this, 'shot', enemy.type === 'boss' ? 0.6 : 0.24);
+  }
+
+  private updateEnemyProjectiles(dt: number): void {
+    for (let index = this.enemyProjectiles.length - 1; index >= 0; index -= 1) {
+      const projectile = this.enemyProjectiles[index];
+      if (!projectile) continue;
+      projectile.elapsedMs = Math.min(projectile.durationMs, projectile.elapsedMs + dt);
+      const sample = sampleEnemyProjectile(
+        projectile.start, projectile.target, projectile.elapsedMs, projectile.durationMs,
+      );
+      if (sample.progress < 1) continue;
+
+      this.enemyProjectiles.splice(index, 1);
+      this.impactEffects.push({
+        x: projectile.target.x, y: projectile.target.y,
+        life: 360, maxLife: 360, kind: 'player-hit', damage: projectile.damage,
+      });
+      this.damagePlayer(projectile.damage);
+    }
+  }
+
   private updateEnemies(dt: number): void {
     for (const enemy of this.enemies) {
       enemy.hitFlash = Math.max(0, enemy.hitFlash - dt);
@@ -873,7 +920,8 @@ export class MissionScene extends Phaser.Scene {
         case 'Aiming': {
           const bossDamageScale = enemy.type === 'boss' ? [1, 1.25, 1.5][enemy.bossPhase] : 1;
           enemy.state = 'Attacking'; enemy.timer = 260;
-          this.damagePlayer(Math.round(def.damage * bossDamageScale)); break;
+          this.launchEnemyProjectile(enemy, Math.round(def.damage * bossDamageScale));
+          break;
         }
         case 'Attacking': {
           if (enemy.type === 'boss') {
@@ -1881,6 +1929,7 @@ export class MissionScene extends Phaser.Scene {
       this.fx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
     }
     this.drawEnemyOverlays();
+    this.drawEnemyProjectiles();
     this.updateWeaponRig();
 
     if (this.shotFlash > 0) {
@@ -1934,6 +1983,21 @@ export class MissionScene extends Phaser.Scene {
         this.fx.lineStyle(3, 0xffe4a8, alpha); this.fx.strokeCircle(effect.x, effect.y, radius * 0.62);
         continue;
       }
+      if (effect.kind === 'enemy-muzzle') {
+        const radius = 8 + (1 - alpha) * 12;
+        this.fx.fillStyle(0xffa45d, alpha * 0.68); this.fx.fillCircle(effect.x, effect.y, radius);
+        this.fx.lineStyle(3, 0xffe4bc, alpha); this.fx.strokeCircle(effect.x, effect.y, radius * 0.85);
+        continue;
+      }
+      if (effect.kind === 'player-hit') {
+        const radius = 12 + (1 - alpha) * 22;
+        this.fx.fillStyle(0xff5750, alpha * 0.16); this.fx.fillCircle(effect.x, effect.y, radius * 1.4);
+        this.fx.lineStyle(6, 0xff6158, alpha * 0.95); this.fx.strokeCircle(effect.x, effect.y, radius);
+        this.fx.lineStyle(3, 0xfff0cf, alpha);
+        this.fx.lineBetween(effect.x - radius * 0.62, effect.y - radius * 0.62, effect.x + radius * 0.62, effect.y + radius * 0.62);
+        this.fx.lineBetween(effect.x + radius * 0.62, effect.y - radius * 0.62, effect.x - radius * 0.62, effect.y + radius * 0.62);
+        continue;
+      }
       const size = effect.kind === 'hit' ? 16 + (1 - alpha) * 18 : 13 + (1 - alpha) * 12;
       const color = effect.kind === 'hit' ? 0x70f0ad : effect.kind === 'cover' ? 0xffc46a : 0xb9c7d4;
       this.fx.lineStyle(4, color, alpha);
@@ -1965,6 +2029,33 @@ export class MissionScene extends Phaser.Scene {
       this.fx.lineBetween(this.aim.x, this.aim.y + 8, this.aim.x, this.aim.y + 29);
       this.fx.fillStyle(reticleColor, 1);
       this.fx.fillCircle(this.aim.x, this.aim.y, 2.5);
+    }
+  }
+
+  private drawEnemyProjectiles(): void {
+    const colors: Record<EnemyType, number> = {
+      guard: 0xff7868,
+      armored: 0xffc06b,
+      assault: 0xff8e61,
+      boss: 0xd78aff,
+    };
+    for (const projectile of this.enemyProjectiles) {
+      const sample = sampleEnemyProjectile(
+        projectile.start, projectile.target, projectile.elapsedMs, projectile.durationMs,
+      );
+      const tail = sampleEnemyProjectile(
+        projectile.start, projectile.target,
+        Math.max(0, projectile.elapsedMs - projectile.durationMs * 0.14),
+        projectile.durationMs,
+      );
+      const color = colors[projectile.type];
+      const alpha = 0.84 + Math.sin(this.time.now / 36 + projectile.uid) * 0.12;
+      this.fx.lineStyle(projectile.type === 'boss' ? 12 : 8, color, 0.2 * alpha);
+      this.fx.lineBetween(tail.x, tail.y, sample.x, sample.y);
+      this.fx.lineStyle(projectile.type === 'boss' ? 4 : 2.8, color, alpha);
+      this.fx.lineBetween(tail.x, tail.y, sample.x, sample.y);
+      this.fx.fillStyle(0xfff1d4, alpha);
+      this.fx.fillCircle(sample.x, sample.y, projectile.type === 'boss' ? 5 : 3.5);
     }
   }
 

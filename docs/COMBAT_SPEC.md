@@ -160,3 +160,13 @@ Current numeric values in `balance.ts` and `enemies.ts` are prototype values, no
 - The target line intensifies and a pulsing marker highlights the player's incoming danger point as the attack approaches.
 - Charge progress is clamped by a pure helper with deterministic unit tests. The telegraph is visual only; existing state transitions and damage timing are unchanged.
 - This is intended to make the existing wind-up readable on small screens, but requires physical Android visual QA.
+
+
+## Enemy projectile launch and impact — 2026-11-26
+
+- Completing the Aiming wind-up launches a visible round from the enemy muzzle toward the player's chest-level world point. The attack no longer removes health at launch.
+- Travel time is archetype-specific: Assault 290 ms, Guard 360 ms, Armored 430 ms and Boss 520 ms. The projectile is drawn as a bright head with a short coloured trail; the muzzle flash and player impact each have their own visual effect.
+- Damage is applied only when the projectile reaches its recorded target. Existing boss-phase damage scaling and armour reduction remain in the damage path.
+- A shot already fired remains in flight even if its shooter is defeated. Wave rewards/transition wait for all in-flight rounds to resolve so damage cannot leak into the next scene.
+- This is a readable incoming-fire timeline, not player dodge or projectile interception. The current player position is fixed; adding dodge/cover/interception counterplay is a separate design task.
+- Unit tests cover linear trajectory, boundary clamping, exact endpoints and invalid timing/coordinates. Physical Android readability and latency checks remain required.

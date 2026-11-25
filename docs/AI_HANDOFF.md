@@ -303,3 +303,14 @@ The user reports a complete failure in graphics quality and mobile shooting and 
 - Pure rules live in `src/game/systems/combat/enemyCombatRules.ts`; tests cover damage multipliers, timings, alternating flanks, arena clamping and invalid input.
 - Damage resolution uses the same authored head/body hits as before. This slice changes damage scaling and enemy movement policy only; no hitbox geometry or attack damage timing is changed.
 - Browser visual inspection and physical Android QA remain outstanding.
+
+
+## Enemy projectile attacks — 2026-11-26
+
+- Completing enemy state Aiming now calls launchEnemyProjectile(); damage is applied only when that projectile reaches the recorded player chest-level world point. Boss phase damage scaling and existing player armour reduction remain active.
+- Archetype travel times: guard 360 ms, armored 430 ms, assault 290 ms, boss 520 ms. Launch creates a muzzle flash and a low-volume shot cue; flight renders a coloured short tracer; arrival renders an impact ring/cross and invokes existing damage feedback/haptics.
+- Projectiles are independent of the source enemy after launch. Killing an enemy does not erase a round already fired.
+- Wave flow waits until all in-flight projectiles resolve, preventing shots from damaging the player during the next wave or after a location transition.
+- Pure trajectory logic and tests are in src/game/systems/combat/enemyProjectile.ts and enemyProjectile.test.ts. Linear progress clamps to [0,1], validates finite coordinates/timing and uses explicit endpoints.
+- This is not dodge/interception gameplay: incoming rounds currently hit the recorded target on arrival. Mobile/browser visual QA and tuning of travel speeds remain outstanding.
+- The lower-screen agent arms/hands/weapon artwork remains an open visual task; this slice does not claim to solve it.
