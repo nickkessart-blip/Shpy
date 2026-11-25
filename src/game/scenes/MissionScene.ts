@@ -313,6 +313,16 @@ export class MissionScene extends Phaser.Scene {
     const appearance = saveService.load().cosmetics;
     const weaponTint = getCosmetic(appearance.weaponSkinId).tint;
     const heroTint = getCosmetic(appearance.heroSkinId).tint;
+    const textureKey = 'weapon-' + this.currentWeaponId;
+    if (AssetCatalog.hasTexture(this, textureKey)) {
+      // Use the original vector viewmodel at native 2× raster size. The old
+      // 192×144 atlas was enlarged to 256×192 and looked visibly soft on phones.
+      const weaponImage = this.add.image(0, -140, textureKey).setDisplaySize(240, 413);
+      rig.add(weaponImage);
+      this.weaponRig = rig;
+      this.updateWeaponRig();
+      return;
+    }
     const atlasKey = 'weapon-fp-atlas';
     AssetCatalog.ensureFirstPersonWeaponFrames(this);
     const frameByWeapon: Record<WeaponId, string> = {
@@ -322,16 +332,6 @@ export class MissionScene extends Phaser.Scene {
       const weaponImage = this.add.image(0, -75, atlasKey, frameByWeapon[this.currentWeaponId])
         .setDisplaySize(256, 192);
       rig.add(weaponImage);
-      this.weaponRig = rig;
-      this.updateWeaponRig();
-      return;
-    }
-    const textureKey = 'weapon-' + this.currentWeaponId;
-    if (AssetCatalog.hasTexture(this, textureKey)) {
-      rig.add(this.add.image(0, -95, textureKey).setDisplaySize(180, 380).setTint(weaponTint));
-      const cuff = this.add.graphics();
-      cuff.fillStyle(heroTint, 0.95); cuff.fillRoundedRect(-36, -54, 72, 22, 8);
-      rig.add(cuff);
       this.weaponRig = rig;
       this.updateWeaponRig();
       return;
@@ -360,9 +360,13 @@ export class MissionScene extends Phaser.Scene {
   private updateWeaponRig(): void {
     if (!this.weaponRig) return;
     if (this.isMobileControls) {
-      this.weaponRig.setPosition(GAME_WIDTH / 2, GAME_HEIGHT + 95 + this.weaponRecoil + this.reloadPose * 38);
+      const originX = GAME_WIDTH / 2;
+      const originY = GAME_HEIGHT + 95 + this.weaponRecoil + this.reloadPose * 38;
+      this.weaponRig.setPosition(originX, originY);
       this.weaponRig.setScale(1 + Math.min(0.035, this.weaponRecoil * 0.00022), 1 - Math.min(0.025, this.weaponRecoil * 0.00016));
-      this.weaponRig.setRotation(-this.weaponRecoilAngle);
+      const screenAim = { x: this.aim.x - this.cameras.main.scrollX, y: this.aim.y - this.cameras.main.scrollY };
+      this.weaponRig.setRotation(Phaser.Math.Angle.Between(originX, originY, screenAim.x, screenAim.y)
+        + Math.PI / 2 - this.weaponRecoilAngle);
       return;
     }
     // Desktop weapon follows the mouse reticle.
@@ -380,8 +384,15 @@ export class MissionScene extends Phaser.Scene {
     const rotation = rig?.rotation ?? 0;
     const originX = rig?.x ?? GAME_WIDTH / 2;
     const originY = rig?.y ?? GAME_HEIGHT + 95 + this.weaponRecoil;
-    const point = { x: originX + 300 * Math.sin(rotation), y: originY - 300 * Math.cos(rotation) };
-    return this.isMobileControls ? this.cameras.main.getWorldPoint(GAME_WIDTH / 2, GAME_HEIGHT - 175) : point;
+    if (this.isMobileControls) {
+      const distance = AssetCatalog.hasTexture(this, 'weapon-' + this.currentWeaponId) ? 326 : 300;
+      const screenPoint = {
+        x: originX + distance * Math.sin(rotation),
+        y: originY - distance * Math.cos(rotation),
+      };
+      return this.cameras.main.getWorldPoint(screenPoint.x, screenPoint.y);
+    }
+    return { x: originX + 300 * Math.sin(rotation), y: originY - 300 * Math.cos(rotation) };
   }
 
   update(_time: number, delta: number): void {
