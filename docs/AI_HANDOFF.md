@@ -114,3 +114,13 @@ The exact first-slice acceptance and deferred work are in `docs/superpowers/plan
 - For mobile work, retain a physical-device checklist.
 - Commit code, tests, assets and relevant docs together for each coherent implementation task.
 - Keep the user out of routine Git operations; do not ask them to connect Git or create commits.
+
+## Latest implementation handoff — HQ phone inbox (2026-11-25)
+
+- Feature branch: `feat/hq-phone-inbox-2026-11-25` (base `main`).
+- Added `src/game/scenes/HQInboxScene.ts` and registered it in `GameConfig.ts`.
+- The HQ desk phone now opens a functional inbox instead of a placeholder notice.
+- The inbox reads persisted operative assignments, refreshes remaining time every second, distinguishes completed reports and lets the player collect the report. Successful assignments award the existing Components reward through `AgentService.collectMission`; failed assignments are reported without a reward.
+- The screen links back to the Agency Computer, where operative assignments are managed. It does not invent a second assignment system or duplicate reward logic.
+- Scope is deliberately limited: story messages, event notices and prestige contracts are still future work. This does not complete the full HQ redesign.
+- Validation still required: TypeScript, lint, tests, production build, then browser visual review. No physical Android QA has been performed.
