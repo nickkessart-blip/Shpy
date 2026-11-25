@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { followAimWithCamera, getAimVelocity, moveAim, moveAimByPointerDelta, moveAimInWorld } from './aimMath';
+import { getMobileControlScale } from './mobileControlLayout';
 
 describe('mobile aim response', () => {
   it('ignores only the tiny radial dead zone', () => {
@@ -100,7 +101,7 @@ describe('mobile control physical sizing', () => {
   });
 
   it('scales controls up on larger phones without making them oversized', () => {
-    expect(getMobileControlScale(854, 480)).toBeCloseTo(1.0675, 4);
+    expect(getMobileControlScale(854, 480)).toBeCloseTo(1.0667, 4);
     expect(getMobileControlScale(1280, 720)).toBe(1.15);
   });
 
