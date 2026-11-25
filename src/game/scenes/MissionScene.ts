@@ -15,7 +15,7 @@ import { getMobileControlScale } from '../systems/input/mobileControlLayout';
 import { FeedbackService, triggerHaptic } from '../systems/feedback/FeedbackService';
 import { RailTimeline } from '../systems/missions/RailTimeline';
 import { planEnemyWave, sampleSpawnEntryX } from '../systems/waves/SpawnDirector';
-import { sampleEnemyHitReaction } from '../systems/combat/enemyPresentation';
+import { sampleEnemyAimCharge, sampleEnemyHitReaction } from '../systems/combat/enemyPresentation';
 
 type EnemyState = 'Entering' | 'Exposed' | 'Aiming' | 'Attacking' | 'SeekingCover' | 'Hidden' | 'Peeking' | 'Repositioning' | 'Defeated';
 interface RuntimeEnemy {
@@ -1778,7 +1778,7 @@ export class MissionScene extends Phaser.Scene {
         const warningY = enemy.y - 70;
         const warningRadius = 25 + Math.sin(this.time.now / 90) * 3;
         const aimDuration = Math.max(1, ENEMIES[enemy.type].aimMs);
-        const charge = 1 - Phaser.Math.Clamp(enemy.timer / aimDuration, 0, 1);
+        const charge = sampleEnemyAimCharge(enemy.timer, aimDuration);
         const pulse = 0.72 + Math.sin(this.time.now / 65) * 0.18;
         this.fx.lineStyle(2, 0xe25c54, 0.34);
         this.fx.strokeCircle(warningX, warningY, warningRadius);
