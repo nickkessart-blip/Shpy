@@ -190,3 +190,9 @@
 - Render-only: enemy coordinates, hitboxes, cover, aim and damage are unchanged.
 - Added deterministic unit tests. Full authored hit/recoil frames and Android visual QA remain outstanding.
 
+## 2026-11-26 — Enemy attack charge telegraph
+- Enemy aim warnings now fill around the attacker as the existing attack timer counts down.
+- The target line intensifies and a pulsing marker shows the incoming danger point.
+- Attack timing and damage are unchanged. Added deterministic charge-progress tests.
+- Physical Android visual validation remains outstanding.
+
