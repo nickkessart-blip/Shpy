@@ -31,6 +31,16 @@ These variants provide deterministic state feedback. They do not invent limb mot
 - No external fetch, image generation, filesystem writes or persistent asset mutation occurs at runtime.
 - The generated-atlas marker is tracked per Phaser Scene, so authored atlases do not receive generated-atlas sizing adjustments.
 
+## Archetype silhouette pass — 2026-11-26
+
+The committed SVG fallback sources now separate the four roles beyond palette changes:
+- Guard: security shoulder tabs and cap badge.
+- Armored: broad shoulder guards and reinforced chest plate.
+- Assault: dark balaclava, red-edged goggles and red equipment markers.
+- Boss: wider command-coat silhouette and stance.
+
+These are source-art distinctions, not frame-by-frame animation. The existing 3×4 state atlas continues to render aim/fire/hit variants and retains its Kenney fallback. The 4×4 Library contact sheet remains uncommitted and is not runtime-loaded.
+
 ## Validation and replacement
 
 CI typecheck and production build validate Phaser API usage. Frame IDs 0–11 are created and checked before hasEnemyAnimationFrame reports success. CI does not visually inspect rendered sprites; desktop/browser and physical Android checks remain required for baseline, crop and appearance. The optional npm run verify:enemy-atlas script validates only the exact prepared WebP, not the runtime CanvasTexture.
