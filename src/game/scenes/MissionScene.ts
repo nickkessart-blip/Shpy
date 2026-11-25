@@ -1772,16 +1772,17 @@ export class MissionScene extends Phaser.Scene {
   private drawEnemyOverlays(): void {
     for (const enemy of this.enemies) {
       if (enemy.state === 'Defeated' || enemy.state === 'Hidden') continue;
+      if (enemy.state === 'Entering') {
+        const pulse = 1 + Math.sin(this.time.now / 85 + enemy.uid) * 0.12;
+        this.fx.lineStyle(2, 0xe0b66f, 0.72);
+        this.fx.strokeCircle(enemy.entryTargetX, enemy.y + 4, 28 * pulse);
+        continue;
+      }
       const def = ENEMIES[enemy.type];
       const barWidth = enemy.type === 'boss' ? 150 : 58;
       const barY = enemy.y - (enemy.type === 'boss' ? 140 : 88);
       this.fx.fillStyle(0x131a22, 0.95); this.fx.fillRoundedRect(enemy.x - barWidth / 2, barY, barWidth, 8, 3);
       this.fx.fillStyle(def.color, 1); this.fx.fillRoundedRect(enemy.x - barWidth / 2, barY, barWidth * (enemy.hp / enemy.maxHp), 8, 3);
-      if (enemy.state === 'Entering') {
-        const pulse = 1 + Math.sin(this.time.now / 85 + enemy.uid) * 0.12;
-        this.fx.lineStyle(2, 0xe0b66f, 0.72);
-        this.fx.strokeCircle(enemy.x, enemy.y + 4, 28 * pulse);
-      }
       if (enemy.state === 'Aiming') {
         this.fx.lineStyle(2, 0xe25c54, 0.9); this.fx.strokeCircle(enemy.x, enemy.y - 70, 25 + Math.sin(this.time.now / 90) * 3);
         this.fx.lineStyle(2, 0xe25c54, 0.65); this.fx.lineBetween(enemy.x, enemy.y - 70, MUZZLE.x, MUZZLE.y - 10);
