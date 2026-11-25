@@ -21,7 +21,8 @@ Do not start a new project. Do not silently change canon. Do not generate or edi
 - Repository: `nickkessart-blip/Shpy`; default branch: `main`.
 - Latest verified main commit at the start of this task: `0b0fe7ab1946e3e4e788be9f339a3e1a05212a40`.
 - PR #15, #16 and #17 are historical/integrated work; do not recreate their branches or duplicate their changes.
-- Active feature branch and PR: `docs/shpy-canon-rebaseline-2026-11-25` → PR #18 (base `main`). PR #18 now includes both the approved canon rebaseline and the first Casino rail-timeline code slice; it is still open and must not be assumed merged.
+- Active feature branch and PR: `docs/shpy-canon-rebaseline-2026-11-25` → PR #18 (base `main`). PR #18 includes the approved canon rebaseline, Casino rail-timeline slice, seeded enemy spawn director and first-pass physical cover occlusion; it is still open and must not be assumed merged.
+- Latest branch head at handoff refresh: `41c6064f49309df8525af13fa28b6a291b61ac41`. Latest verified main remains `0b0fe7ab1946e3e4e788be9f339a3e1a05212a40`.
 - Historical branch head before the first handoff refresh in this work session: `5a27635d3661f9887d8b47b61acefbe31171a03d`. Always query the live branch HEAD before editing. Query live branch HEAD before any subsequent edit; documentation commits may have moved it. Always query the live branch/PR head before writing; subsequent commits may move it.
 - Keep one shared game codebase for Web, Android and desktop. Do not create separate PC/mobile gameplay branches.
 - The latest user environment report is Node.js 24.19.0, npm 11.17.0 and Git 2.55.0.windows.3. CI currently uses Node.js 26.
@@ -82,7 +83,7 @@ The first deterministic rail timeline and independently moving Casino/Royale Bar
 - Integrated staggered `Entering` state in MissionScene with a fading enemy appearance and pulsing lane marker.
 - Enemies taking cover remain rendered at their cover position behind the cover layer. The muzzle-to-target segment is checked against the same cover rectangles before damage is applied; hidden targets cannot be shot through cover. Enemies sharing a cover use distinct peek offsets to reduce stacking.
 - Added six SpawnDirector tests (seed determinism, seed variation, bounds, separation/cover clearance, stagger/order with roster preservation, single boss) and two cover line-of-sight tests.
-- This is a code-level implementation only. Browser screenshots, manual combat QA and physical Android checks have not yet been performed. CI for the newest head is pending until the current workflow run finishes.
+- This is a code-level implementation only. Browser screenshots, manual combat QA and physical Android checks have not yet been performed. Run `45677074691` passed the previous head `0726f5cdea03d2c72feac86cfa8cf3ecccaa957a`; a later code push changed single-boss lane preservation and shared-cover peek spacing. CI for current head `41c6064f49309df8525af13fa28b6a291b61ac41` is pending and must be checked before merging.
 
 ### Skills and asset research
 
