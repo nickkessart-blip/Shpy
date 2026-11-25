@@ -7,7 +7,7 @@ import { ENEMIES, type EnemyType } from '../data/enemies';
 import { CASINO_MISSION, getMissionDefinition, type MissionSceneDefinition } from '../data/missions';
 import { AssetCatalog } from '../assets/AssetCatalog';
 import { getCosmetic } from '../data/cosmetics';
-import { findVisiblePeekX, pointInRect, resolveHit, type Point } from '../systems/combat/combatMath';
+import { findVisiblePeekX, isShotBlocked, pointInRect, resolveHit, type Point } from '../systems/combat/combatMath';
 import { runSession } from '../systems/missions/runSession';
 import { settingsService, type GameSettings } from '../../settings/SettingsService';
 import { moveAim } from '../systems/input/aimMath';
@@ -898,13 +898,14 @@ export class MissionScene extends Phaser.Scene {
 
       let best: { enemy: RuntimeEnemy; part: 'head' | 'body'; target: Point; distance: number } | null = null;
       for (const enemy of this.enemies) {
-        if (enemy.state === 'Defeated' || enemy.state === 'Hidden') continue;
+        if (enemy.state === 'Defeated') continue;
         const isBoss = enemy.type === 'boss';
         const head = { x: enemy.x, y: enemy.y - (isBoss ? 72 : 48) };
         const body = { x: enemy.x, y: enemy.y - 5 };
         const part = resolveHit(pelletAim, head, body, isBoss ? 42 : 32, isBoss ? 66 : 48);
         if (!part) continue;
         const target = part === 'head' ? head : body;
+        if (isShotBlocked(muzzleFxPoint, target, this.sceneDef.covers)) continue;
         const distance = Math.hypot(pelletAim.x - target.x, pelletAim.y - target.y);
         if (!best || distance < best.distance) best = { enemy, part, target, distance };
       }
@@ -1549,9 +1550,10 @@ export class MissionScene extends Phaser.Scene {
       const sprite = this.children.getByName(spriteKey) as Phaser.GameObjects.Image | null;
       const bossLabelKey = 'boss-name-' + enemy.uid;
       const bossLabel = this.children.getByName(bossLabelKey) as Phaser.GameObjects.Text | null;
-      if (enemy.state === 'Defeated' || enemy.state === 'Hidden') {
+      if (enemy.state === 'Defeated') {
         sprite?.setVisible(false); bossLabel?.setVisible(false); continue;
       }
+      if (enemy.state === 'Hidden') bossLabel?.setVisible(false);
       const def = ENEMIES[enemy.type];
       const hitOffset = enemy.hitFlash > 0 ? Math.sin(this.time.now / 24) * 5 * (enemy.hitFlash / 230) : 0;
       const idleBob = Math.sin((this.time.now + enemy.uid * 97) / 270) * 2.2;
@@ -1626,7 +1628,8 @@ export class MissionScene extends Phaser.Scene {
         if (!label) label = this.add.text(enemy.x, enemy.y - 164, 'НАЧАЛЬНИК ОХРАНЫ • ФАЗА I', {
           fontSize: '15px', color: '#f2d49a', fontStyle: 'bold', stroke: '#10161d', strokeThickness: 5,
         }).setOrigin(0.5).setName(bossLabelKey).setDepth(23);
-        label.setPosition(enemy.x, enemy.y - 164).setText('НАЧАЛЬНИК ОХРАНЫ • ФАЗА ' + (enemy.bossPhase + 1)).setVisible(true);
+        label.setPosition(enemy.x, enemy.y - 164).setText('НАЧАЛЬНИК ОХРАНЫ • ФАЗА ' + (enemy.bossPhase + 1))
+          .setVisible(enemy.state !== 'Hidden');
       }
       if (enemy.state === 'Aiming') {
         this.fx.lineStyle(2, 0xe25c54, 0.9); this.fx.strokeCircle(enemy.x, enemy.y - 70, 25 + Math.sin(this.time.now / 90) * 3);
