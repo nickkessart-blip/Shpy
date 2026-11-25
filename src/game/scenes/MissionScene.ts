@@ -595,11 +595,12 @@ export class MissionScene extends Phaser.Scene {
     this.enemies = spawnPlan.map((entry) => {
       const def = ENEMIES[entry.type];
       const entering = entry.entryDelayMs > 0;
+      const state: EnemyState = entering ? 'Entering' : 'Exposed';
       return {
         uid: this.uniqueId++, type: entry.type,
         x: entry.spawn.x, baseX: entry.spawn.x, y: entry.spawn.y, originY: entry.spawn.y,
         hp: def.hp, maxHp: def.hp, coverId: entry.spawn.coverId,
-        state: entering ? 'Entering' : 'Exposed',
+        state,
         timer: entering ? entry.entryDelayMs : Math.round(def.exposeMs * 0.4),
         entryDelayMs: entry.entryDelayMs, phase: 0, bossPhase: 0, hitFlash: 0,
       };
@@ -820,7 +821,7 @@ export class MissionScene extends Phaser.Scene {
           enemy.timer = def.peekMs;
           enemy.phase += 1;
           const cover = this.sceneDef.covers.find((item) => item.id === enemy.coverId);
-          if (cover) enemy.x = findVisiblePeekX(MUZZLE, cover);
+          if (cover) enemy.x = findVisiblePeekX(MUZZLE, cover, 58 + (enemy.uid % 4) * 30);
           enemy.y = enemy.originY;
           break;
         }
@@ -830,7 +831,7 @@ export class MissionScene extends Phaser.Scene {
           const cover = this.sceneDef.covers.find((item) => item.id === enemy.coverId);
           if (cover) {
             // Move to the side of the cover facing the player so the enemy can be hit while peeking.
-            enemy.x = findVisiblePeekX(MUZZLE, cover);
+            enemy.x = findVisiblePeekX(MUZZLE, cover, 58 + (enemy.uid % 4) * 30);
           } else {
             enemy.x = enemy.baseX + (enemy.phase % 2 === 0 ? -52 : 52);
           }
