@@ -15,6 +15,7 @@ import { getMobileControlScale } from '../systems/input/mobileControlLayout';
 import { FeedbackService, triggerHaptic } from '../systems/feedback/FeedbackService';
 import { RailTimeline } from '../systems/missions/RailTimeline';
 import { planEnemyWave, sampleSpawnEntryX } from '../systems/waves/SpawnDirector';
+import { sampleEnemyHitReaction } from '../systems/combat/enemyPresentation';
 
 type EnemyState = 'Entering' | 'Exposed' | 'Aiming' | 'Attacking' | 'SeekingCover' | 'Hidden' | 'Peeking' | 'Repositioning' | 'Defeated';
 interface RuntimeEnemy {
@@ -1690,10 +1691,11 @@ export class MissionScene extends Phaser.Scene {
       }
       if (enemy.state === 'Hidden') bossLabel?.setVisible(false);
       const def = ENEMIES[enemy.type];
-      const hitOffset = enemy.hitFlash > 0 ? Math.sin(this.time.now / 24) * 5 * (enemy.hitFlash / 230) : 0;
+      const hitReaction = sampleEnemyHitReaction(enemy.hitFlash, enemy.uid);
+      const hitOffset = enemy.hitFlash > 0 ? Math.sin(this.time.now / 24) * 2 * (enemy.hitFlash / 230) : 0;
       const idleBob = Math.sin((this.time.now + enemy.uid * 97) / 270) * 2.2;
-      const drawX = enemy.x + hitOffset;
-      const drawY = enemy.y - 20 + idleBob;
+      const drawX = enemy.x + hitReaction.offsetX + hitOffset;
+      const drawY = enemy.y - 20 + idleBob + hitReaction.offsetY;
       AssetCatalog.ensureKenneyEnemyFrames(this);
       const animationPose = enemy.hitFlash > 0 ? 'hit'
         : enemy.state === 'Attacking' ? 'fire' : 'aim';
@@ -1731,7 +1733,8 @@ export class MissionScene extends Phaser.Scene {
         const recoilKick = attacking ? Math.sin(attackProgress * Math.PI) : 0;
         const poseScaleX = 1 + (aiming ? -0.018 : 0) + breathing * 0.008;
         const poseScaleY = 1 + (aiming ? 0.025 : 0) - breathing * 0.006;
-        const poseLean = (aiming ? -1.8 : 0) + (attacking ? recoilKick * 2.2 : 0);
+        const poseLean = (aiming ? -1.8 : 0) + (attacking ? recoilKick * 2.2 : 0)
+          + hitReaction.angle;
         // Keep the atlas's 1:2 cell aspect ratio instead of stretching its characters.
         const generatedAtlas = hasAnimationFrame && AssetCatalog.usesGeneratedEnemyAnimationAtlas(this);
         const atlasContentHeight = enemy.type === 'boss' ? 300 : 320;
@@ -1739,7 +1742,8 @@ export class MissionScene extends Phaser.Scene {
         const atlasAspect = enemy.type === 'boss' ? 0.64 : 0.6;
         const displayWidth = generatedAtlas ? displayHeight * atlasAspect : hasAnimationFrame ? baseHeight * 0.5 : baseWidth;
         image.setPosition(drawX, drawY + (aiming ? -2 : 0) + (attacking ? recoilKick * 3 : 0))
-          .setDisplaySize(displayWidth * poseScaleX, displayHeight * poseScaleY).setVisible(true);
+          .setDisplaySize(displayWidth * poseScaleX * hitReaction.scaleX,
+            displayHeight * poseScaleY * hitReaction.scaleY).setVisible(true);
         const entryProgress = enemy.entryDurationMs > 0
           ? enemy.entryElapsedMs / enemy.entryDurationMs : 1;
         const entryAlpha = enemy.state === 'Entering' ? 0.2 + 0.8 * entryProgress : 1;
