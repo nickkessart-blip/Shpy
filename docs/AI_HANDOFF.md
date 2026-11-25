@@ -143,3 +143,13 @@ User explicitly asked to continue development after reporting that the prior rel
 - Inspected Library `SHPY_enemy_character_atlas.webp`: 1024×1536 RGBA, 4×4 cells of 256×384, alpha present. It is a larger candidate, but cell content has inconsistent bottom bounds and needs baseline normalization before runtime use.
 - Neither file is in the repository. The current runtime still composes its 3-state atlas from four committed SVGs. Do not describe either Library atlas as integrated.
 - Binary transfer from the materialized Library file into a GitHub blob was not available through the current tool path in this run. Do not replace this with an external fetch or a text file disguised as an image. Resume only with a verified binary-transfer route and then add the atlas to AssetCatalog/BootScene, test its frame map and inspect the rendered result.
+
+
+## Release slice: HQ inbox and agency research (2026-11-25)
+
+- Combined release branch: `release/pages-first-inbox-research-2026-11-25`, based on the current `main` after mobile aiming PR #19.
+- HQ phone now opens `HQInboxScene`: timed operative assignments, completed reports, claim through `AgentService.collectMission`, Components rewards and route back to Agency Computer.
+- Agency Computer research: informant network (+5 percentage points mission success/level), logistics (-10% dispatch duration/level), training (+20% operative XP/level). Components-funded; unlocks at account level 3.
+- Save schema v6 migrates older saves; research effects do not rewrite active runs.
+- The combined branch carries implementation files from PR #20 and #21 while preserving the latest `main` documentation and the Pages-first release rule.
+- Required CI: typecheck, Vitest, lint and production build. Publish only after merge to `main`; then verify the Pages deployment/source SHA.
