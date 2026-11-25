@@ -54,3 +54,27 @@ export function resolveHit(
   if (distance(aim, body) <= bodyRadius) return 'body';
   return null;
 }
+
+
+export type AimFeedbackState = 'none' | 'clear' | 'blocked';
+export interface AimFeedbackTarget {
+  head: Point;
+  body: Point;
+  headRadius: number;
+  bodyRadius: number;
+}
+
+/** Reports whether the current reticle is over a target and whether cover blocks the shot. */
+export function getAimFeedbackState(aim: Point, muzzle: Point,
+  targets: readonly AimFeedbackTarget[], covers: readonly Rect[]): AimFeedbackState {
+  let clearTarget = false;
+  let blockedTarget = false;
+  for (const target of targets) {
+    const part = resolveHit(aim, target.head, target.body, target.headRadius, target.bodyRadius);
+    if (!part) continue;
+    const point = part === 'head' ? target.head : target.body;
+    if (isShotBlocked(muzzle, point, [...covers])) blockedTarget = true;
+    else clearTarget = true;
+  }
+  return clearTarget ? 'clear' : blockedTarget ? 'blocked' : 'none';
+}
