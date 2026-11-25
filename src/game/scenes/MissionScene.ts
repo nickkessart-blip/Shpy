@@ -4,7 +4,7 @@ import { saveService } from '../../persistence/SaveService';
 import { BALANCE } from '../data/balance';
 import { getWeapon, getWeaponStats, LOADOUT_UNLOCKS, type WeaponId } from '../data/arsenal';
 import { ENEMIES, type EnemyType } from '../data/enemies';
-import { CASINO_MISSION, getMissionDefinition, type MissionSceneDefinition, type SpawnPoint } from '../data/missions';
+import { CASINO_MISSION, getMissionDefinition, type MissionSceneDefinition } from '../data/missions';
 import { AssetCatalog } from '../assets/AssetCatalog';
 import { getCosmetic } from '../data/cosmetics';
 import { findVisiblePeekX, pointInRect, resolveHit, type Point } from '../systems/combat/combatMath';
@@ -13,11 +13,12 @@ import { settingsService, type GameSettings } from '../../settings/SettingsServi
 import { moveAim } from '../systems/input/aimMath';
 import { FeedbackService, triggerHaptic } from '../systems/feedback/FeedbackService';
 import { RailTimeline } from '../systems/missions/RailTimeline';
+import { planEnemyWave } from '../systems/waves/SpawnDirector';
 
-type EnemyState = 'Exposed' | 'Aiming' | 'Attacking' | 'SeekingCover' | 'Hidden' | 'Peeking' | 'Repositioning' | 'Defeated';
+type EnemyState = 'Entering' | 'Exposed' | 'Aiming' | 'Attacking' | 'SeekingCover' | 'Hidden' | 'Peeking' | 'Repositioning' | 'Defeated';
 interface RuntimeEnemy {
   uid: number; type: EnemyType; x: number; baseX: number; y: number; originY: number; hp: number; maxHp: number;
-  coverId?: string; state: EnemyState; timer: number; phase: number; bossPhase: 0 | 1 | 2; hitFlash: number;
+  coverId?: string; state: EnemyState; timer: number; entryDelayMs: number; phase: number; bossPhase: 0 | 1 | 2; hitFlash: number;
 }
 
 const MUZZLE: Point = { x: GAME_WIDTH / 2, y: 662 };
@@ -588,12 +589,19 @@ export class MissionScene extends Phaser.Scene {
   private spawnWave(): void {
     const wave = this.sceneDef.waves[this.waveIndex];
     if (!wave) return;
-    this.enemies = wave.enemies.map((type, index) => {
-      const spawn: SpawnPoint = wave.spawnPoints[index] ?? { x: 300 + index * 190, y: 350 };
+    const seed = (this.startedAt ^ Math.imul(this.sceneIndex + 1, 0x9e3779b1)
+      ^ Math.imul(this.waveIndex + 1, 0x85ebca6b)) >>> 0;
+    const spawnPlan = planEnemyWave(wave.enemies, wave.spawnPoints, this.sceneDef.covers, seed);
+    this.enemies = spawnPlan.map((entry) => {
+      const def = ENEMIES[entry.type];
+      const entering = entry.entryDelayMs > 0;
       return {
-        uid: this.uniqueId++, type, x: spawn.x, baseX: spawn.x, y: spawn.y, originY: spawn.y,
-        hp: ENEMIES[type].hp, maxHp: ENEMIES[type].hp, coverId: spawn.coverId,
-        state: 'Exposed', timer: ENEMIES[type].exposeMs * (0.4 + index * 0.22), phase: 0, bossPhase: 0, hitFlash: 0,
+        uid: this.uniqueId++, type: entry.type,
+        x: entry.spawn.x, baseX: entry.spawn.x, y: entry.spawn.y, originY: entry.spawn.y,
+        hp: def.hp, maxHp: def.hp, coverId: entry.spawn.coverId,
+        state: entering ? 'Entering' : 'Exposed',
+        timer: entering ? entry.entryDelayMs : Math.round(def.exposeMs * 0.4),
+        entryDelayMs: entry.entryDelayMs, phase: 0, bossPhase: 0, hitFlash: 0,
       };
     });
     this.waveAwarded = false;
@@ -780,6 +788,8 @@ export class MissionScene extends Phaser.Scene {
       if (enemy.timer > 0) continue;
       const def = ENEMIES[enemy.type];
       switch (enemy.state) {
+        case 'Entering':
+          enemy.state = 'Exposed'; enemy.timer = Math.round(def.exposeMs * 0.4); break;
         case 'Exposed': {
           const bossAimScale = enemy.type === 'boss' ? [1, 0.8, 0.62][enemy.bossPhase] : 1;
           enemy.state = 'Aiming'; enemy.timer = Math.round(def.aimMs * bossAimScale); break;
@@ -1591,7 +1601,10 @@ export class MissionScene extends Phaser.Scene {
         const displayWidth = generatedAtlas ? displayHeight * 0.5 : hasAnimationFrame ? baseHeight * 0.5 : baseWidth;
         image.setPosition(drawX, drawY + (aiming ? -2 : 0) + (attacking ? recoilKick * 3 : 0))
           .setDisplaySize(displayWidth * poseScaleX, displayHeight * poseScaleY).setVisible(true);
-        image.setAlpha(enemy.hitFlash > 0 ? 0.72 + Math.abs(hitPulse) * 0.28 : 1);
+        const entryAlpha = enemy.state === 'Entering'
+          ? 0.18 + 0.82 * (1 - enemy.timer / Math.max(1, enemy.entryDelayMs)) : 1;
+        image.setAlpha(enemy.state === 'Entering' ? entryAlpha
+          : enemy.hitFlash > 0 ? 0.72 + Math.abs(hitPulse) * 0.28 : 1);
         image.setAngle(poseLean + Math.sin(phaseTime * 1.7) * (aiming ? 0.25 : 0.7));
         image.setTint(enemy.hitFlash > 0 ? 0xffd5d5 : (attacking ? 0xffe3c2 : 0xffffff));
       } else {
@@ -1740,6 +1753,11 @@ export class MissionScene extends Phaser.Scene {
       const barY = enemy.y - (enemy.type === 'boss' ? 140 : 88);
       this.fx.fillStyle(0x131a22, 0.95); this.fx.fillRoundedRect(enemy.x - barWidth / 2, barY, barWidth, 8, 3);
       this.fx.fillStyle(def.color, 1); this.fx.fillRoundedRect(enemy.x - barWidth / 2, barY, barWidth * (enemy.hp / enemy.maxHp), 8, 3);
+      if (enemy.state === 'Entering') {
+        const pulse = 1 + Math.sin(this.time.now / 85 + enemy.uid) * 0.12;
+        this.fx.lineStyle(2, 0xe0b66f, 0.72);
+        this.fx.strokeCircle(enemy.x, enemy.y + 4, 28 * pulse);
+      }
       if (enemy.state === 'Aiming') {
         this.fx.lineStyle(2, 0xe25c54, 0.9); this.fx.strokeCircle(enemy.x, enemy.y - 70, 25 + Math.sin(this.time.now / 90) * 3);
         this.fx.lineStyle(2, 0xe25c54, 0.65); this.fx.lineBetween(enemy.x, enemy.y - 70, MUZZLE.x, MUZZLE.y - 10);
