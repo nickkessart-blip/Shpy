@@ -25,7 +25,7 @@ const DEFAULT_OPTIONS: SpawnDirectorOptions = {
   maxY: 390,
   minSeparation: 135,
   relaxedSeparation: 105,
-  coverPadding: 24,
+  coverPadding: 64,
   entranceStaggerMs: 220,
 };
 
