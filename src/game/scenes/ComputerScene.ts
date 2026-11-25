@@ -65,7 +65,8 @@ export class ComputerScene extends Phaser.Scene {
       this.addText(this.content, 64, 690, this.notice, 12, '#f0c16d');
     }
     if (this.tab === 'upgrades') this.renderUpgrades(save);
-    else this.renderAgents(save);
+    else if (this.tab === 'agents') this.renderAgents(save);
+    else this.renderResearch(save);
   }
 
   private renderUpgrades(save: ReturnType<typeof saveService.load>): void {
