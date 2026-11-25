@@ -1683,7 +1683,6 @@ export class MissionScene extends Phaser.Scene {
           sprite.setVisible(true)
             .setPosition(enemy.x + Math.sin(progress * Math.PI) * 8, enemy.y - 20 + fall * 30)
             .setAngle((enemy.type === 'assault' ? 1 : -1) * 78 * fall)
-            .setScale(1 - progress * 0.18, 1 - progress * 0.42)
             .setAlpha(1 - progress)
             .setTint(0xffd8c4);
         }
