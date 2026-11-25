@@ -42,7 +42,9 @@ Older roadmap sections and numeric SHPY prototype phase labels are historical im
 ## Production order
 
 ### P0 — Rebuild and validate combat foundation
-- [ ] Implement a coherent moving rail/timeline for the Casino vertical slice.
+
+Implementation status (2026-11-25): the first deterministic route-clock slice is in progress on PR #18. It moves the existing depth layers independently and displays route progress. The authored seamless Casino layer set, enemy route lanes, spawn director and physical cover occlusion are still open; do not mark P0 complete.
+- [~] Add deterministic route timeline and independent far/mid/near scroll to the Casino prototype (first code slice; not the full rail-shooter acceptance). See [implementation plan](superpowers/plans/2026-11-25-casino-rail-timeline.md).
 - [ ] Use genuinely independent background layers and separate foreground/environment set pieces.
 - [ ] Fix pointer-to-world mapping; remove the reported curved reticle response.
 - [ ] Make cover render as physical occlusion; hidden enemies must not disappear.
