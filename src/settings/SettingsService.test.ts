@@ -36,7 +36,7 @@ describe('game settings', () => {
 
   it('preserves supported mobile control and graphics choices', () => {
     const result = normalizeSettings({
-      mobileControlMode: 'swipe',
+      mobileControlMode: 'tap',
       graphicsQuality: 'high',
       vibrationEnabled: false,
       parallaxEnabled: false,
