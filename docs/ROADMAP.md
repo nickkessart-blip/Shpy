@@ -72,7 +72,7 @@ Implementation status (2026-11-25): PR #18 adds a deterministic route clock, rou
 ### P3 — Economy, armory and meaningful progression
 - [ ] Simulate first failure, first clear, repeated early farming, new-sector unlock and boss clear.
 - [ ] Rebalance kill/wave/completion rewards and escalating costs; prevent early-wave/death farming.
-- [ ] Separate personal upgrades from agency infrastructure/research.
+- [~] Separate personal upgrades from agency infrastructure/research: the Agency Computer now has three component-funded research branches (intel, logistics, training); deeper infrastructure and automation doctrine remain open.
 - [ ] Expand perks into concrete branches with readable effects and selected synergies.
 - [ ] Add a meaningful attachment pool and real weapon/agent visual layer separation.
 - [ ] Move actual kit confirmation to Mission Preparation.
