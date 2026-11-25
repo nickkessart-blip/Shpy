@@ -146,3 +146,10 @@ Current numeric values in `balance.ts` and `enemies.ts` are prototype values, no
 - Clear target: green reticle and green fire-button rim. Target under the reticle but behind cover: amber reticle and amber rim. No target: neutral white reticle and original fire-button rim.
 - The mobile reticle is enlarged slightly for thumb-based play. Feedback is visual only; it does not change hitboxes, damage, or aim position.
 - Unit tests cover clear target, cover-blocked target, no target and overlapping target cases.
+
+### Enemy hit reaction presentation — 2026-11-26
+
+- A confirmed hit now produces a deterministic directional knockback pose: horizontal displacement, brief lean and slight squash/stretch, decaying with the existing 230 ms hit flash.
+- Direction is stable per enemy identity to avoid random visual jitter. The sampler is pure and covered by Vitest.
+- The sampled pose is render-only. It does not alter enemy world coordinates, target hitboxes, cover tests, aim or damage.
+- This improves readability but does not replace hand-authored hit/recoil frames.
