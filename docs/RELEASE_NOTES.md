@@ -128,3 +128,12 @@
 
 ## Ограничения
 Сборка остаётся Web-игрой. Проверки CI не заменяют физический плейтест на Android. Полные спрайтовые анимации героя и врагов, 2.5D-камера по рельсам и следующая сюжетная операция остаются следующим этапом.
+
+## 2026-11-25 — Seeded enemy spawn and physical cover slice
+- Added a Phaser-independent seeded SpawnDirector with authored-lane candidates, bounded lane generation, cover clearance, minimum separation and reproducible entrance ordering.
+- Preserved each wave's authored enemy-role roster; only lane assignment, order and entrance timing vary by run. This avoids silently changing combat balance while removing identical spawn silhouettes.
+- Added staggered enemy entry cues with a visible, fading lane marker.
+- Enemies taking cover are now rendered behind the cover layer instead of being hidden by a state toggle. Shot resolution checks the muzzle-to-hitbox segment against the same cover rectangles, so covered targets cannot be hit through the prop.
+- Enemies assigned to the same cover use different peek offsets to reduce stacked silhouettes.
+- Added focused SpawnDirector determinism, spacing, bounds, cover-clearance and composition tests, plus cover line-of-sight tests.
+- Continuous route-lane movement, dynamic role composition, full cover destruction and browser/Android visual validation remain open.
