@@ -117,3 +117,7 @@ Implementation status (2026-11-25): PR #18 adds a deterministic route clock, rou
 ## Pages-first release rule
 
 Every completed, CI-validated implementation slice must be integrated into `main` and deployed to GitHub Pages before the next feature begins. Verify the main deployment workflow and deployed commit SHA, then include the live Pages URL in the completion report. PR CI alone is not publication. The user checks builds through Pages, primarily on a phone.
+
+
+### Mobile touch target recovery — 2026-11-25
+- [~] Increase physical mobile control hit-area size on compact landscape screens and harden fire press/release lifecycle. CI and Pages publication pending; physical Android QA remains required.
