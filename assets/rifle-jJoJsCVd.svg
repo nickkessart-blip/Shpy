@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 620"><defs>
+<linearGradient id="s" x2="1" y2="0"><stop stop-color="#101923"/><stop offset=".5" stop-color="#405267"/><stop offset="1" stop-color="#101820"/></linearGradient>
+<linearGradient id="m" x2="1" y2="1"><stop stop-color="#8d9ba1"/><stop offset=".4" stop-color="#384650"/><stop offset="1" stop-color="#111a22"/></linearGradient>
+<linearGradient id="g" x2="0" y2="1"><stop stop-color="#d7b092"/><stop offset="1" stop-color="#8c624c"/></linearGradient>
+</defs>
+<path d="M72 620Q75 525 111 433L139 362Q179 335 220 363L253 436Q287 535 285 620Z" fill="url(#s)" stroke="#080e14" stroke-width="9"/>
+<path d="M105 620Q115 537 146 447L170 389H199L230 450Q255 537 257 620Z" fill="#27394a" stroke="#0a1118" stroke-width="5"/>
+<path d="M112 389Q105 354 130 322L151 285Q177 264 203 278L233 309Q249 338 232 382L211 410Q176 425 141 410Z" fill="url(#g)" stroke="#523a2d" stroke-width="8"/>
+<path d="M128 366Q150 339 179 353L215 380Q205 405 177 408L142 392Z" fill="#b98a6d" stroke="#765541" stroke-width="5"/>
+<path d="M101 402Q90 375 110 351L130 338L153 369L137 413Z" fill="url(#g)" stroke="#694b3b" stroke-width="5"/><path d="M166 9H198V175H166Z" fill="url(#m)" stroke="#080e14" stroke-width="8"/>
+<path d="M154 26H210V47H154Z" fill="#121b23" stroke="#78868e" stroke-width="4"/>
+<path d="M150 77H213V100H150Z" fill="#101820" stroke="#89959a" stroke-width="4"/>
+<path d="M128 137H232L245 264H115Z" fill="#273844" stroke="#080e14" stroke-width="10"/>
+<path d="M140 159H220M137 181H223M135 204H225M134 227H226" stroke="#9aa5aa" stroke-width="4" opacity=".55"/>
+<path d="M120 231H240V309H120Z" fill="url(#m)" stroke="#080e14" stroke-width="8"/>
+<path d="M142 247H218V273H142Z" fill="#17232b" stroke="#89959a" stroke-width="3"/>
+<path d="M155 297H207Q224 310 219 346L211 402Q205 419 187 420H165Q148 417 145 399L140 344Q137 312 155 297Z" fill="#202d36" stroke="#080e14" stroke-width="9"/>
+<path d="M158 317H203L196 385H163Z" fill="#3b4d57"/>
+<path d="M160 334 199 346M160 357 198 369M162 379 194 390" stroke="#111a22" stroke-width="6"/>
+<rect x="157" y="54" width="50" height="35" rx="7" fill="#141e27" stroke="#8a969c" stroke-width="4"/>
+<rect x="167" y="61" width="30" height="21" rx="4" fill="#294451"/>
+<ellipse cx="182" cy="71" rx="11" ry="7" fill="#84a2ad" opacity=".7"/></svg>

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
+<defs>
+ <linearGradient id="counter" x2="0" y2="1"><stop stop-color="#754538"/><stop offset=".28" stop-color="#3d2728"/><stop offset="1" stop-color="#11171e"/></linearGradient>
+ <linearGradient id="brass" x2="0" y2="1"><stop stop-color="#f4d9a1"/><stop offset=".5" stop-color="#ad7942"/><stop offset="1" stop-color="#53341f"/></linearGradient>
+ <linearGradient id="leather" x2="0" y2="1"><stop stop-color="#8a5340"/><stop offset="1" stop-color="#241a1c"/></linearGradient>
+</defs>
+<g>
+ <path d="M0 500Q640 445 1280 500V630Q640 575 0 630Z" fill="url(#counter)" stroke="url(#brass)" stroke-width="9"/>
+ <path d="M0 520Q640 465 1280 520" fill="none" stroke="#f1d7a0" stroke-opacity=".55" stroke-width="4"/>
+ <path d="M0 600Q640 550 1280 600" fill="none" stroke="#a76e43" stroke-width="5"/>
+ <path d="M0 628H1280V720H0Z" fill="#101820" opacity=".9"/>
+ <path d="M0 650H1280" stroke="#d1a36d" stroke-opacity=".25" stroke-width="4"/>
+</g>
+<g transform="translate(210 555)">
+ <ellipse cy="90" rx="54" ry="12" fill="#05090d" opacity=".6"/>
+ <path d="M-42 -5Q-55 -92 0 -102Q55 -92 42 -5L32 22H-32Z" fill="url(#leather)" stroke="url(#brass)" stroke-width="6"/>
+ <path d="M-28 16 -38 88M28 16 38 88M-18 16 -14 88M18 16 14 88" stroke="#101820" stroke-width="8"/>
+</g>
+<g transform="translate(640 535)">
+ <ellipse cy="90" rx="54" ry="12" fill="#05090d" opacity=".6"/>
+ <path d="M-42 -5Q-55 -92 0 -102Q55 -92 42 -5L32 22H-32Z" fill="url(#leather)" stroke="url(#brass)" stroke-width="6"/>
+ <path d="M-28 16 -38 88M28 16 38 88M-18 16 -14 88M18 16 14 88" stroke="#101820" stroke-width="8"/>
+</g>
+<g transform="translate(1070 555)">
+ <ellipse cy="90" rx="54" ry="12" fill="#05090d" opacity=".6"/>
+ <path d="M-42 -5Q-55 -92 0 -102Q55 -92 42 -5L32 22H-32Z" fill="url(#leather)" stroke="url(#brass)" stroke-width="6"/>
+ <path d="M-28 16 -38 88M28 16 38 88M-18 16 -14 88M18 16 14 88" stroke="#101820" stroke-width="8"/>
+</g>
+<g fill="#d9e4df" fill-opacity=".5" stroke="#f0d9ad" stroke-width="2">
+ <path d="M450 468H480L474 506H456Z"/><path d="M800 468H830L824 506H806Z"/>
+ <path d="M442 462H488L480 472H450Z"/><path d="M792 462H838L830 472H800Z"/>
+</g>
+</svg>

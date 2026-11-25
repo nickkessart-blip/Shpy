@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
+<defs>
+ <linearGradient id="machine" x2="0" y2="1"><stop stop-color="#405360"/><stop offset=".4" stop-color="#17232e"/><stop offset="1" stop-color="#090f16"/></linearGradient>
+ <linearGradient id="brass" x2="0" y2="1"><stop stop-color="#f4d59a"/><stop offset=".5" stop-color="#aa7440"/><stop offset="1" stop-color="#52331f"/></linearGradient>
+ <radialGradient id="screen"><stop stop-color="#ffe7b3"/><stop offset=".28" stop-color="#d89b54"/><stop offset="1" stop-color="#4d202a"/></radialGradient>
+ <linearGradient id="table" x2="0" y2="1"><stop stop-color="#26745c"/><stop offset="1" stop-color="#0c302b"/></linearGradient>
+</defs>
+<g opacity=".98">
+ <g transform="translate(82 230)">
+  <rect width="128" height="224" rx="12" fill="url(#machine)" stroke="url(#brass)" stroke-width="7"/>
+  <rect x="14" y="17" width="100" height="122" rx="8" fill="#101820" stroke="#9a7046" stroke-width="4"/>
+  <rect x="23" y="27" width="82" height="102" rx="5" fill="url(#screen)"/>
+  <g fill="#f4dfad" font-size="24" text-anchor="middle"><text x="42" y="82">7</text><text x="65" y="82">★</text><text x="88" y="82">7</text></g>
+  <circle cx="64" cy="169" r="12" fill="#d6b06f"/><rect x="28" y="194" width="72" height="12" rx="6" fill="#b27b45"/>
+ </g>
+ <g transform="translate(250 252) scale(.88)">
+  <rect width="128" height="224" rx="12" fill="url(#machine)" stroke="url(#brass)" stroke-width="7"/>
+  <rect x="14" y="17" width="100" height="122" rx="8" fill="#101820" stroke="#9a7046" stroke-width="4"/>
+  <rect x="23" y="27" width="82" height="102" rx="5" fill="url(#screen)"/>
+  <g fill="#f4dfad" font-size="24" text-anchor="middle"><text x="42" y="82">♦</text><text x="65" y="82">7</text><text x="88" y="82">♠</text></g>
+  <circle cx="64" cy="169" r="12" fill="#d6b06f"/><rect x="28" y="194" width="72" height="12" rx="6" fill="#b27b45"/>
+ </g>
+ <g transform="translate(902 252) scale(.88)">
+  <rect width="128" height="224" rx="12" fill="url(#machine)" stroke="url(#brass)" stroke-width="7"/>
+  <rect x="14" y="17" width="100" height="122" rx="8" fill="#101820" stroke="#9a7046" stroke-width="4"/>
+  <rect x="23" y="27" width="82" height="102" rx="5" fill="url(#screen)"/>
+  <g fill="#f4dfad" font-size="24" text-anchor="middle"><text x="42" y="82">♣</text><text x="65" y="82">7</text><text x="88" y="82">♥</text></g>
+  <circle cx="64" cy="169" r="12" fill="#d6b06f"/><rect x="28" y="194" width="72" height="12" rx="6" fill="#b27b45"/>
+ </g>
+ <g transform="translate(1070 230)">
+  <rect width="128" height="224" rx="12" fill="url(#machine)" stroke="url(#brass)" stroke-width="7"/>
+  <rect x="14" y="17" width="100" height="122" rx="8" fill="#101820" stroke="#9a7046" stroke-width="4"/>
+  <rect x="23" y="27" width="82" height="102" rx="5" fill="url(#screen)"/>
+  <g fill="#f4dfad" font-size="24" text-anchor="middle"><text x="42" y="82">7</text><text x="65" y="82">★</text><text x="88" y="82">7</text></g>
+  <circle cx="64" cy="169" r="12" fill="#d6b06f"/><rect x="28" y="194" width="72" height="12" rx="6" fill="#b27b45"/>
+ </g>
+</g>
+<g>
+ <path d="M500 170H780V430H500Z" fill="#111a24" stroke="url(#brass)" stroke-width="9"/>
+ <path d="M525 195H755V430H525Z" fill="#273b46" stroke="#8f6945" stroke-width="3"/>
+ <path d="M568 430V302Q640 215 712 302V430Z" fill="#09131c" stroke="url(#brass)" stroke-width="8"/>
+ <path d="M588 430V310Q640 250 692 310V430Z" fill="#213b49"/>
+ <path d="M604 430V327Q640 282 676 327V430Z" fill="#0d1922"/>
+ <path d="M535 440H745" stroke="#d2ad72" stroke-width="6"/>
+</g>
+<g transform="translate(640 520)">
+ <ellipse rx="182" ry="62" fill="#050a0f" opacity=".55"/>
+ <ellipse cy="-15" rx="170" ry="54" fill="url(#table)" stroke="url(#brass)" stroke-width="10"/>
+ <ellipse cy="-15" rx="130" ry="38" fill="none" stroke="#d8bd8b" stroke-width="3"/>
+ <circle cy="-15" r="25" fill="#b58b55" stroke="#f0d9a6" stroke-width="4"/>
+ <path d="M0 -15V-53M0 -15 35 -5M0 -15 -30 8" stroke="#f3dba8" stroke-width="3"/>
+ <path d="M-110 20Q0 48 110 20" fill="none" stroke="#c6a16c" stroke-width="3"/>
+</g>
+</svg>

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
+<defs>
+ <linearGradient id="glass" x2="0" y2="1"><stop stop-color="#93b2bf" stop-opacity=".56"/><stop offset=".48" stop-color="#2b4654" stop-opacity=".9"/><stop offset="1" stop-color="#101c27"/></linearGradient>
+ <linearGradient id="gold" x2="0" y2="1"><stop stop-color="#f5dda8"/><stop offset=".5" stop-color="#b07b43"/><stop offset="1" stop-color="#56351e"/></linearGradient>
+ <radialGradient id="lamp"><stop stop-color="#ffe5ad" stop-opacity=".9"/><stop offset="1" stop-color="#e7a24f" stop-opacity="0"/></radialGradient>
+ <linearGradient id="neon" x2="0" y2="1"><stop stop-color="#f8d8a0"/><stop offset="1" stop-color="#a54b44"/></linearGradient>
+</defs>
+<g opacity=".95">
+ <path d="M145 126H410V414H145Z" fill="#0e1821" stroke="url(#gold)" stroke-width="9"/>
+ <path d="M164 146H391V394H164Z" fill="url(#glass)" stroke="#d0a56c" stroke-width="3"/>
+ <path d="M870 126H1135V414H870Z" fill="#0e1821" stroke="url(#gold)" stroke-width="9"/>
+ <path d="M889 146H1116V394H889Z" fill="url(#glass)" stroke="#d0a56c" stroke-width="3"/>
+ <g stroke="#c6a477" stroke-opacity=".75" stroke-width="5"><path d="M277 146V394M164 270H391M1002 146V394M889 270H1116"/></g>
+ <g fill="#b7d0d6" opacity=".12"><path d="M180 160 350 160 230 370H180Z"/><path d="M905 160H1075L955 370H905Z"/></g>
+</g>
+<g fill="#0c141d" stroke="url(#gold)" stroke-width="5">
+ <path d="M28 196H112V438H28Z"/><path d="M1168 196H1252V438H1168Z"/>
+ <path d="M42 210H98V420H42ZM1182 210H1238V420H1182Z" fill="#26343d"/>
+</g>
+<g fill="url(#lamp)"><circle cx="277" cy="168" r="96"/><circle cx="1003" cy="168" r="96"/></g>
+<g stroke="#d9b57b" stroke-width="5" fill="none"><path d="M277 70V125M247 125H307M1003 70V125M973 125H1033"/></g>
+<g transform="translate(640 110)">
+ <path d="M-180 0H180L150 76H-150Z" fill="#111b25" stroke="url(#gold)" stroke-width="7"/>
+ <path d="M-150 12H150" stroke="#e8c78d" stroke-width="3"/>
+ <text y="51" text-anchor="middle" font-family="Georgia,serif" font-size="34" letter-spacing="12" fill="url(#neon)">ROYALE</text>
+ <text y="72" text-anchor="middle" font-family="Arial,sans-serif" font-size="9" letter-spacing="7" fill="#e6bd7e">CASINO • CLUB</text>
+</g>
+<g stroke="#a77b4a" stroke-width="4" fill="none" opacity=".75">
+ <path d="M72 480V420Q72 390 102 390H1178Q1208 390 1208 420V480"/>
+ <path d="M110 440H1170"/>
+</g>
+</svg>

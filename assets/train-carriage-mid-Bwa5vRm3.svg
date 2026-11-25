@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+<defs><clipPath id="glass"><rect x="75" y="115" width="250" height="210" rx="10"/><rect x="365" y="115" width="250" height="210" rx="10"/><rect x="665" y="115" width="250" height="210" rx="10"/><rect x="955" y="115" width="250" height="210" rx="10"/></clipPath>
+<linearGradient id="reflection" x2="1" y2="0"><stop stop-color="#d9e5ed" stop-opacity="0"/><stop offset=".5" stop-color="#d9e5ed" stop-opacity=".2"/><stop offset="1" stop-color="#d9e5ed" stop-opacity="0"/></linearGradient></defs>
+<g clip-path="url(#glass)">
+ <g stroke="#d6e4ed" stroke-linecap="round" opacity=".38">
+  <path d="M92 118l-54 185M150 112l-62 205M228 105l-48 185M382 118l-56 185M455 110l-58 198M540 115l-48 184M680 112l-58 198M755 110l-55 198M845 112l-50 180M970 112l-55 190M1055 110l-58 195M1160 115l-54 180" stroke-width="3"/>
+ </g>
+ <g fill="url(#reflection)" opacity=".8"><path d="M70 120h85l-95 210H20zM460 110h58L420 335h-60zM790 110h75L760 335h-65zM1110 110h70l-80 225h-65z"/></g>
+ <path d="M60 290Q300 250 640 290T1220 280" fill="none" stroke="#dbe9f0" stroke-width="2" opacity=".2"/>
+</g>
+</svg>

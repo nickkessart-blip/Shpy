@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+<defs><linearGradient id="leather" x2="0" y2="1"><stop stop-color="#59616a"/><stop offset=".45" stop-color="#303943"/><stop offset="1" stop-color="#141c25"/></linearGradient><linearGradient id="brass" x2="0" y2="1"><stop stop-color="#e4c18a"/><stop offset="1" stop-color="#795b36"/></linearGradient></defs>
+<!-- foreground seat backs and armrests, intentionally transparent between objects -->
+<g stroke="#0b1118" stroke-width="10" stroke-linejoin="round">
+ <path d="M35 395Q48 365 88 365H440Q480 372 493 412L520 510H8Z" fill="url(#leather)"/>
+ <path d="M760 410Q780 368 820 365H1170Q1210 372 1228 414L1272 510H744Z" fill="url(#leather)"/>
+</g>
+<g fill="none" stroke="url(#brass)" stroke-width="7" opacity=".7"><path d="M45 430H470M790 430H1200"/><path d="M90 382V485M430 382V485M845 382V485M1185 382V485"/></g>
+<g fill="#aab5bd" opacity=".2"><path d="M68 456H455V472H68zM790 456H1180V472H790z"/></g>
+<g fill="#171f27" stroke="#8a765d" stroke-width="5"><path d="M0 520H1280V550H0Z"/><path d="M0 574H1280V584H0Z"/></g>
+<g stroke="#d4b47d" stroke-width="3" opacity=".35"><path d="M0 520H1280M0 585H1280"/></g>
+</svg>

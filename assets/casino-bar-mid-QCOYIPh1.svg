@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
+<defs>
+ <linearGradient id="bottle" x2="0" y2="1"><stop stop-color="#9cc8a5" stop-opacity=".95"/><stop offset=".35" stop-color="#3e7561"/><stop offset="1" stop-color="#18372f"/></linearGradient>
+ <linearGradient id="glass" x2="0" y2="1"><stop stop-color="#dce6dc" stop-opacity=".5"/><stop offset="1" stop-color="#72928e" stop-opacity=".12"/></linearGradient>
+ <linearGradient id="brass" x2="0" y2="1"><stop stop-color="#f5dca4"/><stop offset=".5" stop-color="#a97842"/><stop offset="1" stop-color="#52321e"/></linearGradient>
+ <radialGradient id="glow"><stop stop-color="#f5c27b" stop-opacity=".72"/><stop offset="1" stop-color="#f5c27b" stop-opacity="0"/></radialGradient>
+</defs>
+<g>
+ <path d="M0 430H1280V464H0Z" fill="#241b1d" stroke="url(#brass)" stroke-width="5"/>
+ <path d="M40 450H1240" stroke="#e1bb82" stroke-width="3"/>
+</g>
+<g fill="url(#bottle)" stroke="#bdd4b6" stroke-width="2">
+ <path d="M178 235H198V270L214 291V394H162V291L178 270Z"/><path d="M235 215H255V250L271 271V394H219V271L235 250Z"/>
+ <path d="M292 245H312V280L328 301V394H276V301L292 280Z"/><path d="M385 225H405V260L421 281V394H369V281L385 260Z"/>
+ <path d="M460 238H480V273L496 294V394H444V294L460 273Z"/><path d="M535 210H555V245L571 266V394H519V266L535 245Z"/>
+ <path d="M700 235H720V270L736 291V394H684V291L700 270Z"/><path d="M765 210H785V245L801 266V394H749V266L765 245Z"/>
+ <path d="M840 245H860V280L876 301V394H824V301L840 280Z"/><path d="M920 220H940V255L956 276V394H904V276L920 255Z"/>
+ <path d="M1000 240H1020V275L1036 296V394H984V296L1000 275Z"/><path d="M1080 215H1100V250L1116 271V394H1064V271L1080 250Z"/>
+</g>
+<g fill="#e2c58e" opacity=".8"><rect x="154" y="393" width="972" height="8" rx="4"/><rect x="154" y="405" width="972" height="4" rx="2"/></g>
+<g>
+ <path d="M330 0V82M950 0V82" stroke="url(#brass)" stroke-width="7"/>
+ <path d="M282 82H378L360 119H300ZM902 82H998L980 119H920Z" fill="#f0d6a0" stroke="#a87643" stroke-width="4"/>
+ <ellipse cx="330" cy="124" rx="130" ry="70" fill="url(#glow)"/><ellipse cx="950" cy="124" rx="130" ry="70" fill="url(#glow)"/>
+</g>
+<g transform="translate(640 118)">
+ <path d="M-220 0H220" stroke="url(#brass)" stroke-width="5"/>
+ <text y="42" text-anchor="middle" font-family="Georgia,serif" font-size="30" letter-spacing="8" fill="#f1d6a5">THE ROYALE BAR</text>
+ <text y="65" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" letter-spacing="5" fill="#c99c65">COCKTAILS • PRIVATE ROOM</text>
+</g>
+<g fill="url(#glass)" stroke="#d7e2d9" stroke-opacity=".55" stroke-width="2">
+ <path d="M600 315H630L626 365H604Z"/><path d="M650 315H680L676 365H654Z"/>
+ <path d="M592 310H638L630 320H600Z"/><path d="M642 310H688L680 320H650Z"/>
+</g>
+</svg>
