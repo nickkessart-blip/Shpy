@@ -246,3 +246,13 @@ The user reports a complete failure in graphics quality and mobile shooting and 
 - Workflow fix commit: 9b5a1a883dc58d3b0b04de5949187f86bee50d52.
 - CI run 45698016511 and Pages run 45698016497 both completed successfully. Pages run used the same main SHA; prototype-build updated to 5a6d63ff14b99b1316ccb2b3248dc1130a119382.
 - Current main SHA: 9b5a1a883dc58d3b0b04de5949187f86bee50d52.
+
+## Enemy defeat feedback slice — 2026-11-26
+
+- Branch: `feat/enemy-defeat-feedback-2026-11-26`, based on current `main` at `e303af143fa268486079dcc3c9d7cfec7a421388`.
+- Added a short readable defeat reaction to the existing enemy sprites: defeated enemies remain visible for 520 ms, tip/fall, shift slightly and fade instead of disappearing on the kill frame.
+- Wave completion/reward/transition waits until all defeat reactions finish, preventing the next wave from clearing the sprites immediately.
+- Applied to normal weapon kills and grenade kills. Hitboxes, damage, target coordinates and spawn/combat timing are unchanged.
+- This is a code-driven death feedback pass, not a hand-authored full animation cycle. Idle/walk/fire/hit/death sprite sheets and physical Android visual QA remain open.
+- Validation and Pages publication are pending until PR CI and main deployment complete.
+
