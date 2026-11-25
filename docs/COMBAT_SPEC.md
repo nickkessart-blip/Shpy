@@ -170,3 +170,11 @@ Current numeric values in `balance.ts` and `enemies.ts` are prototype values, no
 - A shot already fired remains in flight even if its shooter is defeated. Wave rewards/transition wait for all in-flight rounds to resolve so damage cannot leak into the next scene.
 - This is a readable incoming-fire timeline, not player dodge or projectile interception. The current player position is fixed; adding dodge/cover/interception counterplay is a separate design task.
 - Unit tests cover linear trajectory, boundary clamping, exact endpoints and invalid timing/coordinates. Physical Android readability and latency checks remain required.
+
+## Player duck/evade counterplay — 2026-11-26
+
+- Desktop: press Shift. Touch: use the persistent УКЛОН button in the lower-left utility row beside grenade/medkit.
+- The dodge lasts 560 ms, uses a 2,400 ms cooldown, and dips the player's viewmodel and chest hit point downward by up to 68 world/screen pixels. Its safe window exists only through the central portion of the animation; pressing too early or after recovery does not avoid a hit.
+- Enemy rounds retain their original recorded world target. At arrival, the projectile is compared with the current ducked player hit point; it misses only when the active crouch has moved the hit point far enough away. A projectile launched while the player is already crouching aims at the crouched point.
+- The button shows the remaining cooldown in seconds. A green dodge effect and confirmation feedback mark a successful miss; damage, armour and hit flash remain unchanged when the dodge is mistimed.
+- This is a timing-based crouch, not lateral movement, cover destruction or projectile interception. Physical Android layout/readability and balance tuning remain required.

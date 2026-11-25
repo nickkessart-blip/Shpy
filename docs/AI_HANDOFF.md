@@ -325,3 +325,12 @@ The user reports a complete failure in graphics quality and mobile shooting and 
 - Added tests for frame muzzle coordinates, rigid rotation, per-weapon alignment and invalid inputs.
 - Added `scripts/verify-first-person-atlas.mjs` and `npm run verify:first-person-atlas` to validate PNG signature, indexed transparency, dimensions, exact size and SHA-256. CI and Pages workflows execute the check.
 - This does not yet create separate swappable arm/sleeve/weapon cosmetic layers. Physical Android viewmodel scale/alignment is not yet tested.
+## Player duck/evade counterplay — 2026-11-26
+
+- Ability: Shift on desktop or the persistent УКЛОН button in the lower-left mobile utility row. It lasts 560 ms and has a 2,400 ms cooldown.
+- Pure timing logic is in `src/game/systems/combat/playerDodge.ts`: a smooth crouch lowers the player chest hit point by up to 68 px. `canEvade` is true only during the central portion of the curve.
+- MissionScene moves the first-person rig down by the same sampled offset and obtains the current chest hit point from the camera world transform. Fired enemy rounds preserve their original target; on impact, `isPlayerDodgeEvading()` checks the current lowered hit point and only converts the hit into a miss when distance and timing both pass.
+- Projectiles fired while the player is already crouched acquire the crouched target point. Mistimed evades do not grant damage immunity.
+- The button displays cooldown seconds and becomes disabled until ready; a green slash/ring, confirmation SFX and dodge haptic mark a successful miss.
+- Unit tests cover duration/cooldown, crouch ramp, active window, hit-point separation and invalid data.
+- This is a timed duck only. There is no lateral strafe, cover interception or projectile destruction. Physical Android testing and balance tuning remain outstanding.

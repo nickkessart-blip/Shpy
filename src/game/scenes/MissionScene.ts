@@ -24,6 +24,12 @@ import {
 } from '../systems/combat/enemyCombatRules';
 import { getEnemyProjectileTravelMs, sampleEnemyProjectile } from '../systems/combat/enemyProjectile';
 import {
+  PLAYER_DODGE_COOLDOWN_MS,
+  PLAYER_DODGE_DURATION_MS,
+  isPlayerDodgeEvading,
+  samplePlayerDodgePose,
+} from '../systems/combat/playerDodge';
+import {
   getFirstPersonWeaponMuzzlePoint,
   getFirstPersonWeaponRotationOffset,
 } from '../systems/combat/weaponViewmodel';
@@ -53,7 +59,7 @@ export class MissionScene extends Phaser.Scene {
   private coverLayer!: Phaser.GameObjects.Graphics;
   private fx!: Phaser.GameObjects.Graphics;
   private weaponRig?: Phaser.GameObjects.Container;
-  private impactEffects: Array<{ x: number; y: number; life: number; maxLife: number; kind: 'hit' | 'cover' | 'miss' | 'explosion' | 'enemy-muzzle' | 'player-hit'; damage: number }> = [];
+  private impactEffects: Array<{ x: number; y: number; life: number; maxLife: number; kind: 'hit' | 'cover' | 'miss' | 'explosion' | 'enemy-muzzle' | 'player-hit' | 'player-dodge'; damage: number }> = [];
   private selectedWeapons: WeaponId[] = ['pistol'];
   private currentWeaponId: WeaponId = 'pistol';
   private weaponAmmo = new Map<WeaponId, { magazine: number; reserve: number }>();
@@ -99,6 +105,8 @@ export class MissionScene extends Phaser.Scene {
   private reloading = 0;
   private shotCooldown = 0;
   private shotFlash = 0;
+  private dodgeRemainingMs = 0;
+  private dodgeCooldownMs = 0;
   private toastTimer = 0;
   private toastText = '';
   private startedAt = 0;
@@ -122,6 +130,8 @@ export class MissionScene extends Phaser.Scene {
   private mobileSwitchButton?: HTMLButtonElement;
   private mobileSwitchCaption?: HTMLSpanElement;
   private mobileFireButton?: HTMLButtonElement;
+  private mobileDodgeButton?: HTMLButtonElement;
+  private mobileDodgeCaption?: HTMLSpanElement;
   private mobileGrenadeCaption?: HTMLSpanElement;
   private mobileMedkitCaption?: HTMLSpanElement;
   private mobileAimStick?: HTMLDivElement;
@@ -202,6 +212,10 @@ export class MissionScene extends Phaser.Scene {
     this.mobileFireHeld = false;
     this.desktopFireHeld = false;
     this.mobileFirePointerId = null;
+    this.dodgeRemainingMs = 0;
+    this.dodgeCooldownMs = 0;
+    this.mobileDodgeButton = undefined;
+    this.mobileDodgeCaption = undefined;
     this.aimStickVector = { x: 0, y: 0 };
     this.aimStickActive = false;
     this.aimStickPointerId = null;
@@ -324,6 +338,7 @@ export class MissionScene extends Phaser.Scene {
       if (event.code === 'Digit3' || event.code === 'Numpad3') this.selectWeaponSlot(2);
       if (event.code === 'KeyG') this.useGrenade();
       if (event.code === 'KeyQ') this.useMedkit();
+      if (event.code === 'ShiftLeft' || event.code === 'ShiftRight') this.activateDodge();
     });
 
     this.loadMissionScene(0);
@@ -383,7 +398,8 @@ export class MissionScene extends Phaser.Scene {
     if (!this.weaponRig) return;
     if (this.isMobileControls) {
       const originX = GAME_WIDTH / 2;
-      const originY = GAME_HEIGHT + 50 + this.weaponRecoil + this.reloadPose * 38;
+      const dodgeOffsetY = samplePlayerDodgePose(this.dodgeRemainingMs).offsetY;
+      const originY = GAME_HEIGHT + 50 + this.weaponRecoil + this.reloadPose * 38 + dodgeOffsetY;
       this.weaponRig.setPosition(originX, originY);
       this.weaponRig.setScale(1 + Math.min(0.035, this.weaponRecoil * 0.00022), 1 - Math.min(0.025, this.weaponRecoil * 0.00016));
       const screenAim = { x: this.aim.x - this.cameras.main.scrollX, y: this.aim.y - this.cameras.main.scrollY };
@@ -397,7 +413,8 @@ export class MissionScene extends Phaser.Scene {
     const followX = Phaser.Math.Clamp((this.aim.x - GAME_WIDTH / 2) * 0.11, -72, 72);
     const followY = Phaser.Math.Clamp((this.aim.y - GAME_HEIGHT / 2) * 0.055, -20, 22);
     const originX = GAME_WIDTH / 2 + followX;
-    const originY = GAME_HEIGHT + 50 + this.weaponRecoil + this.reloadPose * 38 + followY;
+    const dodgeOffsetY = samplePlayerDodgePose(this.dodgeRemainingMs).offsetY;
+    const originY = GAME_HEIGHT + 50 + this.weaponRecoil + this.reloadPose * 38 + followY + dodgeOffsetY;
     this.weaponRig.setPosition(originX, originY);
     const viewmodelOffset = AssetCatalog.hasTexture(this, 'weapon-fp-atlas')
       ? getFirstPersonWeaponRotationOffset(this.currentWeaponId) : 0;
@@ -409,7 +426,8 @@ export class MissionScene extends Phaser.Scene {
     const rig = this.weaponRig;
     const rotation = rig?.rotation ?? 0;
     const originX = rig?.x ?? GAME_WIDTH / 2;
-    const originY = rig?.y ?? GAME_HEIGHT + 50 + this.weaponRecoil;
+    const originY = rig?.y ?? GAME_HEIGHT + 50 + this.weaponRecoil
+      + samplePlayerDodgePose(this.dodgeRemainingMs).offsetY;
     if (AssetCatalog.hasTexture(this, 'weapon-fp-atlas')) {
       const muzzle = getFirstPersonWeaponMuzzlePoint(
         this.currentWeaponId, { x: originX, y: originY }, rotation,
@@ -482,6 +500,10 @@ export class MissionScene extends Phaser.Scene {
     this.weaponRecoilAngle = Math.max(0, this.weaponRecoilAngle - inputDelta * 0.00038);
     this.reloadPose = Math.max(0, this.reloadPose - inputDelta * 0.0045);
     this.playerHitFlash = Math.max(0, this.playerHitFlash - inputDelta);
+    const previousDodgeCooldownLabel = Math.ceil(this.dodgeCooldownMs / 1000);
+    this.dodgeRemainingMs = Math.max(0, this.dodgeRemainingMs - inputDelta);
+    this.dodgeCooldownMs = Math.max(0, this.dodgeCooldownMs - inputDelta);
+    if (Math.ceil(this.dodgeCooldownMs / 1000) !== previousDodgeCooldownLabel) this.refreshMobileControls();
     for (const effect of this.impactEffects) effect.life -= inputDelta;
     this.impactEffects = this.impactEffects.filter((effect) => effect.life > 0);
     this.toastTimer = Math.max(0, this.toastTimer - inputDelta);
@@ -870,8 +892,27 @@ export class MissionScene extends Phaser.Scene {
     });
   }
 
+  private getPlayerHitPoint(): Point {
+    const pose = samplePlayerDodgePose(this.dodgeRemainingMs);
+    return this.cameras.main.getWorldPoint(GAME_WIDTH / 2, GAME_HEIGHT - 96 + pose.offsetY);
+  }
+
+  private activateDodge(): void {
+    if (this.phase !== 'active' || this.dodgeCooldownMs > 0) return;
+    this.dodgeRemainingMs = PLAYER_DODGE_DURATION_MS;
+    this.dodgeCooldownMs = PLAYER_DODGE_COOLDOWN_MS;
+    const hitPoint = this.getPlayerHitPoint();
+    this.impactEffects.push({
+      x: hitPoint.x, y: hitPoint.y - 18, life: 260, maxLife: 260, kind: 'player-dodge', damage: 0,
+    });
+    FeedbackService.play(this, 'confirm', 0.48);
+    triggerHaptic('dodge');
+    this.showToast('УКЛОНЕНИЕ', 380);
+    this.refreshMobileControls();
+  }
+
   private launchEnemyProjectile(enemy: RuntimeEnemy, damage: number): void {
-    const target = this.cameras.main.getWorldPoint(GAME_WIDTH / 2, GAME_HEIGHT - 96);
+    const target = this.getPlayerHitPoint();
     const start = {
       x: enemy.x + (target.x >= enemy.x ? 22 : -22),
       y: enemy.y - 62,
@@ -898,6 +939,19 @@ export class MissionScene extends Phaser.Scene {
       if (sample.progress < 1) continue;
 
       this.enemyProjectiles.splice(index, 1);
+      const currentPlayerPoint = this.getPlayerHitPoint();
+      const dodged = isPlayerDodgeEvading(
+        this.dodgeRemainingMs, projectile.target, currentPlayerPoint,
+      );
+      if (dodged) {
+        this.impactEffects.push({
+          x: projectile.target.x, y: projectile.target.y,
+          life: 300, maxLife: 300, kind: 'player-dodge', damage: 0,
+        });
+        FeedbackService.play(this, 'confirm', 0.38);
+        this.showToast('УКЛОНЕНИЕ • ПРОМАХ', 420);
+        continue;
+      }
       this.impactEffects.push({
         x: projectile.target.x, y: projectile.target.y,
         life: 360, maxLife: 360, kind: 'player-hit', damage: projectile.damage,
@@ -1265,6 +1319,14 @@ export class MissionScene extends Phaser.Scene {
   private refreshMobileControls(): void {
     const stickMode = this.currentSettings.mobileControlMode === 'stick';
     if (this.mobileFireButton) this.mobileFireButton.style.display = 'grid';
+    if (this.mobileDodgeButton) {
+      const cooldown = Math.ceil(this.dodgeCooldownMs / 1000);
+      const label = this.dodgeRemainingMs > 0 || cooldown === 0 ? 'УКЛОН' : cooldown + 'с';
+      if (this.mobileDodgeCaption) this.mobileDodgeCaption.textContent = label;
+      this.mobileDodgeButton.disabled = this.dodgeCooldownMs > 0 || this.phase !== 'active';
+      this.mobileDodgeButton.style.opacity = this.mobileDodgeButton.disabled ? '0.48' : '1';
+      this.mobileDodgeButton.style.borderColor = this.dodgeRemainingMs > 0 ? '#83f0ad' : '#f0d4a4b8';
+    }
     if (this.mobileAimStick) this.mobileAimStick.style.display = stickMode ? 'block' : 'none';
     if (this.mobileSwitchButton) this.mobileSwitchButton.style.display = this.selectedWeapons.length > 1 ? 'grid' : 'none';
     if (this.appliedMobileControlMode !== this.currentSettings.mobileControlMode) {
@@ -1525,6 +1587,11 @@ export class MissionScene extends Phaser.Scene {
       bottom: 'max(16px, env(safe-area-inset-bottom))', display: 'flex', gap: '8px',
       pointerEvents: 'none',
     });
+    const dodge = makeButton('⇣', 'УКЛОН', 66, '#385e53f0');
+    dodge.style.borderRadius = '18px';
+    this.mobileDodgeButton = dodge;
+    this.mobileDodgeCaption = dodge.lastElementChild as HTMLSpanElement;
+    dodge.addEventListener('pointerdown', (event) => { consume(event); this.activateDodge(); });
     const grenade = makeButton('✹', 'ГРАНАТА ×' + this.grenadeCount, 66, '#78603ef0');
     const medkit = makeButton('+', 'АПТЕЧКА ×' + this.medkitCount, 66, '#356d58f0');
     grenade.style.borderRadius = '18px'; medkit.style.borderRadius = '18px';
@@ -1536,7 +1603,7 @@ export class MissionScene extends Phaser.Scene {
     this.mobileMedkitButton = medkit;
     grenade.addEventListener('pointerdown', (event) => { consume(event); this.useGrenade(); });
     medkit.addEventListener('pointerdown', (event) => { consume(event); this.useMedkit(); });
-    utilityRow.append(grenade, medkit);
+    utilityRow.append(dodge, grenade, medkit);
     overlay.append(stack, pause, utilityRow, stick);
     host.append(overlay);
     this.mobileControlsElement = overlay;
@@ -1602,6 +1669,8 @@ export class MissionScene extends Phaser.Scene {
     this.mobileSwitchButton = undefined;
     this.mobileSwitchCaption = undefined;
     this.mobileFireButton = undefined;
+    this.mobileDodgeButton = undefined;
+    this.mobileDodgeCaption = undefined;
     this.mobileAimStick = undefined;
     this.mobileGrenadeButton = undefined;
     this.mobileMedkitButton = undefined;
@@ -2003,6 +2072,15 @@ export class MissionScene extends Phaser.Scene {
         const radius = 8 + (1 - alpha) * 12;
         this.fx.fillStyle(0xffa45d, alpha * 0.68); this.fx.fillCircle(effect.x, effect.y, radius);
         this.fx.lineStyle(3, 0xffe4bc, alpha); this.fx.strokeCircle(effect.x, effect.y, radius * 0.85);
+        continue;
+      }
+      if (effect.kind === 'player-dodge') {
+        const radius = 16 + (1 - alpha) * 28;
+        this.fx.fillStyle(0x69e0b0, alpha * 0.12); this.fx.fillCircle(effect.x, effect.y, radius * 1.45);
+        this.fx.lineStyle(5, 0x83f0ad, alpha * 0.95); this.fx.strokeCircle(effect.x, effect.y, radius);
+        this.fx.lineStyle(3, 0xe0fff0, alpha);
+        this.fx.lineBetween(effect.x - radius, effect.y + radius * 0.45, effect.x + radius, effect.y - radius * 0.45);
+        this.fx.lineBetween(effect.x - radius * 0.55, effect.y + radius * 0.9, effect.x + radius * 0.55, effect.y);
         continue;
       }
       if (effect.kind === 'player-hit') {
