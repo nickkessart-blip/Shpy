@@ -34,6 +34,11 @@ import {
   getFirstPersonWeaponRotationOffset,
 } from '../systems/combat/weaponViewmodel';
 import { advanceFirstOperationTutorial, type TutorialEvent } from '../systems/missions/firstOperationTutorial';
+import {
+  sampleCasinoLightEvent,
+  type CasinoLightEventState,
+  type CasinoLightPhase,
+} from '../systems/missions/casinoLightEvent';
 
 type EnemyState = 'Entering' | 'Exposed' | 'Aiming' | 'Attacking' | 'SeekingCover' | 'Hidden' | 'Peeking' | 'Repositioning' | 'Defeated';
 type TutorialStep = 'fire' | 'reload' | 'telegraph' | 'dodge' | 'cover' | 'finish';
@@ -60,6 +65,10 @@ export class MissionScene extends Phaser.Scene {
   private world!: Phaser.GameObjects.Graphics;
   private coverLayer!: Phaser.GameObjects.Graphics;
   private fx!: Phaser.GameObjects.Graphics;
+  private casinoLightLayer!: Phaser.GameObjects.Graphics;
+  private casinoLightElapsedMs = 0;
+  private casinoLightState: CasinoLightEventState | null = null;
+  private casinoLightPhase: CasinoLightPhase = 'idle';
   private weaponRig?: Phaser.GameObjects.Container;
   private impactEffects: Array<{ x: number; y: number; life: number; maxLife: number; kind: 'hit' | 'cover' | 'miss' | 'explosion' | 'enemy-muzzle' | 'player-hit' | 'player-dodge'; damage: number }> = [];
   private selectedWeapons: WeaponId[] = ['pistol'];
@@ -249,6 +258,7 @@ export class MissionScene extends Phaser.Scene {
     this.parallaxMid = this.add.graphics().setDepth(-7).setScrollFactor(0.42);
     this.parallaxNear = this.add.graphics().setDepth(-4).setScrollFactor(0.74);
     this.world = this.add.graphics().setDepth(0);
+    this.casinoLightLayer = this.add.graphics().setDepth(1);
     this.coverLayer = this.add.graphics().setDepth(8);
     this.fx = this.add.graphics().setDepth(20);
     this.buildWeaponRig();
@@ -466,7 +476,10 @@ export class MissionScene extends Phaser.Scene {
     if (this.phase === 'paused' || this.phase === 'finished') return;
     const dt = Math.min(delta, 50);
     const inputDelta = Math.min(Math.max(0, delta), 120);
-    if (this.phase === 'active') this.railTimeline.advance(dt);
+    if (this.phase === 'active') {
+      this.railTimeline.advance(dt);
+      this.updateCasinoLighting(dt);
+    }
     this.shotCooldown = Math.max(0, this.shotCooldown - inputDelta);
     this.weaponRecoil = Math.max(0, this.weaponRecoil - inputDelta * 0.16);
     this.weaponRecoilAngle = Math.max(0, this.weaponRecoilAngle - inputDelta * 0.00038);
@@ -543,6 +556,9 @@ export class MissionScene extends Phaser.Scene {
     if (index >= this.missionScenes.length) { this.finishMission(true); return; }
     this.sceneIndex = index;
     this.sceneDef = this.missionScenes[index];
+    this.casinoLightElapsedMs = 0;
+    this.casinoLightPhase = 'idle';
+    this.casinoLightState = this.isCasinoRoom() ? sampleCasinoLightEvent(0, this.sceneDef.id as 'casino-main' | 'casino-bar') : null;
     // Every authored room starts from its own camera origin and a predictable reticle position.
     this.cameras.main.setScroll(0, 0);
     this.aim = { x: GAME_WIDTH / 2, y: GAME_HEIGHT / 2 };
@@ -1837,11 +1853,73 @@ export class MissionScene extends Phaser.Scene {
   }
 
   private skipTutorial(): void { this.finishTutorial(); }
+  private isCasinoRoom(): boolean {
+    return this.sceneDef?.id === 'casino-main' || this.sceneDef?.id === 'casino-bar';
+  }
+
+  private updateCasinoLighting(dt: number): void {
+    if (!this.isCasinoRoom()) {
+      this.casinoLightState = null;
+      this.casinoLightPhase = 'idle';
+      return;
+    }
+    this.casinoLightElapsedMs += dt;
+    const roomId = this.sceneDef.id as 'casino-main' | 'casino-bar';
+    const state = sampleCasinoLightEvent(this.casinoLightElapsedMs, roomId);
+    if (state.phase === 'warning' && this.casinoLightPhase !== 'warning') {
+      const sector = state.laneIndex === 0 ? 'ЛЕВЫЙ' : state.laneIndex === 1 ? 'ЦЕНТРАЛЬНЫЙ' : 'ПРАВЫЙ';
+      this.showToast('ПРОЖЕКТОР • ' + sector + ' СЕКТОР • СВЕТОВАЯ ВСПЫШКА', 1050);
+    }
+    this.casinoLightState = state;
+    this.casinoLightPhase = state.phase;
+  }
+
+  private drawCasinoLightCone(): void {
+    const state = this.casinoLightState;
+    const layer = this.casinoLightLayer;
+    if (!state || !layer || state.phase === 'idle') return;
+    const top = this.cameras.main.getWorldPoint(state.centerX, 92);
+    const floor = this.cameras.main.getWorldPoint(state.centerX + state.sweepOffset, 522);
+    const halfWidth = state.phase === 'warning' ? 92 : state.phase === 'flash' ? 172 : 142;
+    const left = { x: floor.x - halfWidth, y: floor.y };
+    const right = { x: floor.x + halfWidth, y: floor.y };
+    const coneAlpha = state.phase === 'flash' ? 0.15 : 0.055 * state.intensity;
+    layer.fillStyle(0xffd991, coneAlpha);
+    layer.fillTriangle(top.x, top.y, left.x, left.y, right.x, right.y);
+    layer.lineStyle(state.phase === 'warning' ? 2 : 1.5, 0xffd58a, 0.34 * state.intensity);
+    layer.lineBetween(top.x, top.y, left.x, left.y);
+    layer.lineBetween(top.x, top.y, right.x, right.y);
+    layer.fillStyle(0xffd58a, 0.05 * state.intensity);
+    layer.fillEllipse(floor.x, floor.y, halfWidth * 1.9, 48);
+    if (state.phase === 'warning') {
+      const radius = 22 + Math.sin(this.time.now / 70) * 4;
+      layer.lineStyle(3, 0xffd58a, 0.82);
+      layer.strokeCircle(top.x, top.y + 20, radius);
+      layer.fillStyle(0xfff0c8, 0.75);
+      layer.fillCircle(top.x, top.y + 20, 4);
+    }
+  }
+
+  private drawCasinoLightFlash(): void {
+    const state = this.casinoLightState;
+    if (!state || state.phase !== 'flash') return;
+    const center = this.cameras.main.getWorldPoint(state.centerX + state.sweepOffset, 354);
+    const alpha = 0.115 * state.intensity;
+    this.fx.fillStyle(0xfff0c9, alpha * 0.38);
+    this.fx.fillEllipse(center.x, center.y, 330, 310);
+    this.fx.lineStyle(3, 0xffe2a4, alpha * 1.8);
+    this.fx.strokeEllipse(center.x, center.y, 300, 252);
+    this.fx.lineStyle(1.5, 0xffffff, alpha * 1.2);
+    this.fx.lineBetween(center.x - 112, center.y, center.x + 112, center.y);
+    this.fx.lineBetween(center.x, center.y - 96, center.x, center.y + 96);
+  }
   private getDisplayedWaveNumber(): number {
     return Math.min(this.waveIndex + 1, this.sceneDef.waves.length);
   }
 
   private drawFrame(): void {
+    this.casinoLightLayer.clear();
+    this.drawCasinoLightCone();
     this.world.clear();
     this.drawEnemies();
     this.drawCovers();
@@ -2013,7 +2091,12 @@ export class MissionScene extends Phaser.Scene {
         image.setAlpha(enemy.state === 'Entering' ? entryAlpha
           : enemy.hitFlash > 0 ? 0.72 + Math.abs(hitPulse) * 0.28 : 1);
         image.setAngle(poseLean + Math.sin(phaseTime * 1.7) * (aiming ? 0.25 : 0.7));
-        image.setTint(enemy.hitFlash > 0 ? 0xffd5d5 : (attacking ? 0xffe3c2 : 0xffffff));
+        const lightState = this.casinoLightState;
+        const lightCenterX = lightState
+          ? this.cameras.main.getWorldPoint(lightState.centerX + lightState.sweepOffset, 0).x : -10000;
+        const underSpotlight = lightState?.phase === 'flash' && Math.abs(enemy.x - lightCenterX) <= 172;
+        image.setTint(enemy.hitFlash > 0 ? 0xffd5d5
+          : attacking ? 0xffe3c2 : underSpotlight ? 0xfff0c4 : 0xffffff);
       } else {
         this.world.fillStyle(0x05080c, 0.45); this.world.fillEllipse(drawX, enemy.y + 3, 65, 15);
         this.world.fillStyle(def.color, 1); this.world.fillRoundedRect(drawX - 24, drawY - 18, 48, 76, 8);
@@ -2118,6 +2201,7 @@ export class MissionScene extends Phaser.Scene {
       this.fx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
     }
     this.drawEnemyOverlays();
+    this.drawCasinoLightFlash();
     this.drawEnemyProjectiles();
     this.updateWeaponRig();
 

@@ -343,3 +343,10 @@ The user reports a complete failure in graphics quality and mobile shooting and 
 - Desktop copy: mouse, R, Shift. Touch copy: aim stick, FIRE/RELOAD, УКЛОН. The first-op tutorial currently covers core combat, not the Casino signature mechanic.
 - Pure transition rules and sequence tests: `src/game/systems/missions/firstOperationTutorial.ts` and `.test.ts`.
 - Physical Android positioning/readability and first-time-player validation remain outstanding.
+## Casino signature lighting event — 2026-11-26
+
+- Pure event timing is in `src/game/systems/missions/casinoLightEvent.ts` with Vitest coverage. It uses a deterministic 10,000 ms cycle: idle to 4,800 ms, warning 1,100 ms, flash 620 ms, recovery 780 ms.
+- Casino main cycles spotlight lanes left → centre → right. The bar begins one lane ahead; each room resets its event clock. Event time only advances in active Casino gameplay, so pause and room transitions freeze it.
+- MissionScene draws a tapered cone on a depth-1 graphics layer (behind enemy sprites and cover), an upper-layer bounded glare during flash, and a warm highlight tint on enemies in the illuminated lane. The event never changes enemy coordinates, aim/hitbox logic, damage, accuracy or cover checks.
+- The warning toast names the affected sector. Counterplay is to aim outside the lit lane during the warning or wait through the 620 ms flash.
+- This is the first working Casino signature slice. It does not yet add independently animated spotlight fixtures, slot jackpot sequences, roulette set-pieces or optional modifiers. Browser/mobile visual QA remains outstanding.

@@ -183,3 +183,9 @@ Every completed, CI-validated implementation slice must be integrated into `main
 - [x] Add adaptive desktop/touch instructions, always-available skip and persistent completion.
 - [x] Migrate v1-v6 saves as already tutorial-complete so existing players are not forced through onboarding.
 - [ ] Add the Casino signature-mechanic lesson and browser/physical Android usability validation.
+### Casino signature lighting event — 2026-11-26
+- [~] Add a deterministic spotlight/distraction cycle to Casino main hall and bar: lane warning, short local flash, silhouette highlight and recovery. It changes target readability only; hitboxes and damage remain unchanged.
+- [x] Add a predictable 10 s cycle with a 1.1 s warning, 620 ms flash and 780 ms recovery; alternate spotlight lanes between cycles and offset the bar sequence.
+- [x] Freeze the event during pause/transitions and reset it for each authored room.
+- [x] Add deterministic tests for boundaries, event phases, lane rotation and invalid inputs.
+- [ ] Validate visual balance/readability on desktop browser and physical Android; extend moving spotlights and slot/roulette set-piece interactions after review.

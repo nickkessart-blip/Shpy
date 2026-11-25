@@ -185,3 +185,10 @@ Current numeric values in `balance.ts` and `enemies.ts` are prototype values, no
 - Desktop inputs are mouse/fire, R and Shift. Touch inputs are aim stick, FIRE/RELOAD and the dedicated dodge button. Prompt copy adapts to the detected mobile control layout.
 - Skip is always available. Completion or skip is persisted in SaveData schema v7. New saves default to incomplete; migrated schema v1-v6 saves are marked complete to avoid interrupting existing careers.
 - Tutorial is limited to the first Casino operation. It is a non-pausing overlay; enemies and mission timing continue while the player reads and acts.
+## Casino signature lighting event — 2026-11-26
+
+- Casino main hall and bar now run a deterministic, repeating 10,000 ms lighting cycle per room. The first cue begins at 4,800 ms: an 1,100 ms warning, a 620 ms localized flash, then 780 ms recovery. The remaining time is calm interval.
+- Spotlight target lanes alternate left/centre/right each cycle; the bar starts one lane offset from the main hall. Warning identifies the affected sector before the flash.
+- During the event, a tapered spotlight cone is drawn behind enemies/cover. The flash adds a bounded warm glare ellipse and temporarily highlights enemies inside the lit lane. It does not change enemy positions, hitbox geometry, aim coordinates, damage, accuracy or cover line-of-sight.
+- Counterplay: use the warning interval to shift aim to a different sector, or wait for the 620 ms glare to clear. The event pauses with the mission and does not advance during transitions.
+- This is the first functional signature slice, not the final Casino set-piece system. Moving spotlight fixtures, slot-machine jackpot flashes, roulette lighting and modifiers remain later additions. Desktop/browser and physical Android visual QA are still required.
