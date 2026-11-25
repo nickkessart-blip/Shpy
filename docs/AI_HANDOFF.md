@@ -64,13 +64,14 @@ The current implementation does not yet have the approved moving rail timeline, 
 
 ### First Casino rail-timeline implementation slice (PR #18)
 
-- Added `src/game/systems/missions/RailTimeline.ts`, a Phaser-independent deterministic route clock with validated config, distance/progress/completion, reset and per-layer wrapped offsets.
-- Added six focused Vitest cases in `RailTimeline.test.ts` for deterministic advance, completion clamp, reset, layer offsets, invalid deltas and invalid configuration.
-- Integrated the clock into `MissionScene`: reset per mission segment, advance only during active play, move the existing far/mid/near procedural layers at separate factors and draw a route-progress meter in the HUD.
-- Decorative layer offsets do not alter pointer, weapon rig or authoritative enemy hitbox coordinates.
-- Kept the current art and combat model. This is the first route-motion foundation, **not** the completed rail-shooter: authored seamless Casino layers, enemy route lanes, seeded spawn composition, physical cover occlusion, projectile feedback and the Casino signature event remain open.
-- The test-only commit was pushed before the implementation to follow a test-first sequence, but the intermediate GitHub Actions runs were cancelled by later pushes. Do not claim a confirmed red/green local TDD cycle.
-- The container could not clone GitHub (DNS/network unavailable), so no local npm test/build was run. Use the latest PR #18 GitHub Actions run as the source of truth; until it completes, checks are pending.
+- Added `src/game/systems/missions/RailTimeline.ts`, a Phaser-independent deterministic route clock with validated config, distance/progress/completion, reset, wrapped offsets for repeatable layers and bounded travel for non-tileable authored planes.
+- Added seven focused Vitest cases in `RailTimeline.test.ts` for deterministic advance, completion clamp, reset, wrapped offsets, bounded authored-layer travel, invalid deltas and invalid configuration.
+- Split the existing `casino-main.svg` and `casino-bar.svg` into eight transparent 1280×720 base/far/mid/near SVG planes. Registered them in AssetCatalog; MissionScene loads authored planes when the complete set is present and falls back to the original full-scene SVGs otherwise.
+- Integrated the clock into `MissionScene`: reset per mission segment, advance only during active play, move the authored Casino planes at separate factors and draw a route-progress meter in the HUD. East Express retains its window-masked procedural exterior layers.
+- Decorative layer travel does not alter pointer, weapon rig or authoritative enemy hitbox coordinates.
+- The Casino art is now genuinely split into independently moving vector planes, but it is still a bounded pan of one authored room, not an infinite seamless route. Enemy route lanes, seeded spawn composition, physical cover occlusion, projectile feedback and the Casino signature event remain open.
+- The test-only commit was pushed before the implementation to follow a test-first sequence, but intermediate GitHub Actions runs were cancelled by later pushes. Do not claim a confirmed red/green local TDD cycle.
+- The container could not clone GitHub (DNS/network unavailable), so no local npm test/build was run. Use the latest PR #18 GitHub Actions run as the source of truth; until the latest head run completes, checks are pending.
 - No Library image was committed or edited. The 384×1024 transparent enemy state atlas remains prepared in Library only. The larger East Express art sheets are opaque contact sheets, not ready-to-load sprite atlases.
 
 ### Skills and asset research
@@ -83,13 +84,13 @@ The current implementation does not yet have the approved moving rail timeline, 
 ## Next production work
 
 1. Check the latest CI run for PR #18 and fix any typecheck/test/lint/build failures before continuing.
-2. Continue P0 with genuinely authored, independent Casino far/mid/near/foreground layers (use seamless TileSprite sources only where tiling is valid; do not repeat contact sheets or whole non-seamless paintings).
-3. Add route-lane enemy entry/exit and a seeded SpawnDirector with minimum separation and composition limits.
-4. Correct the pointer-to-world/reticle mapping before any camera/world transform is introduced.
-5. Make cover a physical occluder shared by rendering, hit-testing and shot blocking; hidden enemies must not simply vanish.
-6. Differentiate enemy attack patterns and add readable attack launch/projectile/impact effects.
-7. Implement the Casino signature lighting/distraction mechanic with warnings and counterplay.
-8. Perform desktop/browser visual QA, then physical Android touch/orientation testing. CI is not a substitute.
+2. Add route-lane enemy entry/exit and a seeded SpawnDirector with minimum separation and composition limits.
+3. Correct the pointer-to-world/reticle mapping before any camera/world transform is introduced.
+4. Make cover a physical occluder shared by rendering, hit-testing and shot blocking; hidden enemies must not simply vanish.
+5. Differentiate enemy attack patterns and add readable attack launch/projectile/impact effects.
+6. Implement the Casino signature lighting/distraction mechanic with warnings and counterplay.
+7. Validate the new Casino planes in a browser screenshot at native 1280×720 and on the user's desktop; verify that depth offsets are visible without seams or misaligned edges.
+8. Perform physical Android touch/orientation testing. CI is not a substitute.
 9. Only after the combat foundation passes, continue P1 UI/HQ, P2 prologue/tutorial, P3 economy, P4 operative department/location framework and P5 autonomy.
 
 The exact first-slice acceptance and deferred work are in `docs/superpowers/plans/2026-11-25-casino-rail-timeline.md` and `docs/ROADMAP.md`.
