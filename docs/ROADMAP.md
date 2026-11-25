@@ -35,7 +35,7 @@ Older roadmap sections and numeric SHPY prototype phase labels are historical im
 - [x] Account progression, Dollars and local save migration through schema v5.
 - [x] Operative roster with timed assignments and component rewards.
 - [x] Basic enemy archetypes, state machine, wave flow, cover states and attack telegraphs.
-- [x] Mobile hybrid tap/drag and virtual aim-stick profiles.
+- [~] Mobile world-space aim stick is now the default; camera follows the reticle through authored mission bounds. Hybrid tap-and-drag uses the same world-space camera-follow contract. Physical Android validation remains open.
 - [x] Local audio, HUD feedback, muzzle/impact effects and enemy state atlas.
 - [ ] Do not treat the above as proof that the current visual design, balance, cover visuals, rail movement, enemy spacing, UX or mobile experience meet the new specification.
 
@@ -46,7 +46,7 @@ Older roadmap sections and numeric SHPY prototype phase labels are historical im
 Implementation status (2026-11-25): PR #18 adds a deterministic route clock, route progress HUD and eight transparent 1280×720 SVG planes extracted from the existing Casino/Bar source art. The follow-up P0 slice adds a seeded SpawnDirector: wave enemy roles remain authored, while lane assignments, entrance order and stagger timing vary per run; placements enforce 135px target separation and cover clearance. Enemies now enter from alternating route edges into assigned lanes with archetype-specific travel durations. Hidden enemies remain rendered behind cover, and cover geometry blocks shots along the muzzle-to-hitbox segment. This is still a prototype: no continuous rail travel during the whole operation, route exits, dynamic role-composition budgets, full cover destruction/peek validation, attack projectiles or Casino signature event yet.
 - [~] Add deterministic route timeline and independent authored far/mid/near SVG planes to the Casino prototype (first code slice; enemy lanes, spawn director and cover remain open). See [implementation plan](superpowers/plans/2026-11-25-casino-rail-timeline.md).
 - [ ] Use genuinely independent background layers and separate foreground/environment set pieces.
-- [ ] Fix pointer-to-world mapping; remove the reported curved reticle response.
+- [~] Fix pointer-to-world mapping and off-screen target access: world-space reticle, bounded camera follow and sensitivity applied to aim travel. Verify on desktop browser and physical Android before marking complete.
 - [~] Make cover render as physical occlusion; hidden enemies remain drawn behind the cover and line-of-sight shots are blocked. Validate in browser; add physical cover-state polish.
 - [~] Seeded SpawnDirector varies lane assignment, enemy entry order and stagger timing, enforcing minimum spacing. Authored enemy role composition remains fixed per wave; seeded composition variants and route-lane entry/exit remain open.
 - [ ] Differentiate enemy behaviour, attack patterns and counters beyond HP.

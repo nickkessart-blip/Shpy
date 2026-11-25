@@ -20,7 +20,7 @@ Maintain distinct coordinate spaces:
 - HUD/viewport coordinates;
 - hitbox coordinates.
 
-Pointer input is transformed from screen to world using the current camera transform. Visual shake, parallax offsets and decorative layers must never shift authoritative enemy hitboxes. The reticle must map directly to the pointer after the transform; do not apply a curved movement response or position-dependent arc. Any optional aim smoothing must be explicitly tuned, bounded and disabled for precision debugging.
+Pointer input is transformed from screen to world using the current camera transform. On touch devices, the default left virtual stick moves a world-space reticle; the camera follows the reticle after it crosses a 28% viewport safe margin, until authored mission bounds are reached. The alternate tap-and-drag scheme accumulates finger deltas in world space and uses the same camera-follow contract. Aim sensitivity affects reticle travel, not an arbitrary camera offset. The reticle may travel beyond the visible viewport while remaining inside mission bounds. Visual shake, parallax offsets and decorative layers must never shift authoritative enemy hitboxes. Desktop reticle mapping remains direct after the camera transform; do not apply a curved movement response or position-dependent arc. Any optional aim smoothing must be explicitly tuned, bounded and disabled for precision debugging.
 
 ## 3. Weapon and first-person rig
 

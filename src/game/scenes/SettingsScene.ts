@@ -82,14 +82,14 @@ export class SettingsScene extends Phaser.Scene {
     this.settingButton(828, 235, 370, 52,
       this.controlModeLabel(this.settings.mobileControlMode),
       0x394d5d, () => this.cycleControlMode());
-    this.addText('ЧУВСТВИТЕЛЬНОСТЬ УПРАВЛЕНИЯ', 828, 328, 13, '#b6c3ce', true);
+    this.addText('ЧУВСТВИТЕЛЬНОСТЬ ПРИЦЕЛА', 828, 328, 13, '#b6c3ce', true);
     this.slider(828, 362, 370, this.settings.aimSensitivity, 0.5, 4,
       (value) => this.saveSettings({ aimSensitivity: value }, false),
       (value) => value.toFixed(1) + '×');
-    this.addText('ГИБРИД: касание задаёт прицел и стреляет; перетаскивание ведёт прицел.', 828, 460, 12, '#d3dce5');
-    this.addText('КНОПКА ОГОНЬ: удерживайте вторым пальцем для очереди.', 828, 490, 12, '#d3dce5');
-    this.addText('СТИК: альтернативный режим с отдельной кнопкой огня.', 828, 520, 12, '#d3dce5');
-    this.addText('Чувствительность также регулирует панорамирование камеры.', 828, 550, 12, '#d3dce5');
+    this.addText('СТИК: слева внизу ведёт прицел; камера следует за ним.', 828, 460, 12, '#d3dce5');
+    this.addText('ОГОНЬ: удерживайте кнопку справа для автоматической очереди.', 828, 490, 12, '#d3dce5');
+    this.addText('ТАП + DRAG: касание стреляет, перетаскивание ведёт прицел.', 828, 520, 12, '#d3dce5');
+    this.addText('У края экрана камера продолжает обзор мира.', 828, 550, 12, '#d3dce5');
     this.addText('ИЗМЕНЕНИЯ ПРИМЕНЯЮТСЯ СРАЗУ И СОХРАНЯЮТСЯ.', 828, 595, 10, '#718091');
 
     this.addText('ESC / КНОПКА ПАУЗЫ — ПАУЗА В МИССИИ', 56, 682, 11, '#718091');
@@ -190,7 +190,7 @@ export class SettingsScene extends Phaser.Scene {
   }
 
   private controlModeLabel(value: MobileControlMode): string {
-    return value === 'tap' ? 'ГИБРИД • ТАП + DRAG + ОГОНЬ' : 'ВИРТУАЛЬНЫЙ ДЖОЙСТИК';
+    return value === 'tap' ? 'ТАП + DRAG • ПРИЦЕЛ' : 'СТИК • ПРИЦЕЛ + АВТОКАМЕРА';
   }
 
   private qualityLabel(value: GraphicsQuality): string {

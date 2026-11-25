@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getAimVelocity, moveAim } from './aimMath';
+import { followAimWithCamera, getAimVelocity, moveAim, moveAimByPointerDelta, moveAimInWorld } from './aimMath';
 
 describe('mobile aim response', () => {
   it('ignores only the tiny radial dead zone', () => {
@@ -39,5 +39,46 @@ describe('mobile aim response', () => {
   it('clamps the cursor inside the playable field', () => {
     expect(moveAim({ x: 1270, y: 710 }, { x: 1, y: 1 }, 4, 50, 1280, 720))
       .toEqual({ x: 1262, y: 590 });
+  });
+});
+
+
+describe('world-space mobile aim and camera follow', () => {
+  const worldBounds = { minX: -420, maxX: 1700, minY: -180, maxY: 900 };
+  const scrollBounds = { minX: -420, maxX: 420, minY: -180, maxY: 180 };
+  const viewport = { width: 1280, height: 720 };
+
+  it('moves the reticle beyond the visible screen without clamping it to the viewport', () => {
+    const moved = moveAimInWorld({ x: 1260, y: 360 }, { x: 1, y: 0 }, 4, 120, worldBounds);
+    expect(moved.x).toBeGreaterThan(1280);
+    expect(moved.y).toBe(360);
+  });
+
+  it('clamps world aim only at the authored mission limits', () => {
+    expect(moveAimInWorld({ x: 1699, y: 899 }, { x: 1, y: 1 }, 4, 120, worldBounds))
+      .toEqual({ x: 1700, y: 900 });
+  });
+
+  it('moves the camera to keep an off-screen target inside the safe viewport', () => {
+    const scroll = followAimWithCamera({ x: 1500, y: 600 }, { x: 0, y: 0 }, viewport, scrollBounds);
+    expect(scroll.x).toBe(420);
+    expect(scroll.y).toBeCloseTo(81.6, 8);
+    expect(1500 - scroll.x).toBeGreaterThanOrEqual(1280 * 0.28);
+    expect(600 - scroll.y).toBeGreaterThanOrEqual(720 * 0.28);
+  });
+
+  it('does not move the camera while the reticle remains in the safe region', () => {
+    expect(followAimWithCamera({ x: 640, y: 360 }, { x: 20, y: -10 }, viewport, scrollBounds))
+      .toEqual({ x: 20, y: -10 });
+  });
+
+  it('keeps camera movement inside authored limits when aim exceeds them', () => {
+    expect(followAimWithCamera({ x: 2200, y: 1200 }, { x: 0, y: 0 }, viewport, scrollBounds))
+      .toEqual({ x: 420, y: 180 });
+  });
+
+  it('applies drag sensitivity to world-space reticle travel', () => {
+    expect(moveAimByPointerDelta({ x: 500, y: 300 }, { x: 20, y: -10 }, 2, worldBounds))
+      .toEqual({ x: 540, y: 280 });
   });
 });
