@@ -18,12 +18,12 @@ Do not start a new project. Do not silently change canon. Do not generate or edi
 ## Repository and Git state
 
 - Repository: `nickkessart-blip/Shpy`; default branch: `main`.
-- Latest verified main commit before this documentation branch: `0b0fe7ab1946e3e4e788be9f339a3e1a05212a40`.
-- Previously integrated work includes mobile hybrid controls, visual polish and the enemy state atlas. PR #15, #16 and #17 are historical/integrated work; do not recreate their branches or duplicate their changes.
-- Current documentation branch: `docs/shpy-canon-rebaseline-2026-11-25`, created from the verified main commit above.
-- The branch contains the documentation rebaseline and follow-up consistency corrections; always inspect its current HEAD rather than relying on a remembered SHA.
-- This branch has not yet been merged. It contains documentation changes only.
-- Start new work from the latest `main`; keep one shared game codebase for Web, Android and desktop.
+- Latest verified main commit at the start of this task: `0b0fe7ab1946e3e4e788be9f339a3e1a05212a40`.
+- PR #15, #16 and #17 are historical/integrated work; do not recreate their branches or duplicate their changes.
+- Active feature branch and PR: `docs/shpy-canon-rebaseline-2026-11-25` → PR #18 (base `main`). PR #18 now includes both the approved canon rebaseline and the first Casino rail-timeline code slice; it is still open and must not be assumed merged.
+- Branch head before this handoff refresh: `eee681cf92bf7bb3cd846a0d59b73603fcdf05d6`. Always query the live branch/PR head before writing; subsequent commits may move it.
+- Keep one shared game codebase for Web, Android and desktop. Do not create separate PC/mobile gameplay branches.
+- The latest user environment report is Node.js 24.19.0, npm 11.17.0 and Git 2.55.0.windows.3. CI currently uses Node.js 26.
 
 ## Approved design rebaseline
 
@@ -50,6 +50,8 @@ The user's decisions from 2026-11-25 are now recorded in D-009 through D-020:
 - `docs/UI_UX_SPEC.md` — menu, HQ, map, settings, armory, computer and onboarding UX.
 - `docs/MVP_SCOPE.md` and `docs/ROADMAP.md` — prioritized production scope.
 - `docs/TECHNICAL_ARCHITECTURE.md` — future rail/event/automation service boundaries.
+- `docs/AI_SKILLS_RESEARCH.md` — Phaser 4-compatible external skills, other user repositories, GameDevkit tools, free asset candidates and Library asset provenance.
+- `docs/superpowers/plans/2026-11-25-casino-rail-timeline.md` — scoped implementation plan and acceptance criteria for the first rail slice.
 - `docs/DECISIONS.md` — D-009 through D-020 and remaining open questions.
 
 ## Implementation truth and limitations
@@ -60,21 +62,37 @@ These are prototype implementations, not proof of final quality. The user's 2026
 
 The current implementation does not yet have the approved moving rail timeline, complete location event framework, full autonomous mission director, fully separated first-person arm/hand/weapon cosmetic layers, or balanced late-game economy. Do not claim these systems are implemented because their specs now exist.
 
-No gameplay code, numeric balance, save schema, image or audio asset was changed by this rebaseline.
+### First Casino rail-timeline implementation slice (PR #18)
+
+- Added `src/game/systems/missions/RailTimeline.ts`, a Phaser-independent deterministic route clock with validated config, distance/progress/completion, reset and per-layer wrapped offsets.
+- Added six focused Vitest cases in `RailTimeline.test.ts` for deterministic advance, completion clamp, reset, layer offsets, invalid deltas and invalid configuration.
+- Integrated the clock into `MissionScene`: reset per mission segment, advance only during active play, move the existing far/mid/near procedural layers at separate factors and draw a route-progress meter in the HUD.
+- Decorative layer offsets do not alter pointer, weapon rig or authoritative enemy hitbox coordinates.
+- Kept the current art and combat model. This is the first route-motion foundation, **not** the completed rail-shooter: authored seamless Casino layers, enemy route lanes, seeded spawn composition, physical cover occlusion, projectile feedback and the Casino signature event remain open.
+- The test-only commit was pushed before the implementation to follow a test-first sequence, but the intermediate GitHub Actions runs were cancelled by later pushes. Do not claim a confirmed red/green local TDD cycle.
+- The container could not clone GitHub (DNS/network unavailable), so no local npm test/build was run. Use the latest PR #18 GitHub Actions run as the source of truth; until it completes, checks are pending.
+- No Library image was committed or edited. The 384×1024 transparent enemy state atlas remains prepared in Library only. The larger East Express art sheets are opaque contact sheets, not ready-to-load sprite atlases.
+
+### Skills and asset research
+
+- Read the project gameplay, asset-pipeline and release/validation skills.
+- Identified Phaser 4.2.1-compatible `phaser-core` plus `create-game-assets`, `game-ai`, `input-systems`, `game-feel`, `level-design`, `audio-design` and `game-ui-ux` in `gamedev-skills/awesome-gamedev-agent-skills`.
+- The `games-workspace` Phaser skill is Phaser 3.80-specific and must not be copied directly into SHPY. GameDevkit sprite/audio/Playwright/visual scripts are useful references; check their dependencies and Phaser 3 atlas output before reuse.
+- Free CC0 candidates and exact Library asset status are recorded in `docs/AI_SKILLS_RESEARCH.md`, `docs/ASSET_CATALOG.md` and `docs/ASSET_RESEARCH.md`. None of the newly researched external packs has been downloaded or integrated.
 
 ## Next production work
 
-Follow P0 onward in `docs/ROADMAP.md`. First make one Casino route a reliable moving rail-shooter slice:
-1. Direct pointer-to-world aim and coordinate correctness.
-2. Independent background layers and a real rail timeline.
-3. Physical cover occlusion and consistent hit/shot blocking.
-4. Enemy spacing, varied seeded spawns and distinct behaviour.
-5. Telegraph/attack effects and clear lower-screen first-person rig.
-6. Casino's permanent lighting/distraction mechanic with readable warnings.
+1. Check the latest CI run for PR #18 and fix any typecheck/test/lint/build failures before continuing.
+2. Continue P0 with genuinely authored, independent Casino far/mid/near/foreground layers (use seamless TileSprite sources only where tiling is valid; do not repeat contact sheets or whole non-seamless paintings).
+3. Add route-lane enemy entry/exit and a seeded SpawnDirector with minimum separation and composition limits.
+4. Correct the pointer-to-world/reticle mapping before any camera/world transform is introduced.
+5. Make cover a physical occluder shared by rendering, hit-testing and shot blocking; hidden enemies must not simply vanish.
+6. Differentiate enemy attack patterns and add readable attack launch/projectile/impact effects.
+7. Implement the Casino signature lighting/distraction mechanic with warnings and counterplay.
+8. Perform desktop/browser visual QA, then physical Android touch/orientation testing. CI is not a substitute.
+9. Only after the combat foundation passes, continue P1 UI/HQ, P2 prologue/tutorial, P3 economy, P4 operative department/location framework and P5 autonomy.
 
-Add deterministic focused tests for coordinate transforms, route events, spawn spacing and cover/line-of-sight. Do not attempt all five locations or full autonomy in one change.
-
-After the combat foundation, follow the roadmap for shared UI/HQ, prologue/tutorial, economy, operative management, location modifiers and the automation ladder.
+The exact first-slice acceptance and deferred work are in `docs/superpowers/plans/2026-11-25-casino-rail-timeline.md` and `docs/ROADMAP.md`.
 
 ## Validation and handoff rules
 
