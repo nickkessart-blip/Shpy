@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { CoverDefinition, SpawnPoint } from '../../data/missions';
 import type { EnemyType } from '../../data/enemies';
-import { planEnemyWave } from './SpawnDirector';
+import { planEnemyWave, sampleSpawnEntryX } from './SpawnDirector';
 
 const anchors: SpawnPoint[] = [
   { x: 365, y: 350, coverId: 'left' },
@@ -69,5 +69,18 @@ describe('SpawnDirector', () => {
     expect(plan).toHaveLength(1);
     expect(plan[0].type).toBe('boss');
     expect(plan[0].spawn).toEqual({ x: 640, y: 315 });
+  });
+
+  it('moves route-lane entries smoothly from the route edge into their assigned lane', () => {
+    expect(sampleSpawnEntryX(-100, 450, 0, 400)).toBe(-100);
+    expect(sampleSpawnEntryX(-100, 450, 400, 400)).toBe(450);
+    const halfway = sampleSpawnEntryX(-100, 450, 200, 400);
+    expect(halfway).toBeGreaterThan(175);
+    expect(halfway).toBeLessThan(450);
+  });
+
+  it('clamps route-lane entrance progress and rejects invalid durations', () => {
+    expect(sampleSpawnEntryX(1400, 300, 900, 400)).toBe(300);
+    expect(() => sampleSpawnEntryX(0, 100, 10, -1)).toThrow(RangeError);
   });
 });
