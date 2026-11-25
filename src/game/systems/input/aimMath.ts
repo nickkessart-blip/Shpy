@@ -47,3 +47,51 @@ export function moveAim(
     y: clamp(point.y + velocity.y * delta, 90, height - 130),
   };
 }
+
+
+export interface AimBounds { minX: number; maxX: number; minY: number; maxY: number }
+export interface CameraScrollBounds { minX: number; maxX: number; minY: number; maxY: number }
+export interface ViewportSize { width: number; height: number }
+
+/** Move a virtual reticle through the mission world, not just the current viewport. */
+export function moveAimInWorld(point: AimVector, vector: AimVector, sensitivity: number,
+  deltaMs: number, bounds: AimBounds): AimVector {
+  const velocity = getAimVelocity(vector, sensitivity);
+  const delta = clamp(Number.isFinite(deltaMs) ? deltaMs : 0, 0, 120);
+  return {
+    x: clamp(point.x + velocity.x * delta, bounds.minX, bounds.maxX),
+    y: clamp(point.y + velocity.y * delta, bounds.minY, bounds.maxY),
+  };
+}
+
+/** Translate a reticle by a finger-drag delta while preserving world coordinates. */
+export function moveAimByPointerDelta(point: AimVector, delta: AimVector, sensitivity: number,
+  bounds: AimBounds): AimVector {
+  const safeSensitivity = clamp(Number.isFinite(sensitivity) ? sensitivity : 1.8, 0.5, 4);
+  return {
+    x: clamp(point.x + delta.x * safeSensitivity, bounds.minX, bounds.maxX),
+    y: clamp(point.y + delta.y * safeSensitivity, bounds.minY, bounds.maxY),
+  };
+}
+
+/** Keep the world-space reticle inside a comfortable viewport region. */
+export function followAimWithCamera(aim: AimVector, scroll: AimVector, viewport: ViewportSize,
+  bounds: CameraScrollBounds, marginRatio = 0.28): AimVector {
+  const margin = clamp(marginRatio, 0.1, 0.45);
+  const minScreenX = viewport.width * margin;
+  const maxScreenX = viewport.width * (1 - margin);
+  const minScreenY = viewport.height * margin;
+  const maxScreenY = viewport.height * (1 - margin);
+  let x = scroll.x;
+  let y = scroll.y;
+  const screenX = aim.x - x;
+  const screenY = aim.y - y;
+  if (screenX < minScreenX) x = aim.x - minScreenX;
+  else if (screenX > maxScreenX) x = aim.x - maxScreenX;
+  if (screenY < minScreenY) y = aim.y - minScreenY;
+  else if (screenY > maxScreenY) y = aim.y - maxScreenY;
+  return {
+    x: clamp(x, bounds.minX, bounds.maxX),
+    y: clamp(y, bounds.minY, bounds.maxY),
+  };
+}

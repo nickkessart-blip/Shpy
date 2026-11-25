@@ -10,7 +10,7 @@ import { getCosmetic } from '../data/cosmetics';
 import { findVisiblePeekX, isShotBlocked, pointInRect, resolveHit, type Point } from '../systems/combat/combatMath';
 import { runSession } from '../systems/missions/runSession';
 import { settingsService, type GameSettings } from '../../settings/SettingsService';
-import { moveAim } from '../systems/input/aimMath';
+import { followAimWithCamera, moveAimByPointerDelta, moveAimInWorld } from '../systems/input/aimMath';
 import { FeedbackService, triggerHaptic } from '../systems/feedback/FeedbackService';
 import { RailTimeline } from '../systems/missions/RailTimeline';
 import { planEnemyWave, sampleSpawnEntryX } from '../systems/waves/SpawnDirector';
@@ -24,6 +24,8 @@ interface RuntimeEnemy {
 }
 
 const MUZZLE: Point = { x: GAME_WIDTH / 2, y: 662 };
+const MOBILE_AIM_BOUNDS = { minX: -420, maxX: GAME_WIDTH + 420, minY: -180, maxY: GAME_HEIGHT + 180 };
+const MOBILE_CAMERA_BOUNDS = { minX: -420, maxX: 420, minY: -180, maxY: 180 };
 const SPRITES: Record<EnemyType, string> = {
   guard: 'kenney-guard', armored: 'kenney-armored', assault: 'kenney-assault', boss: 'kenney-boss',
 };
@@ -113,7 +115,8 @@ export class MissionScene extends Phaser.Scene {
   private aimStickActive = false;
   private aimStickPointerId: number | null = null;
   private mobileLookPointerId: number | null = null;
-  private appliedMobileControlMode: 'tap' | 'stick' = 'tap';
+  private mobileLookLastPointer: Point | null = null;
+  private appliedMobileControlMode: 'tap' | 'stick' = 'stick';
 
   constructor() { super('Mission'); }
 
@@ -179,6 +182,7 @@ export class MissionScene extends Phaser.Scene {
     this.aimStickActive = false;
     this.aimStickPointerId = null;
     this.mobileLookPointerId = null;
+    this.mobileLookLastPointer = null;
     this.mobileFireButton = undefined;
     this.mobileAimStick = undefined;
     this.mobileControlsElement?.remove();
@@ -233,16 +237,23 @@ export class MissionScene extends Phaser.Scene {
 
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
       if (this.isMobileControls && pointer.id === this.mobileLookPointerId) {
-        const sensitivity = this.currentSettings.aimSensitivity;
-        // The hybrid control pans the world only as far as the finger moves from screen centre.
-        // A wider camera bound lets players reach enemies that used to sit just outside the viewport.
-        this.cameras.main.scrollX = Phaser.Math.Clamp(
-          (pointer.x - GAME_WIDTH / 2) * sensitivity * 0.38, -420, 420,
-        );
-        this.cameras.main.scrollY = Phaser.Math.Clamp(
-          (pointer.y - GAME_HEIGHT / 2) * sensitivity * 0.28, -180, 180,
-        );
-        this.aim = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+        const previous = this.mobileLookLastPointer;
+        if (previous) {
+          this.aim = moveAimByPointerDelta(
+            this.aim,
+            { x: pointer.x - previous.x, y: pointer.y - previous.y },
+            this.currentSettings.aimSensitivity,
+            MOBILE_AIM_BOUNDS,
+          );
+          const scroll = followAimWithCamera(
+            this.aim,
+            { x: this.cameras.main.scrollX, y: this.cameras.main.scrollY },
+            { width: GAME_WIDTH, height: GAME_HEIGHT },
+            MOBILE_CAMERA_BOUNDS,
+          );
+          this.cameras.main.setScroll(scroll.x, scroll.y);
+        }
+        this.mobileLookLastPointer = { x: pointer.x, y: pointer.y };
         return;
       }
       if (!this.isMobileControls) this.aim = { x: pointer.x, y: pointer.y };
@@ -253,6 +264,7 @@ export class MissionScene extends Phaser.Scene {
           || this.currentSettings.mobileControlMode === 'stick') return;
         if (this.mobileLookPointerId === null) {
           this.mobileLookPointerId = pointer.id;
+          this.mobileLookLastPointer = { x: pointer.x, y: pointer.y };
           this.aim = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
           this.shoot();
         }
@@ -264,7 +276,10 @@ export class MissionScene extends Phaser.Scene {
       this.shoot();
     });
     const releaseAimPointer = (pointer: Phaser.Input.Pointer): void => {
-      if (pointer.id === this.mobileLookPointerId) this.mobileLookPointerId = null;
+      if (pointer.id === this.mobileLookPointerId) {
+        this.mobileLookPointerId = null;
+        this.mobileLookLastPointer = null;
+      }
       if (!this.isMobileControls) this.desktopFireHeld = false;
     };
     this.input.on('pointerup', releaseAimPointer);
@@ -375,8 +390,16 @@ export class MissionScene extends Phaser.Scene {
     this.weaponRecoil = Math.max(0, this.weaponRecoil - inputDelta * 0.16);
     this.weaponRecoilAngle = Math.max(0, this.weaponRecoilAngle - inputDelta * 0.00038);
     if (this.aimStickActive && this.phase === 'active') {
-      this.aim = moveAim(this.aim, this.aimStickVector, this.currentSettings.aimSensitivity,
-        inputDelta, GAME_WIDTH, GAME_HEIGHT);
+      this.aim = moveAimInWorld(
+        this.aim, this.aimStickVector, this.currentSettings.aimSensitivity, inputDelta, MOBILE_AIM_BOUNDS,
+      );
+      const scroll = followAimWithCamera(
+        this.aim,
+        { x: this.cameras.main.scrollX, y: this.cameras.main.scrollY },
+        { width: GAME_WIDTH, height: GAME_HEIGHT },
+        MOBILE_CAMERA_BOUNDS,
+      );
+      this.cameras.main.setScroll(scroll.x, scroll.y);
     }
     const lookX = this.isMobileControls
       ? Phaser.Math.Clamp(this.cameras.main.scrollX / 420, -1, 1)
@@ -1392,6 +1415,7 @@ export class MissionScene extends Phaser.Scene {
     this.mobileFireHeld = false;
     this.mobileFirePointerId = null;
     this.mobileLookPointerId = null;
+    this.mobileLookLastPointer = null;
     this.aimStickActive = false;
     this.aimStickPointerId = null;
     this.aimStickVector = { x: 0, y: 0 };
@@ -1442,6 +1466,7 @@ export class MissionScene extends Phaser.Scene {
     this.mobileFireHeld = false;
     this.mobileFirePointerId = null;
     this.mobileLookPointerId = null;
+    this.mobileLookLastPointer = null;
     this.desktopFireHeld = false;
     this.aimStickActive = false;
     this.aimStickPointerId = null;

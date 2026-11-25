@@ -12,13 +12,14 @@ export interface GameSettings {
   screenShakeEnabled: boolean;
 }
 
-export const SETTINGS_STORAGE_KEY = 'shpy_settings_v1';
+const LEGACY_SETTINGS_STORAGE_KEY = 'shpy_settings_v1';
+export const SETTINGS_STORAGE_KEY = 'shpy_settings_v2';
 
 export const DEFAULT_SETTINGS: GameSettings = {
   graphicsQuality: 'balanced',
   musicVolume: 0.24,
   sfxVolume: 0.7,
-  mobileControlMode: 'tap',
+  mobileControlMode: 'stick',
   aimSensitivity: 1.8,
   vibrationEnabled: true,
   parallaxEnabled: true,
@@ -51,6 +52,12 @@ export function normalizeSettings(value: unknown): GameSettings {
   };
 }
 
+export function migrateLegacySettings(value: unknown): GameSettings {
+  const raw = value && typeof value === 'object' ? value as Partial<GameSettings> : {};
+  // v1's tap mode was the old default, not a reliable indication of a deliberate choice.
+  return normalizeSettings({ ...raw, mobileControlMode: 'stick' });
+}
+
 export class SettingsService {
   private volatileSettings: GameSettings = { ...DEFAULT_SETTINGS };
 
@@ -58,10 +65,17 @@ export class SettingsService {
     try {
       if (typeof localStorage === 'undefined') return { ...this.volatileSettings };
       const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
-      if (!raw) return { ...this.volatileSettings };
-      const normalized = normalizeSettings(JSON.parse(raw) as unknown);
-      this.volatileSettings = normalized;
-      return { ...normalized };
+      if (raw) {
+        const normalized = normalizeSettings(JSON.parse(raw) as unknown);
+        this.volatileSettings = normalized;
+        return { ...normalized };
+      }
+      const legacyRaw = localStorage.getItem(LEGACY_SETTINGS_STORAGE_KEY);
+      if (!legacyRaw) return { ...this.volatileSettings };
+      const migrated = migrateLegacySettings(JSON.parse(legacyRaw) as unknown);
+      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(migrated));
+      this.volatileSettings = migrated;
+      return { ...migrated };
     } catch {
       return { ...this.volatileSettings };
     }
