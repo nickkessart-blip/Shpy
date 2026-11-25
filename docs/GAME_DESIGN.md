@@ -1,84 +1,119 @@
 # SHPY — GAME DESIGN DOCUMENT
-Версия 1.0.0 | Базовый GDD для прототипа
+Version 2.0 | Rebaseline: 2026-11-25
+Canonical companion: [GAME_BIBLE.md](GAME_BIBLE.md)
 
-## Видение
-Короткие активные шпионские операции чередуются с улучшениями штаба и долгосрочным развитием. Проверяемая гипотеза: отзывчивая стрельба, поведение противников, короткие миссии и ощутимая автоматизация создают цикл, к которому хочется возвращаться.
+## 1. Core loop
 
-## Основной цикл
-1. Игрок находится в интерактивном помещении штаба.
-2. Взаимодействует с картой основных сюжетных операций, компьютером управления агентством или оружейным шкафом.
-3. Боевая миссия.
-4. Последовательность сцен и волн.
-5. Устранение врагов, получение наград и статистики.
-6. Победа/поражение.
-7. Возврат в штаб.
-8. Опыт аккаунта открывает контент и ранги; доллары оплачивают улучшения и покупки.
-9. Следующая операция на более высокой мощности/сложности.
-Ранняя целевая длительность короткой миссии — ориентировочно 45–90 секунд; это гипотеза, не норматив.
+1. HQ: review messages, campaign map, agency status and current resources.
+2. Select a main operation or roster assignment.
+3. Mission Preparation: select weapons, consumables, gadgets, support operative, support equipment and operation modifiers.
+4. Launch a rail-shooter operation.
+5. Early/mid game: manually aim and shoot, with unlocked assistance and support.
+6. Late game: launch a configured autonomous operation and watch it execute without combat input.
+7. Debrief: review objective outcome, combat performance, resources consumed, operative status, new intel and rewards.
+8. Invest dollars, reputation and components; recruit/train operatives; research agency systems; unlock further sectors and operations.
 
-## Боевой экран
-Во время перестрелки камера фиксирована, а прицел управляется мышью или сенсорным вводом. Стрелять можно всегда. Враги могут быть открыты, целиться, атаковать, прятаться, выглядывать и менять позицию. Между локациями герой автоматически проходит по заранее поставленному маршруту: короткая катсцена с ходьбой, коридором и плавной сменой фона без перезапуска игровой сцены. Это основа рельсового шутера: перемещение контролирует сценарий, бой остаётся интерактивным.
+## 2. Rail-shooter mission structure
 
-## Оружие
-MVP начинается с одного пистолета, ограниченного магазина и ручной перезарядки. Исходная гипотеза: 6 патронов, урон 1, перезарядка 2 секунды.
-Улучшения из исходника: урон 1→2→3; магазин 6→8→10; перезарядка 2.0→1.5→1.0 секунды. Все параметры конфигурируемы. Резервный боезапас и пополнение между сценами пока не определены.
+A main operation is a route containing segments, encounter groups, location events, transitions and a climax. The camera/environment advances along a authored rail. During combat, the player remains in a first-person fixed position relative to the route; the route and environment supply the forward motion. The visual background must use independently moving layers and separate set pieces, not one flat image duplicated at different scroll factors.
 
-## Противники
-- Охранник: базовая прочность и стандартная атака, использует укрытия.
-- Бронированный: повышенная прочность, заставляет учитывать урон и боезапас.
-- Штурмовик: агрессивно меняет позицию, быстрее готовит атаку и чаще выглядывает.
-Это стартовые архетипы, параметры тестируются.
+Each segment defines:
+- route distance/duration and transition;
+- background layers and foreground occluders;
+- spawn windows and valid spawn lanes;
+- enemy groups, roles and entry directions;
+- cover objects with visibility and collision rules;
+- location events and warning windows;
+- wave/encounter completion conditions;
+- rewards and story events.
 
-## Поведение врагов
-Состояния: Exposed, Aiming, Attacking, SeekingCover, Hidden, Peeking, Repositioning, Defeated. У архетипов разные тайминги и допустимые переходы. Для MVP достаточно заранее заданных точек укрытия и переходов по таймерам/событиям, сложный pathfinding не нужен.
+The first implementation target is not five completed campaigns. It is one robust Casino route that proves the rail timeline, independent parallax, spatially consistent aim/hitboxes, enemy spacing, usable cover and a readable boss encounter.
 
-## Укрытия
-Простые прямоугольные/полигональные препятствия и заданные точки укрытия. Hidden блокирует хитбокс врага. Peeking временно открывает его. Перемещение между укрытиями делает врага уязвимым. Игрок может стрелять в любой момент; попадание в укрытие не наносит урон скрытой цели. Разрушаемые и пробиваемые укрытия отложены.
+## 3. Mission modes
 
-## Атаки и здоровье
-Атака телеграфируется: выбор цели → предупреждение/подготовка → истечение времени реакции → урон игроку. Устранение врага отменяет его атаку. Точная модель уклонения, защиты и урона открыта; для MVP достаточно HP и читаемого индикатора подготовки.
+- Manual: the player aims, fires, reloads and uses equipment.
+- Assisted: the player retains target selection while equipment performs selected actions (auto-reload, auto-medkit, turret deployment after command, called operative support).
+- Autonomous: a late-game mode in which the complete operation is simulated after preparation. The player watches; no combat actions are required.
 
-## Сцены и волны
-Структура текущего вертикального среза «Казино»:
-1. Главный зал — пять волн с нарастающим составом охраны.
-2. Переход по коридору — герой самостоятельно проходит к следующей зоне; движение и смена локации идут внутри текущей игровой сцены, без перезагрузки страницы/миссии.
-3. Бар и VIP-проход — пять волн охраны, затем шестая финальная волна с начальником охраны казино.
-4. Отчёт о завершении операции.
+New operation sectors must be introduced in manual/assisted mode before the autonomous package for that sector is unlocked. Routine known sectors can later become autonomous assignments.
 
-Дальнейшее расширение: отдельная VIP-зона, хранилище и финальная арена с усиленным противником. Сцена задаёт spawn points, укрытия, волны, обязательные цели и условие завершения.
+## 4. Combat flow and readability
 
-## Боссы
-Босс — отдельная ситуация, а не просто увеличенный HP. Первый босс — начальник охраны казино (42 HP), финальная шестая волна VIP-зоны. Три фазы запускаются на отметках 66% и 33% здоровья: босс быстрее готовит атаки, чаще смещается и наносит больше урона. За победу выдаётся отдельная награда. Дальнейшие боссы должны получать собственные паттерны, а не только увеличенные числа.
+Combat is continuous within an encounter and respects the rail timeline. Enemy entry, cover use, aiming, attack telegraph, attack, repositioning and defeat must be visually legible. Enemies must not overlap in ways that hide targets or create ambiguous hitboxes. Spawn composition should vary within authored constraints and seeded randomness, not repeat a predictable fixed sequence every run.
 
-## Результаты
-Показывать успех/провал, время, устранения, точность, полученный урон, полученный account XP, заработанные доллары и новый баланс.
+The player weapon/hands rig is anchored in the lower foreground. Arms, hands and weapon are separate visual layers. Aim response must be a direct coordinate mapping after camera transforms, not an unexplained arc or easing offset. Recoil is a short impulse with damped return.
 
-## Репутация и долгосрочные системы
-Исходные награды: +10 за устранение, +50 за волну, +200 за миссию. Ручная игра в исходнике даёт ×2 относительно автоматической, но это поздняя система. Значения — гипотеза.
-Долгосрочно: сегменты миссий, модификаторы, турели, дроны, автоматизация и престиж. Базовая система агентов и отдельные операции братства реализованы в прототипе.
+## 5. Location mechanics and modifiers
 
-## Штаб и прогрессия
-Штаб показывает баланс долларов, account XP, комплектующие, текущий уровень/ранг и прогресс до следующего уровня. Доллары зарабатываются в сюжетных миссиях и расходуются на постоянные улучшения/вербовку; account XP не тратится и открывает оружие, слоты, расходники и тиры перков. Шесть веток имеют по пять уровней. Комплектующие выдаются за успешные задания агентов и расходуются на полевые модификации и косметику. Сохранение v5 мигрирует v1–v4 без потери прежних данных.
+Each location has a permanent signature mechanic. Casino uses changing light/distraction; East Express uses train motion, tunnel darkness, vibration and steam; Warehouse uses moving cargo/machinery; Embassy uses surveillance/security systems and reinforced sightlines; Vulkan's Lair uses dangerous infrastructure and power systems.
 
-## Штаб и агентское братство
+Operation modifiers are selected before launch and modify event frequency, hazards, route constraints, enemies or security. Each shows an explanation, warning/counterplay and reward/risk before launch. Combination compatibility is validated. Full location design and candidate modifiers: [CAMPAIGN_AND_LOCATIONS.md](CAMPAIGN_AND_LOCATIONS.md).
 
-Карта операций ведёт в отдельный экран сюжетных миссий. Оружейный шкаф не запускает сюжет: он показывает весь арсенал (открытый и закрытый), позволяет сохранить комплект, просматривать все шесть перков, улучшать полевые предметы за комплектующие и открывать скины. Покупка постоянных перков за доллары остаётся в компьютере.
+## 6. HQ and management screens
 
-Компьютер имеет две вкладки: «Улучшения агентства» и «Отдел агентов». В отделе можно вербовать оперативников, выбирать свободных агентов и отправлять их в отдельные операции. У каждого агента индивидуальные роль, уровень и XP. Побочные операции идут по реальному времени и продолжаются офлайн; состав и уровень отряда задают вероятность успеха. Успех приносит комплектующие для полевых модификаций и косметики. Сами побочные задания никогда не начисляют account XP/доллары и не меняют сюжетный прогресс. В текущем прототипе провал не убивает агента, но не приносит комплектующие.
+HQ is a spatial office/workstation with a campaign dossier wall, desk terminal, armory, telephone and cat. Clickable props must have visible affordances and accurate hit areas. Phone opens messages/briefings from the start; the cat has a recognizable silhouette and small contextual interactions.
 
-## Управление
-Desktop: мышь — прицел, ЛКМ — выстрел, R — перезарядка, Esc — пауза/меню.
-Mobile: основной гибридный режим — тап задаёт прицел и стреляет, drag того же пальца непрерывно перемещает прицел и панорамирует камеру; отдельная кнопка справа позволяет удерживать огонь вторым пальцем. Альтернативный режим — левый виртуальный стик для прицела и отдельная кнопка огня. Чувствительность настраивается. Геймпад — возможное расширение.
+Responsibilities:
+- Operations map: campaign/story operations only.
+- Armory: browse, compare and upgrade catalogue items, attachments, perks and cosmetics.
+- Mission Preparation: select the actual kit for the next operation.
+- Agency Computer: personal upgrades, agency development/research, operative roster/assignments.
+- Telephone: inbox/story/event delivery; future prestige.
+- Operatives: recruited people, not bots with no role.
 
-## Сохранение
-Локально сохранять доллары, account XP, открытые ранги/миссии/сегменты, уровни перков, комплект снаряжения, ростер агентов, их XP, активные таймеры побочных операций, комплектующие, модификации, косметику и настройки. Схема v5 мигрирует v1–v4. Облачная синхронизация вне MVP.
+## 7. Economy and progression
 
-## Не входит в MVP
-Пять миссий целиком, все сегменты, расширенный ростер агентов и десятки побочных заданий, престиж, сложные модификаторы, финальный босс, финальный арт, сложные анимации, онлайн, донат/реклама, сложные разрушаемые укрытия.
+Three resource types:
+- Dollars: spendable purchases, personal improvements, recruitment.
+- Reputation: persistent career/agency unlock progress. The existing `accountXp` save field remains the storage representation pending a deliberate migration.
+- Components: crafting, attachments, equipment upgrades and cosmetics.
 
+Reward hierarchy:
+- kills are a small tactical reward;
+- encounter/wave completion is a modest progress reward;
+- mission objectives and completion provide the main payout;
+- bonus objectives and risky modifiers add a controlled premium;
+- repeated farming of early content is reduced relative to current progression, without making old missions worthless.
 
-## Штаб как игровая локация
-Штаб реализуется как отдельная сцена с перспективным интерьером и интерактивными объектами. Карта открывает основные сюжетные операции; компьютер разделяет постоянные улучшения за доллары и управление агентами; оружейный шкаф объединяет коллекцию снаряжения, перки, модификации и косметику. Телефон зарезервирован под будущие события и престиж. Кот — интерактивный персонаж, поддерживающий фирменный юмор. Все зоны работают касанием на мобильных устройствах.
+Exact values must be established by running representative simulations: first failure, first clear, repeated early mission, new sector unlock, boss clear, assisted clear and autonomous clear. Verify the player cannot finance a large share of the armory from one early wave plus a couple of deaths. Also verify the player is not forced into a long grind after normal successful play.
 
-## Мобильное прицеливание
-Альтернативный режим прицеливания: в нижней левой части экрана расположен виртуальный аналоговый джойстик. Отклонение стика перемещает прицел с постоянной скоростью, пропорциональной силе отклонения; отпускание останавливает прицел. Стрельба остаётся отдельной кнопкой справа. Поддерживается одновременное удержание стика и кнопки огня.
+## 8. Perks, attachments and agency research
+
+Personal perks become several readable branches with specific effects and selected synergies. Candidate themes:
+- Marksmanship: weak-point/critical interactions, accuracy under sustained fire.
+- Weapon handling: reload, recoil, magazine handling and weapon swap.
+- Survival: health, damage mitigation, recovery and emergency response.
+- Tactical equipment: grenade/medkit/gadget capacity and effectiveness.
+- Support coordination: turret/operative/drone coordination and cooldown efficiency.
+
+Agency research is a separate track for command capacity, logistics, intelligence, engineering and automation. Do not merely rename personal perk upgrades as agency upgrades.
+
+Weapon attachments should create build choices: sights, barrel, magazine, grip and specialist modules, each with trade-offs. Cosmetics must visibly alter the correct independent layer.
+
+## 9. Operative roster and assignments
+
+Operatives have a specialist role, level, XP, equipment/readiness and current availability. Roster assignments produce components, supplies, intelligence or other defined operational resources. A roster operative assigned to the main mission is unavailable for concurrent assignments. A mission report should show what they did, what was consumed, what was found and their status on return.
+
+Roster assignments should be useful but not mandatory chores. The main campaign remains completable without waiting for an agent timer.
+
+## 10. Tutorial and story pacing
+
+The first mission is the prologue/tutorial:
+- agency briefing and protagonist introduction;
+- aim/fire;
+- reload/ammunition;
+- enemy telegraph and damage;
+- cover and target visibility;
+- first location mechanic;
+- simple climax and evidence reveal;
+- HQ return and first useful investment.
+
+Only teach one system when needed. Future systems get contextual unlock tutorials and a reference manual.
+
+## 11. Results and feedback
+
+Debrief includes success/failure, objectives, route/segment progress, kills by source (player, turret, drone, operative, autonomous weapon), accuracy where applicable, damage received, supplies consumed, operative contribution, modifier effects, rewards and new intel/unlocks.
+
+## 12. Technical boundaries
+
+Combat logic remains separate from scenes and UI. Mission route, location mechanics, modifiers, automation decisions and rewards are data-driven. Randomness is seeded. Save changes require schema migration and tests. See [TECHNICAL_ARCHITECTURE.md](TECHNICAL_ARCHITECTURE.md), [COMBAT_SPEC.md](COMBAT_SPEC.md) and [AUTOMATION_DESIGN.md](AUTOMATION_DESIGN.md).
