@@ -56,6 +56,7 @@ describe('agent operations', () => {
   });
   it('automatically assigns the strongest available team to the best expected component rate', () => {
     const save = saves.load();
+    save.accountXp = 2_400;
     save.dollars = 3_000;
     saves.save(save);
     for (const id of ['fox', 'cipher', 'shade', 'hammer']) expect(agents.recruit(id)).toEqual({ success: true });
