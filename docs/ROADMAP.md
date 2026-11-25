@@ -103,7 +103,7 @@ Implementation status (2026-11-25): PR #18 adds a deterministic route clock, rou
 - [ ] Expand weapon/attachment, operative, gadget and cosmetic content.
 - [~] Rebuild initial Casino combat art: detailed four-layer main/bar backgrounds, 2× weapon viewmodels and 2× enemy atlas are in progress; full authored animation cycles and additional location art remain open.
 - [ ] Profile low-end desktop and mobile; validate actual Android controls and rendering.
-- [ ] Rebuild the Casino/East Express combat art with production-quality backgrounds, high-resolution first-person weapon artwork and fully animated enemy sprites; current SVG/low-resolution atlas art is still placeholder quality.
+- [ ] Extend the visual rebuild to East Express, Warehouse, Embassy and Vulkan's Lair; add hand-authored idle/walk/fire/hit/death cycles and complete physical Android visual QA.
 - [ ] Review save migration, persistence and release packaging.
 
 ## Validation policy
