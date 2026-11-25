@@ -137,3 +137,6 @@
 - Enemies assigned to the same cover use different peek offsets to reduce stacked silhouettes.
 - Added focused SpawnDirector determinism, spacing, bounds, cover-clearance and composition tests, plus cover line-of-sight tests.
 - Continuous route-lane movement, dynamic role composition, full cover destruction and browser/Android visual validation remain open.
+
+- Extended the spawn plan into visible route-lane entrances: guards, assault units and armored enemies enter from alternating route edges with different travel durations, while stagger timing remains seed-driven. A pulsing marker previews each assigned lane before arrival.
+- Added a pure eased-entry sampler and tests for start/end positions, clamping and invalid duration. Bosses preserve their authored entrance point.
