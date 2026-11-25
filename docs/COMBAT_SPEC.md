@@ -199,3 +199,10 @@ Current numeric values in `balance.ts` and `enemies.ts` are prototype values, no
 - Any projectile already launched continues along its recorded trajectory and can still hit the player. The event only delays a later AI transition/attack; it is not an interrupt that deletes incoming fire.
 - A 777 callout and a gold sparkle above affected enemies make the effect readable. The warning names the affected sector. Player counterplay is to shift aim into the sector and exploit the brief action window.
 - The slot event is not yet player-triggered; interactive slot machines and the optional Jackpot Sequence modifier remain future work. Physical/browser visual QA remains outstanding.
+## Player-triggered roulette jackpot — 2026-11-26
+
+- In Casino main hall, one manual jackpot can be triggered per room by aiming at the central roulette wheel and firing. The target is an authored 96×64 logical hit region centred on (640,505), mapped through the same 0.42 parallax transform as the mid-background artwork.
+- The reticle shows a gold target frame and the hint `РУЛЕТКА • ВЫСТРЕЛ ДЛЯ ДЖЕКПОТА`. If existing cover line-of-sight blocks the shot, the target turns amber and the trigger is rejected.
+- A successful shot consumes one round, counts as a fired shot, marks the roulette wheel spent for that room, and triggers an immediate 420 ms central jackpot flash. This manual pulse distracts eligible stationary security in a wider 300 px lane radius; it does not deal damage or cancel incoming projectiles.
+- The interaction is disabled during first-operation onboarding and after one successful activation. The automatic slot-bank jackpot cycle remains separate.
+- Touch aim uses screen-to-world camera conversion while the roulette target uses the mid-layer parallax factor; deterministic geometry tests cover zero and non-zero camera offsets. Physical Android visual/tolerance QA remains required.

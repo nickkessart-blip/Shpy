@@ -358,3 +358,12 @@ The user reports a complete failure in graphics quality and mobile shooting and 
 - `RuntimeEnemy.distractionRemainingMs` pauses the selected enemy's AI timer/movement, but does not alter position, HP, hitbox or the already launched projectile array. A projectile already fired continues to impact normally.
 - The top `777 • ДЖЕКПОТ` callout and gold flash/spin marker above affected enemy heads signal the opening; the warning toast states the lane.
 - The automatic signature slice is not a player-triggered slot interaction and is not yet the optional jackpot modifier. Physical/browser visual QA remains outstanding.
+## Player-triggered roulette jackpot — 2026-11-26
+
+- Main Casino only: the roulette-table illustration in `casino-main-mid.svg` has a 96×64 logical target rectangle centred at (640,505). Pure geometry is in `src/game/systems/missions/casinoRouletteTarget.ts`; background parallax factor is 0.42.
+- MissionScene converts mobile world reticle to screen coordinates, tests against the parallax-shifted rectangle, then converts the target back through `camera.getWorldPoint()` for the same cover LOS check as weapon shots.
+- While aimed at a clear roulette target, show a gold frame and `РУЛЕТКА • ВЫСТРЕЛ ДЛЯ ДЖЕКПОТА`. If cover blocks the line, show an amber frame and a blocked-angle hint.
+- Firing at the wheel consumes one normal round and increments shots, then triggers a 420 ms manual jackpot pulse and wider 300 px distraction radius through `applyCasinoJackpotDistraction`. It does not count as an enemy hit and causes no direct damage.
+- The wheel is one-use per main room; reset on room entry. Interaction is suppressed while the first-operation tutorial is active and after activation.
+- The manual flash temporarily overrides the recurring jackpot presentation while the automatic event clock continues. Automatic cycle remains separate.
+- Geometry tests cover target centre/edge, miss and parallax alignment. Physical Android aiming tolerance and browser visual QA remain outstanding.
