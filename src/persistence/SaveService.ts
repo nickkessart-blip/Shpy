@@ -18,7 +18,8 @@ export type UpgradeKind = 'damage' | 'magazine' | 'reload' | 'health' | 'armor' 
 export type GearUpgradeKind = 'grenadeCapacity' | 'medkitEfficiency';
 
 export interface SaveData {
-  schemaVersion: 6;
+  schemaVersion: 7;
+  tutorialCompleted: boolean;
   accountXp: number;
   dollars: number;
   upgrades: Record<UpgradeKind, number>;
@@ -37,7 +38,8 @@ export const GEAR_UPGRADE_COSTS: Record<GearUpgradeKind, readonly number[]> = {
 };
 
 const DEFAULT_SAVE: SaveData = {
-  schemaVersion: 6,
+  schemaVersion: 7,
+  tutorialCompleted: false,
   accountXp: 0,
   dollars: 0,
   upgrades: { damage: 0, magazine: 0, reload: 0, health: 0, armor: 0, precision: 0 },
@@ -68,13 +70,13 @@ export class SaveService {
         schemaVersion?: unknown; reputation?: unknown; accountXp?: unknown; dollars?: unknown;
         upgrades?: Partial<Record<UpgradeKind, unknown>>; loadout?: unknown;
         agents?: unknown; agentMissions?: unknown; components?: unknown;
-        gearUpgrades?: unknown; cosmetics?: unknown; agencyResearch?: unknown;
+        gearUpgrades?: unknown; cosmetics?: unknown; agencyResearch?: unknown; tutorialCompleted?: unknown;
       };
       const version = data.schemaVersion;
-      if (![1, 2, 3, 4, 5, 6].includes(version as number) || !data.upgrades || typeof data.upgrades !== 'object') {
+      if (![1, 2, 3, 4, 5, 6, 7].includes(version as number) || !data.upgrades || typeof data.upgrades !== 'object') {
         return this.rejectCorruptSave(raw);
       }
-      const legacy = version !== 4 && version !== 5 && version !== 6;
+      const legacy = version === 1 || version === 2 || version === 3;
       if (legacy && (typeof data.reputation !== 'number' || !Number.isFinite(data.reputation))) {
         return this.rejectCorruptSave(raw);
       }
@@ -91,7 +93,9 @@ export class SaveService {
         ? data.gearUpgrades as Partial<Record<GearUpgradeKind, unknown>>
         : {};
       const normalized: SaveData = {
-        schemaVersion: 6,
+        schemaVersion: 7,
+        // Existing careers have already started playing; only a genuinely new save gets onboarding.
+        tutorialCompleted: version === 7 ? data.tutorialCompleted === true : true,
         accountXp,
         dollars,
         upgrades: {
@@ -115,7 +119,7 @@ export class SaveService {
       };
       this.volatileSave = structuredClone(normalized);
       this.volatileSaveExists = true;
-      if (version !== 6) this.save(normalized);
+      if (version !== 7) this.save(normalized);
       return normalized;
     } catch { return this.rejectCorruptSave(raw); }
   }
@@ -130,7 +134,8 @@ export class SaveService {
         schemaVersion?: unknown; reputation?: unknown; accountXp?: unknown; dollars?: unknown; upgrades?: unknown;
       };
       const legacy = data.schemaVersion === 1 || data.schemaVersion === 2 || data.schemaVersion === 3;
-      const validVersion = legacy || data.schemaVersion === 4 || data.schemaVersion === 5 || data.schemaVersion === 6;
+      const validVersion = legacy || data.schemaVersion === 4 || data.schemaVersion === 5
+        || data.schemaVersion === 6 || data.schemaVersion === 7;
       const validXp = legacy ? typeof data.reputation === 'number' && Number.isFinite(data.reputation)
         : typeof data.accountXp === 'number' && Number.isFinite(data.accountXp);
       const validMoney = legacy || (typeof data.dollars === 'number' && Number.isFinite(data.dollars));
@@ -177,6 +182,14 @@ export class SaveService {
     const freshSave = structuredClone(DEFAULT_SAVE);
     this.save(freshSave);
     return freshSave;
+  }
+
+  completeTutorial(): SaveData {
+    const data = this.load();
+    if (data.tutorialCompleted) return data;
+    data.tutorialCompleted = true;
+    this.save(data);
+    return data;
   }
 
   addProgress(accountXpAmount: number, dollarAmount: number): SaveData {

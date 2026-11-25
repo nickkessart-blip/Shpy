@@ -178,3 +178,10 @@ Current numeric values in `balance.ts` and `enemies.ts` are prototype values, no
 - Enemy rounds retain their original recorded world target. At arrival, the projectile is compared with the current ducked player hit point; it misses only when the active crouch has moved the hit point far enough away. A projectile launched while the player is already crouching aims at the crouched point.
 - The button shows the remaining cooldown in seconds. A green dodge effect and confirmation feedback mark a successful miss; damage, armour and hit flash remain unchanged when the dodge is mistimed.
 - This is a timing-based crouch, not lateral movement, cover destruction or projectile interception. Physical Android layout/readability and balance tuning remain required.
+## First-operation interactive tutorial — 2026-11-26
+
+- A genuinely new save starts the Casino operation with a six-step contextual card: aim/fire, reload, enemy telegraph, timed duck, cover/peek, and finish a target. Prompts advance only after corresponding live game events.
+- The enemy signal prompt explains the red aim ring. When an enemy launches its round, the card switches to evade instructions; a successful dodge advances to cover education. The cover step waits for an enemy to peek. A kill completes onboarding; if the player eliminates the entire group before a peek, the tutorial closes after the group is cleared.
+- Desktop inputs are mouse/fire, R and Shift. Touch inputs are aim stick, FIRE/RELOAD and the dedicated dodge button. Prompt copy adapts to the detected mobile control layout.
+- Skip is always available. Completion or skip is persisted in SaveData schema v7. New saves default to incomplete; migrated schema v1-v6 saves are marked complete to avoid interrupting existing careers.
+- Tutorial is limited to the first Casino operation. It is a non-pausing overlay; enemies and mission timing continue while the player reads and acts.
