@@ -100,3 +100,60 @@ Phaser 4 + TypeScript + Vite. Capacitor 8 для Android/iOS. Tauri 2 для des
 - CI должен запускаться для PR в любую целевую ветку, изолировать concurrency по PR/ref и публиковать только после успешного push в `main`.
 - Публичность репозитория не связана с передачей локальных бинарных байтов в GitHub connector; приватизацию рассматривать отдельно как миграцию source/deployment.
 
+
+
+## Rebaseline 2026-11-25 — approved product canon
+
+### D-009 — SHPY identity and tone
+Approved: incremental spy-action rail shooter with agency management. The primary tone is broad spy parody/comedy with black humour, using Johnny English, Leslie Nielsen parody films, The Gentlemen, Tropic Thunder, Austin Powers and Inglourious Basterds as tonal references only. SHPY must use original characters, dialogue, scenes and jokes.
+
+### D-010 — Protagonist arc
+Approved: combine the awkward/lucky rookie with the deadpan, increasingly competent professional. The player-agent begins inexperienced and occasionally clumsy, but gradually becomes genuinely capable. The surrounding agency and antagonists remain absurd; the protagonist must not remain a useless joke forever.
+
+### D-011 — Multiple major antagonists
+Approved: Vulkan is one of several major villains, not the universal mastermind. The first campaign reveals a network of competing criminal interests and independent antagonists. Vulkan receives a major arc associated with his lair.
+
+### D-012 — Rail-shooter structure restored
+Approved: missions use a moving authored rail, linked segments, independent parallax/environment layers, enemy entry lanes and scripted location events. Stationary compositions may still be used for brief encounter beats, but the mission's overall identity is a forward-moving rail shooter. The previous "static scenes only" description is superseded.
+
+### D-013 — Location signatures and operation modifiers
+Approved: each initial location has a permanent signature mechanic that affects play. Optional modifiers are selected before launch and alter the frequency, severity or combination of events while showing clear warnings and counterplay. Initial signature directions:
+- Casino: changing light and visual distractions.
+- East Express: train motion, tunnel darkness, vibration, steam and compartment routes.
+- Contraband warehouse: moving cargo and industrial machinery.
+- Embassy: surveillance/security network, reinforced sightlines and restricted doors.
+- Vulkan's Lair: dangerous infrastructure, pressure/heat systems and power control.
+Specific event values and compatibility are balancing/content decisions, not fixed constants.
+
+### D-014 — Three-resource economy
+Approved: Dollars are spendable cash; Reputation is persistent career/agency progression; Components are crafting and equipment materials. The current save field `accountXp` remains the technical storage field for Reputation until a deliberate migration is implemented and tested. Do not add currencies without a strong design reason.
+
+### D-015 — Fully autonomous endgame operations
+Approved: late-game players can prepare and launch an operation, then watch the simulation execute the entire mission. In this full-autonomy mode the game handles target selection, aim, fire, reload, automatic supplies, weapon selection, turret/drone/rocket support and assigned operative support. The player has no required combat clicks after launch. Pause and playback speed are presentation controls only.
+
+### D-016 — Autonomy is earned and operation-bound
+Approved: new story operations/sectors are first experienced manually or with assistance. Full autonomy unlocks for known/prepared sectors through agency research, reconnaissance and equipment progression. Autonomy is a visible in-mission simulation, not an offline timer or a button that simply claims rewards. It uses the same combat rules as manual play and can fail when underprepared.
+
+### D-017 — Player-agent and operatives
+Approved terminology: the directly controlled character is the **player-agent**; recruited roster members are **operatives**. An operative assigned as direct support in a main operation is unavailable for simultaneous timed roster assignments. This creates a deliberate choice between immediate combat support and background logistics/intelligence work.
+
+### D-018 — Armory versus mission preparation
+Approved: the Armory is a catalogue/workshop for weapon inspection, attachments, perks and cosmetics. Actual weapon slots, grenades, medkits, gadgets, support operative and automation package are confirmed in a separate Mission Preparation step before launch.
+
+### D-019 — Onboarding and story delivery
+Approved: the first operation is a prologue and contextual tutorial. Story delivery uses short cinematic intros/outros, radio chatter, character exchanges, documents, messages and mission events. New systems are explained when first unlocked, not in one front-loaded manual.
+
+### D-020 — UI/UX expectations
+Approved direction: consistent visual system and dimensions across buttons/tabs/cards; active tabs must stay visibly selected; Settings are platform-aware; Desktop includes key rebinding; mobile-only touch options are not shown as desktop controls; parallax is a default visual feature rather than a normal toggle; graphics and vibration options explain their real effects.
+
+## Open content and balance questions (not blockers for the canon)
+
+- Protagonist name, agency leadership cast and supporting character roster.
+- Exact villain roster, their motives and the order in which the network is exposed.
+- Final plot twists and the campaign ending.
+- Exact account level thresholds, prices, rewards and automation unlock costs.
+- Exact location event timings, modifier compatibility and difficulty multipliers.
+- Exact perk branch nodes, weapon attachment pool and role bonuses for operatives.
+- The first complete autonomous operation's equipment budget and success targets.
+
+Do not silently promote these open items into fixed canon.
