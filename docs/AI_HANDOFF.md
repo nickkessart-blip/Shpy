@@ -264,3 +264,12 @@ The user reports a complete failure in graphics quality and mobile shooting and 
 - Added Vitest coverage for neutral pose, stable directional response, decay and clamping.
 - Full authored hit/recoil animation frames, broader idle/walk/fire cycles and physical Android visual QA remain outstanding.
 - PR CI and Pages publication pending.
+
+## Enemy attack charge telegraph — 2026-11-26
+
+- Branch: `feat/enemy-attack-telegraph-2026-11-26`, based on main `39e6ae13b416c0cff26ab1d501c236287050c0df`.
+- During `Aiming`, a 28-segment ring fills according to the existing enemy aim timer; the target line intensifies and a pulsing marker indicates the player's danger point.
+- Added pure `sampleEnemyAimCharge` and tests for progress, clamping and invalid values.
+- Presentation only: enemy state transitions, damage timing, hitboxes and aim remain unchanged.
+- CI/Pages publication pending; physical Android visual QA remains outstanding.
+
