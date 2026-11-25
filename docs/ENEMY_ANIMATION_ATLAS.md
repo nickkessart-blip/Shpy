@@ -2,10 +2,10 @@
 
 ## Runtime implementation
 
-AssetCatalog.ensureEnemyAnimationAtlas() builds a deterministic 384×1024 Phaser CanvasTexture from the four committed SVG enemy assets after BootScene preload. This removes the runtime dependency on transferring the prepared Library-only WebP. The implementation uses Phaser's documented CanvasTexture API (createCanvas, getContext, refresh and add), makes no network requests, and does not mutate source assets or combat coordinates.
+AssetCatalog.ensureEnemyAnimationAtlas() builds a deterministic 576×1536 Phaser CanvasTexture from the four committed SVG enemy assets after BootScene preload. This removes the runtime dependency on transferring the prepared Library-only WebP. The implementation uses Phaser's documented CanvasTexture API (createCanvas, getContext, refresh and add), makes no network requests, and does not mutate source assets or combat coordinates.
 
 - Texture key: enemy-animation-atlas.
-- Geometry: 3 columns × 4 rows; 128×256 per cell.
+- Geometry: 3 columns × 4 rows; 192×384 per cell.
 - Rows: guard, armored, assault, boss.
 - Columns: aim, fire, hit.
 - Frame index: row * 3 + column (0–11).
@@ -16,7 +16,7 @@ AssetCatalog.ensureEnemyAnimationAtlas() builds a deterministic 384×1024 Phaser
 ## Meaning and limits of states
 
 This is a state atlas, not a hand-drawn frame animation:
-- aim: original SVG pose, fitted into a fixed transparent cell and baseline-aligned.
+- aim: original SVG pose, fitted into a fixed 192×384 transparent cell and baseline-aligned.
 - fire: same silhouette with a restrained recoil offset and muzzle flash.
 - hit: same silhouette with a small offset and red source-atop damage tint.
 
@@ -43,7 +43,7 @@ The separate Library copy SHPY_enemy_animation_atlas.webp remains uncommitted: 3
 Two native Library files were visually inspected; neither is committed or runtime-loaded.
 
 ### SHPY_enemy_animation_atlas.webp
-- 384×1024 RGBA WebP; 3 columns × 4 rows; each cell 128×256.
+- 384×1024 RGBA WebP; 3 columns × 4 rows; each cell 192×384.
 - Rows: guard, armored, assault, boss.
 - Columns: aim, fire, hit.
 - Alpha channel is present. All 12 cells have a consistent bottom bound at y=248, so the sheet is structurally more suitable for direct Phaser spritesheet loading than the larger contact sheet.
@@ -58,3 +58,10 @@ Two native Library files were visually inspected; neither is committed or runtim
 - The committed runtime still uses the generated 384×1024 CanvasTexture from four static SVGs, with aim, fire and hit state variants. It is not using either Library atlas.
 - A prepared asset is not integrated until the exact binary is committed, loaded by BootScene, registered with AssetCatalog, mapped to runtime animation states and visually validated.
 - The available tool path in this audit could inspect/materialize the Library WebP but could not pass its binary bytes to GitHub. Do not claim integration or silently substitute the runtime-generated state atlas for the prepared sheet.
+
+
+## SHPY visual recovery pass — 2026-11-25
+
+- Runtime enemy SVG source textures are rasterized at 2× source resolution (guard/armored/assault 480×800; boss 640×1000).
+- The runtime CanvasTexture now uses 192×384 cells (3×4, 576×1536) and a 372px baseline. It preserves the SVG source silhouette more cleanly than the former 128×256 atlas.
+- These are still three state variants generated from one source pose per enemy. This resolution upgrade is not a substitute for hand-authored idle/walk/fire/hit/death animation cycles.
