@@ -21,7 +21,7 @@ Do not start a new project. Do not silently change canon. Do not generate or edi
 - Latest verified main commit at the start of this task: `0b0fe7ab1946e3e4e788be9f339a3e1a05212a40`.
 - PR #15, #16 and #17 are historical/integrated work; do not recreate their branches or duplicate their changes.
 - Active feature branch and PR: `docs/shpy-canon-rebaseline-2026-11-25` → PR #18 (base `main`). PR #18 now includes both the approved canon rebaseline and the first Casino rail-timeline code slice; it is still open and must not be assumed merged.
-- Branch head before this handoff refresh: `eee681cf92bf7bb3cd846a0d59b73603fcdf05d6`. Always query the live branch/PR head before writing; subsequent commits may move it.
+- Branch head before this handoff refresh: `2b3c49b947183c3357c3ecfe0a058a29566660df`. The handoff refresh itself is commit `ee048f0281cb21c2516db34fd135acb62b5bc1ec`; query live HEAD before any subsequent edit. Always query the live branch/PR head before writing; subsequent commits may move it.
 - Keep one shared game codebase for Web, Android and desktop. Do not create separate PC/mobile gameplay branches.
 - The latest user environment report is Node.js 24.19.0, npm 11.17.0 and Git 2.55.0.windows.3. CI currently uses Node.js 26.
 
