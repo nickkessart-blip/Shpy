@@ -195,7 +195,7 @@ Current numeric values in `balance.ts` and `enemies.ts` are prototype values, no
 ## Casino slot-machine jackpot distraction — 2026-11-26
 
 - A second Casino signature event runs independently from the spotlight. Every 15,000 ms, a slot-machine sequence warns a lane for 900 ms, flashes for 420 ms and recovers for 900 ms. The cycle is deterministic; the bar uses a different lane offset.
-- At the flash, living exposed/active guards in the illuminated lane receive a brief distraction: Guard 1,350 ms, Assault 900 ms, Armored 420 ms, Boss 0 ms. Their current AI timer/movement is suspended while the distraction is active. Enemy hitboxes/coordinates are not moved and their current HP is unchanged.
+- At the flash, eligible stationary enemies in the illuminated lane receive a brief distraction: Guard 1,350 ms, Assault 900 ms, Armored 420 ms, Boss 0 ms. Exposed/Aiming/Attacking/Peeking states qualify; Entering/Hidden/SeekingCover/Repositioning do not. Their current AI timer is suspended while distracted; active movement tweens are never stopped mid-path. Enemy hitboxes/coordinates and HP are unchanged.
 - Any projectile already launched continues along its recorded trajectory and can still hit the player. The event only delays a later AI transition/attack; it is not an interrupt that deletes incoming fire.
 - A 777 callout and a gold sparkle above affected enemies make the effect readable. The warning names the affected sector. Player counterplay is to shift aim into the sector and exploit the brief action window.
 - The slot event is not yet player-triggered; interactive slot machines and the optional Jackpot Sequence modifier remain future work. Physical/browser visual QA remains outstanding.

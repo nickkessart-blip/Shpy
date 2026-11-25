@@ -354,7 +354,7 @@ The user reports a complete failure in graphics quality and mobile shooting and 
 
 - Pure sequence/timing and archetype response durations are in `src/game/systems/missions/casinoJackpotEvent.ts` with deterministic Vitest coverage.
 - It is a separate 15,000 ms room event: warning 900 ms, flash 420 ms, recovery 900 ms. Casino main and bar cycle different initial lanes.
-- On entering `flash`, MissionScene selects living enemies in the lane. Guard pauses 1,350 ms; Assault 900 ms; Armored 420 ms; Boss is immune. Enemies entering or hidden behind cover are not tagged.
+- On entering `flash`, MissionScene selects stationary enemies in the lane. `canCasinoJackpotDistract()` only accepts Exposed/Aiming/Attacking/Peeking; it explicitly excludes Entering, Hidden, SeekingCover, Repositioning and Defeated. Guard pauses 1,350 ms; Assault 900 ms; Armored 420 ms; Boss is immune. This avoids interrupting active movement tweens.
 - `RuntimeEnemy.distractionRemainingMs` pauses the selected enemy's AI timer/movement, but does not alter position, HP, hitbox or the already launched projectile array. A projectile already fired continues to impact normally.
 - The top `777 • ДЖЕКПОТ` callout and gold flash/spin marker above affected enemy heads signal the opening; the warning toast states the lane.
 - The automatic signature slice is not a player-triggered slot interaction and is not yet the optional jackpot modifier. Physical/browser visual QA remains outstanding.

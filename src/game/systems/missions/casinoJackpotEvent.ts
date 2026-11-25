@@ -20,6 +20,8 @@ export const CASINO_JACKPOT_FLASH_MS = 420;
 export const CASINO_JACKPOT_RECOVERY_MS = 900;
 
 const LANE_CENTRES = [300, 640, 980] as const;
+export type CasinoJackpotEnemyState = 'Entering' | 'Exposed' | 'Aiming' | 'Attacking' | 'SeekingCover' | 'Hidden' | 'Peeking' | 'Repositioning' | 'Defeated';
+
 const DISTRACTION_MS: Record<EnemyType, number> = {
   guard: 1350,
   assault: 900,
@@ -29,6 +31,12 @@ const DISTRACTION_MS: Record<EnemyType, number> = {
 
 export function getCasinoJackpotDistractionMs(type: EnemyType): number {
   return DISTRACTION_MS[type];
+}
+
+/** Only stationary combat states can be interrupted; active movement tweens are never frozen mid-path. */
+export function canCasinoJackpotDistract(type: EnemyType, state: CasinoJackpotEnemyState): boolean {
+  return DISTRACTION_MS[type] > 0
+    && (state === 'Exposed' || state === 'Aiming' || state === 'Attacking' || state === 'Peeking');
 }
 
 /** Deterministic slot-jackpot cue; its flash is a temporary distraction, not damage. */

@@ -40,6 +40,7 @@ import {
   type CasinoLightPhase,
 } from '../systems/missions/casinoLightEvent';
 import {
+  canCasinoJackpotDistract,
   getCasinoJackpotDistractionMs,
   sampleCasinoJackpotEvent,
   type CasinoJackpotEventState,
@@ -1910,7 +1911,7 @@ export class MissionScene extends Phaser.Scene {
     const laneCenter = this.cameras.main.getWorldPoint(state.centerX + state.sweepOffset, 0).x;
     let distractedCount = 0;
     for (const enemy of this.enemies) {
-      if (enemy.state === 'Defeated' || enemy.state === 'Entering' || enemy.state === 'Hidden') continue;
+      if (!canCasinoJackpotDistract(enemy.type, enemy.state)) continue;
       const duration = getCasinoJackpotDistractionMs(enemy.type);
       if (duration <= 0 || Math.abs(enemy.x - laneCenter) > 170) continue;
       enemy.distractionRemainingMs = Math.max(enemy.distractionRemainingMs, duration);
@@ -1957,9 +1958,27 @@ export class MissionScene extends Phaser.Scene {
 
   private drawCasinoJackpotFlash(): void {
     const state = this.casinoJackpotState;
-    if (!state || state.phase !== 'flash') return;
+    if (!state || state.phase === 'idle') return;
     const center = this.cameras.main.getWorldPoint(state.centerX + state.sweepOffset, 258);
     const pulse = 0.7 + Math.sin(this.time.now / 42) * 0.18;
+    if (state.phase === 'warning') {
+      const alpha = 0.46 + pulse * 0.24;
+      this.fx.fillStyle(0xffd85c, 0.07 * alpha);
+      this.fx.fillEllipse(center.x, center.y, 210, 74);
+      this.fx.lineStyle(3, 0xffd45e, alpha);
+      this.fx.strokeEllipse(center.x, center.y, 150, 56);
+      for (let index = 0; index < 3; index += 1) {
+        const x = center.x + (index - 1) * 27;
+        this.fx.fillStyle(0xffedaa, alpha);
+        this.fx.fillCircle(x, center.y, 5 + pulse * 2);
+      }
+      return;
+    }
+    if (state.phase === 'recovery') {
+      this.fx.lineStyle(2, 0xffd45e, 0.35 * state.intensity);
+      this.fx.strokeEllipse(center.x, center.y, 156, 60);
+      return;
+    }
     this.fx.fillStyle(0xffd85c, 0.1 * pulse);
     this.fx.fillCircle(center.x, center.y, 92);
     this.fx.lineStyle(5, 0xffd45e, 0.78 * pulse);

@@ -5,6 +5,7 @@ import {
   CASINO_JACKPOT_RECOVERY_MS,
   CASINO_JACKPOT_WARNING_MS,
   CASINO_JACKPOT_WARNING_START_MS,
+  canCasinoJackpotDistract,
   getCasinoJackpotDistractionMs,
   sampleCasinoJackpotEvent,
 } from './casinoJackpotEvent';
@@ -39,6 +40,18 @@ describe('Casino slot-machine jackpot sequence', () => {
     expect(getCasinoJackpotDistractionMs('assault')).toBe(900);
     expect(getCasinoJackpotDistractionMs('armored')).toBe(420);
     expect(getCasinoJackpotDistractionMs('boss')).toBe(0);
+  });
+
+  it('distracts only stationary, non-boss combat states', () => {
+    expect(canCasinoJackpotDistract('guard', 'Aiming')).toBe(true);
+    expect(canCasinoJackpotDistract('assault', 'Peeking')).toBe(true);
+    expect(canCasinoJackpotDistract('armored', 'Exposed')).toBe(true);
+    expect(canCasinoJackpotDistract('guard', 'SeekingCover')).toBe(false);
+    expect(canCasinoJackpotDistract('assault', 'Repositioning')).toBe(false);
+    expect(canCasinoJackpotDistract('guard', 'Entering')).toBe(false);
+    expect(canCasinoJackpotDistract('guard', 'Hidden')).toBe(false);
+    expect(canCasinoJackpotDistract('boss', 'Aiming')).toBe(false);
+    expect(canCasinoJackpotDistract('guard', 'Defeated')).toBe(false);
   });
 
   it('stays inactive during the rest interval', () => {
