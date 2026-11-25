@@ -1,5 +1,11 @@
 # SHPY — Release Notes
 
+## 2026-11-25 — First Casino rail timeline slice
+- Added a renderer-independent deterministic route clock with bounded distance/progress, reset and independent wrapped layer offsets.
+- Wired the route clock into MissionScene; the route advances only during active play, resets per mission segment, drives far/mid/near layer movement and displays a compact route-progress meter.
+- Kept reticle, weapon rig, HUD and authoritative enemy hit coordinates independent from decorative layer offsets.
+- Kept the current authored art and procedural geometry; this is the first motion foundation, not the final authored multi-plane rail-shooter. Enemy route lanes, spawn director, physical cover occlusion and real seamless background layers remain open.
+
 ## 2026-11-25 — Approved game design rebaseline
 - Re-centered SHPY on its approved spy-parody rail-shooter identity and protagonist progression.
 - Defined the first campaign's narrative frame, five location signature mechanics and the layered operation-modifier model.
