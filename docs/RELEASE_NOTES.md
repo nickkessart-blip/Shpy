@@ -171,8 +171,9 @@
 - Added a pure eased-entry sampler and tests for start/end positions, clamping and invalid duration. Bosses preserve their authored entrance point.
 
 
-## 2026-11-25 — Mobile target feedback (in progress)
+## 2026-11-25 — Mobile target feedback (published)
 - Reticle turns green when a valid enemy hit is under it, amber when cover blocks the shot, and remains white when no target overlaps.
 - Mobile fire button rim mirrors the same state, making it easier to tell whether a shot should connect.
 - Feedback uses existing hit radii and cover geometry and does not alter aim, damage or hitboxes.
 - Deterministic geometry tests cover clear, blocked, neutral and overlapping target cases.
+- Merged as PR #29 and deployed to GitHub Pages (main commit 3b537faedde2111094fc7b809c91ce070580e8a4). Physical Android QA remains outstanding.
