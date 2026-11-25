@@ -68,5 +68,6 @@ describe('SpawnDirector', () => {
     const plan = planEnemyWave(['boss'], [{ x: 640, y: 315 }], [], 5);
     expect(plan).toHaveLength(1);
     expect(plan[0].type).toBe('boss');
+    expect(plan[0].spawn).toEqual({ x: 640, y: 315 });
   });
 });
