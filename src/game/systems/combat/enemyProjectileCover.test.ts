@@ -10,10 +10,11 @@ describe('enemy projectile cover collision', () => {
   });
 
   it('stops the round at the near edge of a crossed cover', () => {
+    const progress = 132 / 336;
     expect(findEnemyProjectileCoverImpact(
-      { x: 640, y: 330 }, { x: 640, y: 624 },
+      { x: 387, y: 288 }, { x: 640, y: 624 },
       [{ x: 250, y: 420, width: 260, height: 94 }],
-    )).toEqual({ point: { x: 640, y: 420 }, progress: 90 / 294, coverIndex: 0 });
+    )).toEqual({ point: { x: 387 + 253 * progress, y: 420 }, progress, coverIndex: 0 });
   });
 
   it('selects the earliest cover when several rectangles cross the line', () => {
