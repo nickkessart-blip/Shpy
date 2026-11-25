@@ -61,3 +61,15 @@ Keep original archives outside the runtime asset folders. Before importing a pac
 | `Игровой артбук: поезд и оружие.png` | 1536×1024 RGB, opaque contact sheet/mockup. | Art reference only; not a runtime atlas. |
 
 The Library files are not repository assets. Do not describe them as integrated until the exact binary is committed, its frame map and provenance are recorded, the loader registers it, and a runtime screenshot confirms correct rendering. See `docs/AI_SKILLS_RESEARCH.md`.
+
+
+## Casino authored parallax planes — 2026-11-25
+
+The original Casino SVG scenes were split into transparent, same-canvas vector planes. This is source-asset separation, not generated background art or a labelled contact sheet.
+
+| Scene | Base | Far | Mid | Near |
+|---|---|---|---|---|
+| Main Casino | `casino-main-base.svg` — wall/floor/perspective | `casino-main-far.svg` — windows and side lamp glow | `casino-main-mid.svg` — columns, vault/door, sign and chandelier | `casino-main-near.svg` — lower shadow and frame |
+| Royale Bar | `casino-bar-base.svg` — wall/floor | `casino-bar-far.svg` — back cabinets and shelves | `casino-bar-mid.svg` — bottles, lamps and sign | `casino-bar-near.svg` — floor perspective and lower trim |
+
+All eight SVGs use the original 1280×720 viewBox and transparent overlay planes. AssetCatalog loads each plane at 1280×720. MissionScene scrolls the planes independently at 0.16/0.42/0.74 camera factors and applies a bounded route pan; the original full-scene SVG remains the fallback if a complete plane set is unavailable.
