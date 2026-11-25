@@ -80,3 +80,14 @@ All eight SVGs use the original 1280×720 viewBox and transparent overlay planes
 The Casino main room and bar now use a rebuilt four-layer SVG environment: architectural shell, distant windows/lighting, midground machines/bar shelving, and foreground furniture/counter. The assets remain lightweight, locally loaded vector files. The four first-person weapon illustrations are rasterized at 720×1240 (2×) and used directly by the combat rig instead of enlarging the low-resolution 192×144 atlas frames. Enemy source art is rasterized at 2× and composed into a larger 192×384 runtime state atlas.
 
 This is an improvement to the current art baseline, not a claim that the final game art is complete: true frame-by-frame character animation, additional location backgrounds, and physical mobile visual QA remain outstanding.
+
+
+## East Express layered carriage pass (2026-11-26)
+
+- Added `train-carriage-far.svg`, `train-carriage-mid.svg` and `train-carriage-near.svg`, each a transparent 1280×720 overlay aligned to the existing `train-carriage.svg` base.
+- Far layer: distant night city silhouette and warm lit windows, clipped to the four existing carriage windows.
+- Mid layer: rain streaks and glass reflections, also clipped to the window apertures.
+- Near layer: foreground seat backs, brass trim and lower carriage rails.
+- All three layers are registered in `assetSlots.ts` and rasterized at 1280×720 by `AssetCatalog`.
+- `MissionScene` now selects the four-layer set for `backgrounds/train-carriage`; the existing single-image fallback remains intact.
+- These overlays are original vector cutouts aligned to the committed carriage artwork, not downloaded third-party art. No new third-party license obligations were introduced.

@@ -490,7 +490,8 @@ export class MissionScene extends Phaser.Scene {
     });
     const bgKey = AssetCatalog.imageKeyFor(this.sceneDef.backgroundSlot);
     const layerPrefix = this.sceneDef.backgroundSlot === 'backgrounds/casino-main' ? 'casino-main'
-      : this.sceneDef.backgroundSlot === 'backgrounds/casino-bar' ? 'casino-bar' : null;
+      : this.sceneDef.backgroundSlot === 'backgrounds/casino-bar' ? 'casino-bar'
+        : this.sceneDef.backgroundSlot === 'backgrounds/train-carriage' ? 'train-carriage' : null;
     const layerKeys = layerPrefix ? {
       base: layerPrefix + '-base', far: layerPrefix + '-far',
       mid: layerPrefix + '-mid', near: layerPrefix + '-near',
