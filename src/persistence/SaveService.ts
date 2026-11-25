@@ -91,7 +91,7 @@ export class SaveService {
         ? data.gearUpgrades as Partial<Record<GearUpgradeKind, unknown>>
         : {};
       const normalized: SaveData = {
-        schemaVersion: 5,
+        schemaVersion: 6,
         accountXp,
         dollars,
         upgrades: {
