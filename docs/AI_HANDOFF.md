@@ -82,7 +82,7 @@ The first deterministic rail timeline and independently moving Casino/Royale Bar
 - The director deliberately preserves the authored enemy-role roster for each wave. It does not yet generate dynamic role compositions or difficulty budgets; those remain balance-sensitive follow-up work.
 - Integrated staggered `Entering` state in MissionScene with a fading enemy appearance and pulsing lane marker.
 - Enemies taking cover remain rendered at their cover position behind the cover layer. The muzzle-to-target segment is checked against the same cover rectangles before damage is applied; hidden targets cannot be shot through cover. Enemies sharing a cover use distinct peek offsets to reduce stacking.
-- Added six SpawnDirector tests (seed determinism, seed variation, bounds, separation/cover clearance, stagger/order with roster preservation, single boss) and two cover line-of-sight tests.
+- Added eight SpawnDirector tests (seed determinism, seed variation, bounds, separation/cover clearance, stagger/order with roster preservation, single boss, route-entry interpolation and clamping) and two cover line-of-sight tests.
 - This is a code-level implementation only. Browser screenshots, manual combat QA and physical Android checks have not yet been performed. Run `45677074691` passed the previous head `0726f5cdea03d2c72feac86cfa8cf3ecccaa957a`; a later code push changed single-boss lane preservation and shared-cover peek spacing. CI for current head `41c6064f49309df8525af13fa28b6a291b61ac41` is pending and must be checked before merging.
 
 ### Skills and asset research
@@ -95,8 +95,8 @@ The first deterministic rail timeline and independently moving Casino/Royale Bar
 
 ## Next production work
 
-1. Run desktop/browser visual QA at 1280×720 and a desktop viewport; verify Casino/Bar planes, spawn spacing, entry markers and cover occlusion.
-2. Add continuous route-lane enemy entry/exit and authored spawn/exit paths; the current director selects bounded screen lanes but does not move enemies along the rail.
+1. Run desktop/browser visual QA at 1280×720 and a desktop viewport; verify Casino/Bar planes, spawn spacing, route-edge entrance timing and cover occlusion.
+2. Add route exits/despawn and continuous rail movement through the full operation; current movement is an entrance animation into screen lanes.
 3. Add seeded role-composition budgets and wave difficulty constraints without changing balance until simulation tests exist.
 4. Correct the pointer-to-world/reticle mapping before any camera/world transform is introduced.
 5. Validate cover peeking, line-of-sight, visual occlusion and hitboxes in browser; add authored attack launch/projectile/impact effects and stronger archetype differences.
