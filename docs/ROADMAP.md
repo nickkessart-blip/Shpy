@@ -101,7 +101,7 @@ Implementation status (2026-11-25): PR #18 adds a deterministic route clock, rou
 - [ ] Build Warehouse, Embassy and Vulkan's Lair around their signature mechanics.
 - [ ] Add compatible operation modifier pools, elite encounters and distinct bosses.
 - [ ] Expand weapon/attachment, operative, gadget and cosmetic content.
-- [ ] Add full animation cycles and high-quality visual/audio treatment when approved assets are available.
+- [~] Rebuild initial Casino combat art: detailed four-layer main/bar backgrounds, 2× weapon viewmodels and 2× enemy atlas are in progress; full authored animation cycles and additional location art remain open.
 - [ ] Profile low-end desktop and mobile; validate actual Android controls and rendering.
 - [ ] Rebuild the Casino/East Express combat art with production-quality backgrounds, high-resolution first-person weapon artwork and fully animated enemy sprites; current SVG/low-resolution atlas art is still placeholder quality.
 - [ ] Review save migration, persistence and release packaging.
