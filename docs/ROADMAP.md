@@ -129,3 +129,6 @@ Every completed, CI-validated implementation slice must be integrated into `main
 ### Enemy defeat readability — 2026-11-26
 - [~] Add a brief visible fall/fade reaction on enemy defeat and let the wave transition wait for it. This is a code-driven presentation effect; authored death frames and complete idle/walk/fire/hit/death cycles remain open.
 
+### Directional enemy hit reaction — 2026-11-26
+- [x] Add a deterministic, short directional knockback/lean pose on confirmed hits; unit tests verify direction and decay. Full authored hit/recoil animation frames remain open.
+

@@ -256,3 +256,11 @@ The user reports a complete failure in graphics quality and mobile shooting and 
 - This is a code-driven death feedback pass, not a hand-authored full animation cycle. Idle/walk/fire/hit/death sprite sheets and physical Android visual QA remain open.
 - Validation and Pages publication are pending until PR CI and main deployment complete.
 
+## Directional enemy hit reaction — 2026-11-26
+
+- Branch: `feat/enemy-hit-reaction-2026-11-26`, based on main `94afadeaa0599eba74b73221b9972a2409c09724`.
+- Added pure `sampleEnemyHitReaction`: deterministic per-enemy knockback direction, short horizontal shove, lean and subtle squash/stretch, decaying with the existing 230 ms hit flash.
+- Integrated into enemy sprite rendering only. No authoritative enemy coordinates, hitboxes, cover geometry, aim, damage or combat timing changed.
+- Added Vitest coverage for neutral pose, stable directional response, decay and clamping.
+- Full authored hit/recoil animation frames, broader idle/walk/fire cycles and physical Android visual QA remain outstanding.
+- PR CI and Pages publication pending.

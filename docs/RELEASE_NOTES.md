@@ -184,3 +184,9 @@
 - Applies to firearm and grenade kills; combat hitboxes and damage are unchanged.
 - This is procedural sprite presentation, not a hand-authored death animation. Full animation cycles and Android visual QA remain outstanding.
 
+## 2026-11-26 — Directional enemy hit reaction
+- Enemies now visibly recoil away from incoming hits with a short directional shove, lean and subtle squash/stretch.
+- The reaction fades with the existing hit flash and is stable per enemy.
+- Render-only: enemy coordinates, hitboxes, cover, aim and damage are unchanged.
+- Added deterministic unit tests. Full authored hit/recoil frames and Android visual QA remain outstanding.
+
