@@ -1,28 +1,26 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
 <defs>
- <linearGradient id="wall" x2="0" y2="1"><stop stop-color="#17232c"/><stop offset="1" stop-color="#422d2d"/></linearGradient>
- <linearGradient id="floor" x2="0" y2="1"><stop stop-color="#5c3c3b"/><stop offset="1" stop-color="#101820"/></linearGradient>
- <linearGradient id="brass" x2="0" y2="1"><stop stop-color="#f1d28d"/><stop offset=".5" stop-color="#a66d36"/><stop offset="1" stop-color="#52351f"/></linearGradient>
- <linearGradient id="bottle" x2="0" y2="1"><stop stop-color="#8dbb9b" stop-opacity=".8"/><stop offset="1" stop-color="#234c47"/></linearGradient>
- <radialGradient id="glow"><stop stop-color="#e99c58" stop-opacity=".65"/><stop offset="1" stop-color="#e99c58" stop-opacity="0"/></radialGradient>
+ <linearGradient id="mirror" x2="0" y2="1"><stop stop-color="#8aa3a9" stop-opacity=".5"/><stop offset=".5" stop-color="#29414a" stop-opacity=".85"/><stop offset="1" stop-color="#101b23"/></linearGradient>
+ <linearGradient id="brass" x2="0" y2="1"><stop stop-color="#f4d99e"/><stop offset=".5" stop-color="#a87542"/><stop offset="1" stop-color="#4e3020"/></linearGradient>
+ <linearGradient id="shelf" x2="0" y2="1"><stop stop-color="#3e2a27"/><stop offset="1" stop-color="#110f12"/></linearGradient>
 </defs>
 <g>
- <path d="M135 110H390V405H135Z" fill="#111b24" stroke="url(#brass)" stroke-width="7"/>
- <path d="M155 130H370V384H155Z" fill="#263b45"/>
- <path d="M890 110H1145V405H890Z" fill="#111b24" stroke="url(#brass)" stroke-width="7"/>
- <path d="M910 130H1125V384H910Z" fill="#263b45"/>
- <path d="M170 150H355V365H170ZM925 150H1110V365H925Z" fill="#182933" stroke="#89623c" stroke-width="3"/>
+ <path d="M90 95H1190V410H90Z" fill="#111a22" stroke="url(#brass)" stroke-width="9"/>
+ <path d="M112 116H1168V385H112Z" fill="url(#mirror)" stroke="#9d7549" stroke-width="4"/>
+ <path d="M125 145H1155M125 220H1155M125 295H1155M125 370H1155" stroke="#d1a66e" stroke-width="9"/>
+ <path d="M130 150H1150V212H130ZM130 225H1150V287H130ZM130 300H1150V362H130Z" fill="url(#shelf)" opacity=".8"/>
 </g>
-<g>
- <rect x="198" y="150" width="12" height="210" rx="5" fill="#c79b5b"/>
- <rect x="245" y="145" width="12" height="215" rx="5" fill="#c79b5b"/>
- <rect x="292" y="155" width="12" height="205" rx="5" fill="#c79b5b"/>
- <rect x="955" y="150" width="12" height="210" rx="5" fill="#c79b5b"/>
- <rect x="1002" y="145" width="12" height="215" rx="5" fill="#c79b5b"/>
- <rect x="1049" y="155" width="12" height="205" rx="5" fill="#c79b5b"/>
+<g stroke="#d2b27a" stroke-width="4" fill="none" opacity=".85">
+ <path d="M210 120V390M390 120V390M570 120V390M750 120V390M930 120V390M1110 120V390"/>
+ <path d="M155 180H1125M155 255H1125M155 330H1125"/>
 </g>
-<g fill="#c58f50">
- <path d="M160 185H365V198H160ZM160 245H365V257H160ZM160 305H365V317H160Z"/>
- <path d="M915 185H1120V198H915ZM915 245H1120V257H915ZM915 305H1120V317H915Z"/>
+<g fill="#294f4a" stroke="#b3c4a2" stroke-width="2">
+ <path d="M180 153H197V177L207 190V209H170V190L180 177Z"/><path d="M240 153H257V177L267 190V209H230V190L240 177Z"/>
+ <path d="M430 153H447V177L457 190V209H420V190L430 177Z"/><path d="M490 153H507V177L517 190V209H480V190L490 177Z"/>
+ <path d="M670 153H687V177L697 190V209H660V190L670 177Z"/><path d="M730 153H747V177L757 190V209H720V190L730 177Z"/>
+ <path d="M850 153H867V177L877 190V209H840V190L850 177Z"/><path d="M910 153H927V177L937 190V209H900V190L910 177Z"/>
+ <path d="M1030 153H1047V177L1057 190V209H1020V190L1030 177Z"/>
 </g>
+<g fill="#d5b779"><circle cx="290" cy="172" r="10"/><circle cx="550" cy="172" r="10"/><circle cx="810" cy="172" r="10"/><circle cx="1070" cy="172" r="10"/></g>
+<path d="M70 430H1210" stroke="#d4b17b" stroke-width="7"/>
 </svg>
