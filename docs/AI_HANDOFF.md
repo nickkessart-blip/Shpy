@@ -237,3 +237,12 @@ The user reports a complete failure in graphics quality and mobile shooting and 
 - Live Pages: https://nickkessart-blip.github.io/Shpy/.
 - Aim feedback uses the same hit radii and cover geometry as firing. Green = clear target, amber = cover blocked, white = no target. It does not modify aim, hitboxes or damage.
 - Physical Android QA remains outstanding.
+
+
+## Pages deployment reliability fix — 2026-11-25
+
+- Repeated Pages failures were caused by GitHub Actions reporting zero artifacts immediately after a successful upload; the artifact became visible later and a manual rerun succeeded.
+- Added an 8-second Wait for Pages artifact registration step between upload-pages-artifact@v4 and deploy-pages@v4 in .github/workflows/deploy-pages.yml.
+- Workflow fix commit: 9b5a1a883dc58d3b0b04de5949187f86bee50d52.
+- CI run 45698016511 and Pages run 45698016497 both completed successfully. Pages run used the same main SHA; prototype-build updated to 5a6d63ff14b99b1316ccb2b3248dc1130a119382.
+- Current main SHA: 9b5a1a883dc58d3b0b04de5949187f86bee50d52.
