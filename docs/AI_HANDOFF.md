@@ -21,7 +21,7 @@ Do not start a new project. Do not silently change canon. Do not generate or edi
 - Latest verified main commit at the start of this task: `0b0fe7ab1946e3e4e788be9f339a3e1a05212a40`.
 - PR #15, #16 and #17 are historical/integrated work; do not recreate their branches or duplicate their changes.
 - Active feature branch and PR: `docs/shpy-canon-rebaseline-2026-11-25` → PR #18 (base `main`). PR #18 now includes both the approved canon rebaseline and the first Casino rail-timeline code slice; it is still open and must not be assumed merged.
-- Branch head before this handoff refresh: `cf70e3f0af3a114517fff3470816c0d25dc89f4b`. Query live branch HEAD before any subsequent edit; documentation commits may have moved it. Always query the live branch/PR head before writing; subsequent commits may move it.
+- Branch head before this handoff refresh: `5a27635d3661f9887d8b47b61acefbe31171a03d`. Query live branch HEAD before any subsequent edit; documentation commits may have moved it. Always query the live branch/PR head before writing; subsequent commits may move it.
 - Keep one shared game codebase for Web, Android and desktop. Do not create separate PC/mobile gameplay branches.
 - The latest user environment report is Node.js 24.19.0, npm 11.17.0 and Git 2.55.0.windows.3. CI currently uses Node.js 26.
 
@@ -71,7 +71,7 @@ The current implementation does not yet have the approved moving rail timeline, 
 - Decorative layer travel does not alter pointer, weapon rig or authoritative enemy hitbox coordinates.
 - The Casino art is now genuinely split into independently moving vector planes, but it is still a bounded pan of one authored room, not an infinite seamless route. Enemy route lanes, seeded spawn composition, physical cover occlusion, projectile feedback and the Casino signature event remain open.
 - The test-only commit was pushed before the implementation to follow a test-first sequence, but intermediate GitHub Actions runs were cancelled by later pushes. Do not claim a confirmed red/green local TDD cycle.
-- The container could not clone GitHub (DNS/network unavailable), so no local npm test/build was run. Use the latest PR #18 GitHub Actions run as the source of truth; until the latest head run completes, checks are pending.
+- The container could not clone GitHub (DNS/network unavailable), so no local npm test/build or browser screenshot was run. GitHub Actions PR run `45674036540` on commit `5a27635d3661f9887d8b47b61acefbe31171a03d` completed successfully: dependency install, TypeScript, Vitest, ESLint and production build all passed. Publish-build was skipped because this is a feature PR, not a main deployment. Physical Android and desktop visual QA remain unperformed.
 - No Library image was committed or edited. The 384×1024 transparent enemy state atlas remains prepared in Library only. The larger East Express art sheets are opaque contact sheets, not ready-to-load sprite atlases.
 
 ### Skills and asset research
@@ -84,15 +84,14 @@ The current implementation does not yet have the approved moving rail timeline, 
 
 ## Next production work
 
-1. Check the latest CI run for PR #18 and fix any typecheck/test/lint/build failures before continuing.
+1. Run desktop/browser visual QA at 1280×720 and a desktop viewport; verify Casino/Bar planes move independently without seams or misalignment.
 2. Add route-lane enemy entry/exit and a seeded SpawnDirector with minimum separation and composition limits.
 3. Correct the pointer-to-world/reticle mapping before any camera/world transform is introduced.
 4. Make cover a physical occluder shared by rendering, hit-testing and shot blocking; hidden enemies must not simply vanish.
 5. Differentiate enemy attack patterns and add readable attack launch/projectile/impact effects.
 6. Implement the Casino signature lighting/distraction mechanic with warnings and counterplay.
-7. Validate the new Casino planes in a browser screenshot at native 1280×720 and on the user's desktop; verify that depth offsets are visible without seams or misaligned edges.
-8. Perform physical Android touch/orientation testing. CI is not a substitute.
-9. Only after the combat foundation passes, continue P1 UI/HQ, P2 prologue/tutorial, P3 economy, P4 operative department/location framework and P5 autonomy.
+7. Perform physical Android touch/orientation testing. CI is not a substitute.
+8. Only after the combat foundation passes, continue P1 UI/HQ, P2 prologue/tutorial, P3 economy, P4 operative department/location framework and P5 autonomy.
 
 The exact first-slice acceptance and deferred work are in `docs/superpowers/plans/2026-11-25-casino-rail-timeline.md` and `docs/ROADMAP.md`.
 
