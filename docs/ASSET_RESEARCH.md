@@ -165,3 +165,8 @@
 ### Phaser 4 background implementation reference
 
 Официальный [Phaser 4 TileSprite API](https://docs.phaser.io/api-documentation/class/gameobjects-tilesprite) и [Tile Sprite concept](https://docs.phaser.io/phaser/concepts/gameobjects/tile-sprite) подтверждают использование viewport-sized TileSprite и независимого `tilePosition` для бесшовного скролла. Для SHPY это целевой способ прокрутки настоящих seamless texture layers; контактные листы и неповторяющиеся иллюстрации нельзя автоматически считать tileable.
+
+
+## Нарезка исходного SVG казино на реальные слои — 2026-11-25
+
+Из существующих `casino-main.svg` и `casino-bar.svg` выделены восемь однотипных SVG-плоскостей с общим viewBox 1280×720: base, far, mid, near для каждой сцены. Слои разделены по уже существующим SVG-группам: дальние окна/задние полки, средние колонны/сейф/бутылки/свет и ближний край пола/рамка. Это не новый арт и не копирование чужого набора. Оригинальные полноэкранные SVG оставлены как fallback. Все новые слои подключены через AssetCatalog и используются MissionScene при наличии полного комплекта.
