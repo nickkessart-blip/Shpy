@@ -1706,7 +1706,7 @@ export class MissionScene extends Phaser.Scene {
         const atlasContentHeight = enemy.type === 'boss' ? 300 : 320;
         const displayHeight = generatedAtlas ? baseHeight * (384 / atlasContentHeight) : baseHeight;
         const atlasAspect = enemy.type === 'boss' ? 0.64 : 0.6;
-        const displayWidth = generatedAtlas ? displayHeight * atlasAspect : hasAnimationFrame ? baseHeight * atlasAspect : baseWidth;
+        const displayWidth = generatedAtlas ? displayHeight * atlasAspect : hasAnimationFrame ? baseHeight * 0.5 : baseWidth;
         image.setPosition(drawX, drawY + (aiming ? -2 : 0) + (attacking ? recoilKick * 3 : 0))
           .setDisplaySize(displayWidth * poseScaleX, displayHeight * poseScaleY).setVisible(true);
         const entryProgress = enemy.entryDurationMs > 0
