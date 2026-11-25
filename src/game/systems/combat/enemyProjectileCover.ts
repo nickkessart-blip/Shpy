@@ -19,7 +19,9 @@ export function findEnemyProjectileCoverImpact(
   const dy = target.y - start.y;
   let earliest: EnemyProjectileCoverImpact | null = null;
 
-  covers.forEach((cover, coverIndex) => {
+  for (let coverIndex = 0; coverIndex < covers.length; coverIndex += 1) {
+    const cover = covers[coverIndex];
+    if (!cover) continue;
     if (![cover.x, cover.y, cover.width, cover.height].every(Number.isFinite)
       || cover.width < 0 || cover.height < 0) {
       throw new RangeError('cover rectangle must have finite coordinates and non-negative dimensions');
@@ -43,15 +45,15 @@ export function findEnemyProjectileCoverImpact(
       else exit = Math.min(exit, boundary);
       if (enter > exit) { intersects = false; break; }
     }
-    if (!intersects || exit < 0 || enter > 1) return;
+    if (!intersects || exit < 0 || enter > 1) continue;
     const progress = Math.max(0, Math.min(1, enter));
-    if (earliest && progress >= earliest.progress) return;
+    if (earliest && progress >= earliest.progress) continue;
     earliest = {
       point: { x: start.x + dx * progress, y: start.y + dy * progress },
       progress,
       coverIndex,
     };
-  });
+  }
 
   return earliest;
 }
