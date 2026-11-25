@@ -177,3 +177,10 @@
 - Feedback uses existing hit radii and cover geometry and does not alter aim, damage or hitboxes.
 - Deterministic geometry tests cover clear, blocked, neutral and overlapping target cases.
 - Merged as PR #29 and deployed to GitHub Pages (main commit 3b537faedde2111094fc7b809c91ce070580e8a4). Physical Android QA remains outstanding.
+
+## 2026-11-26 — Enemy defeat feedback
+- Defeated enemies now remain visible briefly, tip/fall and fade rather than vanishing instantly.
+- Wave rewards and transitions wait for the defeat reaction to finish.
+- Applies to firearm and grenade kills; combat hitboxes and damage are unchanged.
+- This is procedural sprite presentation, not a hand-authored death animation. Full animation cycles and Android visual QA remain outstanding.
+
