@@ -1,3 +1,4 @@
+import type { EnemyType } from '../../data/enemies';
 import type { Point, Rect } from './combatMath';
 
 export interface EnemyProjectileCoverImpact {
@@ -56,4 +57,16 @@ export function findEnemyProjectileCoverImpact(
   }
 
   return earliest;
+}
+
+const ENEMY_COVER_DAMAGE: Record<EnemyType, number> = {
+  guard: 14,
+  assault: 20,
+  armored: 18,
+  boss: 30,
+};
+
+/** Damage applied when an enemy round strikes solid cover instead of the player. */
+export function getEnemyProjectileCoverDamage(type: EnemyType): number {
+  return ENEMY_COVER_DAMAGE[type];
 }
