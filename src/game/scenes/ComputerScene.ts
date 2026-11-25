@@ -46,6 +46,9 @@ export class ComputerScene extends Phaser.Scene {
     this.button(326, 112, 230, 42, 'ОТДЕЛ АГЕНТОВ', 0x30495a, () => {
       this.tab = 'agents'; this.selectedAgentIds = []; this.render();
     });
+    this.button(568, 112, 220, 42, 'ИССЛЕДОВАНИЯ', 0x665137, () => {
+      this.tab = 'research'; this.selectedAgentIds = []; this.render();
+    });
     this.time.addEvent({
       delay: 1000,
       loop: true,
@@ -114,7 +117,8 @@ export class ComputerScene extends Phaser.Scene {
     this.addText(this.content!, 930, 164, 'КОМПОНЕНТЫ  ' + save.components.toLocaleString('ru-RU'), 17, '#86d2a2', true);
     if (level < 3) {
       this.drawPanel(this.content!, 64, 210, 1150, 380, 'ИССЛЕДОВАТЕЛЬСКИЙ ОТДЕЛ НЕ АКТИВИРОВАН');
-      this.addText(this.content!, 100, 290, 'Исследования откроются на 3-м уровне агентства.\nСначала заслужите доступ к оперативному отделу.', 20, '#c2ccd6');
+      this.addText(this.content!, 100, 290, 'Исследования откроются на 3-м уровне агентства.
+Сначала заслужите доступ к оперативному отделу.', 20, '#c2ccd6');
       this.addText(this.content!, 100, 390, 'ТРЕБУЕТСЯ: УРОВЕНЬ 3', 14, '#f0c16d', true);
       return;
     }
@@ -170,7 +174,8 @@ export class ComputerScene extends Phaser.Scene {
     if (accountLevel < 3) {
       this.drawPanel(this.content!, 64, 210, 1150, 390, 'СИСТЕМА АГЕНТОВ ЗАБЛОКИРОВАНА');
       this.addText(this.content!, 100, 290,
-        'Отдел агентов откроется на 3-м уровне аккаунта.\nДо этого агент работает один и лично выполняет основные операции.',
+        'Отдел агентов откроется на 3-м уровне аккаунта.
+До этого агент работает один и лично выполняет основные операции.',
         21, '#c2ccd6');
       this.addText(this.content!, 100, 390, 'ТРЕБУЕТСЯ: УРОВЕНЬ 3', 14, '#f0c16d', true);
       return;
